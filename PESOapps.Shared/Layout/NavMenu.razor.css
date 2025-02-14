@@ -1,0 +1,97 @@
+:root {
+    --maincolor: #00449E;
+    --mainfade: #00449ed4;
+    --font-color: #ffffff;
+}
+
+.navbars {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    box-sizing: border-box;
+    color: var(--font-color);
+    /*
+    box-shadow: 0 .125rem .25rem rgba(0, 0, 0, .075) !important;
+    border-bottom-right-radius: 30%;
+    border-bottom-left-radius: 30%;
+*/
+}
+
+.navbar-container {
+    display: flex;
+    justify-content: space-between;
+    flex-direction: row;
+    align-items: center;
+}
+
+nav.navbar-option {
+    display: flex;
+    gap: 30px;
+}
+
+.navbar-logo {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.nav-link {
+    padding: 0;
+}
+
+.nav-links:after {
+    content: "";
+    height: 2px;
+    width: 0%;
+    position: absolute;
+    bottom: 0px;
+    background: #fff;
+    left: 0;
+    transition: eas-out .8s;
+}
+
+.nav-links:hover:after {
+    width: 100%;
+}
+
+.log-diver img {
+    width: 60px;
+}
+
+
+.nav-item {
+    position: relative;
+}
+
+.nav-sub {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    min-width: 150px;
+    z-index: 1000;
+    box-shadow: 1px -1px 30px -16px rgba(255, 255, 255, 0.75);
+    -webkit-box-shadow: 1px -1px 30px -16px rgba(255, 255, 255, 0.75);
+    -moz-box-shadow: 1px -1px 54px -16px rgba(255, 255, 255, 0.75);
+    background: #1A5AA5;
+    border: 1px solid #fff;
+    padding: 10px;
+}
+
+
+.nav-item.has-submenu:hover .nav-sub {
+    display: block;
+}
+
+
+
+.nav-links-sub {
+    display: block;
+    padding: 10px;
+    color: black;
+    text-decoration: none;
+}
+
+.nav-links-sub:hover {
+    background-color: #f4f4f4;
+}

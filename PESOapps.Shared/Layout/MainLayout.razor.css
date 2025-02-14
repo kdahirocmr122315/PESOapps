@@ -1,0 +1,22 @@
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: transparent;
+    margin: 0;
+    box-sizing: border-box;
+    font-size: 16px;
+}
+
+.navigation-section {
+    position: fixed;
+    width: 100%;
+    top: 0;
+    left: 0;
+    background: var(--maincolor);
+}
+
+.peso-menu {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    flex-wrap: nowrap;
+}

@@ -1,6 +1,7 @@
 ﻿@page "/"
 @using PESOapps.Shared.Services
 @inject IFormFactor FormFactor
+@inject IJSRuntime JS
 
 <PageTitle>Home</PageTitle>
 
@@ -11,7 +12,9 @@
                 <span class="peso-log">Public Employment Service Office</span>
             </div>
             <div class="org-logo-text">
-                <span class="misor-log">Misamis Oriental</span>
+                <a href="" class="typewrite" data-period="2000" data-type='[ "Misamis Oriental", "Misamis Oriental" ]'>
+                <span class="misor-log wrap"></span>
+                </a>
             </div>
         </div>
         <div class="org-logo-cont">

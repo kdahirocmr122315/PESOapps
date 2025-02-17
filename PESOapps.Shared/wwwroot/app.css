@@ -192,15 +192,18 @@ img.govpic {
     margin-top: 20vh;
 }
 
-.org-contents {
+.org-contents,
+.container-aboutus {
     max-width: 1280px;
     margin: 0 auto;
     padding: 1px 20px 50px;
     box-sizing: border-box;
 }
 
-.org-container.pesomisvis {
+.org-container.pesomisvis,
+.cont-aboutus {
     background: hsla(0, 0%, 100%, .1);
+    padding-top: 1px;
 }
 
 .org-content.misvis {
@@ -246,8 +249,16 @@ span.misvis-par {
 
 .services span {
     display: block;
-    font-size: 16px;
     margin: 5px 0;
+    background: #1A5AA5;
+    padding: 0 10px;
+    border-radius: 10px;
+}
+
+.emails div {
+    background: #1A5AA5;
+    padding: 0 10px;
+    border-radius: 10px;
 }
 
 .navigation-section {
@@ -361,4 +372,44 @@ td {
 
 th {
     background-color: #0AA9F9;
+}
+
+.container-aboutus {
+    display: flex;
+    justify-content: center;
+    padding: 100px 20px;
+}
+
+.contact-us-cont {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 1px 20px 50px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: space-between;
+}
+
+.emails {
+    margin-bottom: 10px;
+}
+
+.footer-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 10px 0;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    align-content: center;
+}
+
+.footer {
+    background: var(--maincolor);
+}
+
+.footer i {
+    font-size: 25px;
 }

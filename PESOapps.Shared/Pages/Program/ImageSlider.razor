@@ -1,0 +1,27 @@
+﻿@inject IJSRuntime JS
+
+<div class="swiper">
+    <div class="swiper-wrapper">
+        @foreach (var image in Images)
+        {
+            <div class="swiper-slide">
+                <img src="@image" alt="Image" style="width:100%; height:350px; border-radius: 15px; object-fit: cover;" />
+            </div>
+        }
+    </div>
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+</div>
+
+@code {
+    [Parameter] public List<string> Images { get; set; } = new();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("initSwiperMultiSlide");
+        }
+    }
+}

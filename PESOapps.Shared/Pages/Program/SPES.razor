@@ -1,4 +1,5 @@
 ﻿@page "/SPES"
+@inject IJSRuntime JS
 
 <PageTitle>Special Program for Employment of Students</PageTitle>
 
@@ -60,39 +61,31 @@
         </tr>
     </table>
 </div>
-<div>
-    <h2 style="color: #ff9800; font-size: 2em; margin-bottom: 20px;">Activities</h2>
-    <div class="swiper-container">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES1.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES2.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES3.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES4.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES5.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES6.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES7.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES8.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES9.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES10.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES11.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES12.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES13.jpg');">
-            </div>
-        </div>
-        <div class="swiper-pagination"></div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
+<div class="header-title">
+    <span class="misvis-title">Activities</span>
+</div>
+<div class="slider-cont">
+    <div class="container-slide">
+       <ImageSlider Images="@imageList" />
     </div>
 </div>
+
+
+@code {
+    private List<string> imageList = new List<string>
+    {
+        "_content/PESOapps.Shared/spes/SPES1.jpg",
+        "_content/PESOapps.Shared/spes/SPES2.jpg",
+        "_content/PESOapps.Shared/spes/SPES3.jpg",
+        "_content/PESOapps.Shared/spes/SPES4.jpg",
+        "_content/PESOapps.Shared/spes/SPES5.jpg",
+        "_content/PESOapps.Shared/spes/SPES6.jpg",
+        "_content/PESOapps.Shared/spes/SPES7.jpg",
+        "_content/PESOapps.Shared/spes/SPES8.jpg",
+        "_content/PESOapps.Shared/spes/SPES9.jpg",
+        "_content/PESOapps.Shared/spes/SPES10.jpg",
+        "_content/PESOapps.Shared/spes/SPES11.jpg",
+        "_content/PESOapps.Shared/spes/SPES12.jpg",
+        "_content/PESOapps.Shared/spes/SPES13.jpg",
+    };
+}

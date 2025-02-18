@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css');
 
 :root {
     --maincolor: #00449E;
@@ -7,7 +8,7 @@
 }
 
 main {
-    margin-top: 90px;
+    margin: 90px 0;
 }
 
 .log-inside {
@@ -29,6 +30,7 @@ h5 {
 
 .nav-item a {
     font-weight: 500;
+    position: relative;
 }
 
 h5.ext {
@@ -59,6 +61,10 @@ body {
 
 body {
     background: var(--maincolor);
+}
+
+.navigation-section {
+    z-index: 5;
 }
 
 a,
@@ -164,13 +170,25 @@ h1:focus {
 }
 
 .peso-menu {
+    /*
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     flex-wrap: nowrap;
     align-items: center;
+*/
+    display: flex;
     max-width: 1280px;
     margin: 0px auto;
+    min-height: calc(100vh - 90px);
+    position: relative;
+}
+
+.org-logo-cont.gov {
+    position: absolute;
+    z-index: -1;
+    right: 0;
+    bottom: 0;
 }
 
 .log-diver {
@@ -182,6 +200,16 @@ h1:focus {
 span.peso-log {
     font-size: 40px;
     font-weight: 100;
+    text-shadow: 1px 1px #1A5AA5;
+}
+
+a.typewrite:hover {
+    color: var(--font-color);
+    text-shadow: 1px 1px #1A5AA5;
+}
+
+a.typewrite {
+    text-shadow: 1px 1px #1A5AA5;
 }
 
 img.govpic {
@@ -189,8 +217,7 @@ img.govpic {
 }
 
 .org-logo-cont.texts {
-    align-self: baseline;
-    margin-top: 20vh;
+    align-self: center;
 }
 
 .org-contents,
@@ -202,7 +229,8 @@ img.govpic {
 }
 
 .org-container.pesomisvis,
-.cont-aboutus {
+.cont-aboutus,
+.slider-cont {
     background: hsla(0, 0%, 100%, .1);
     padding-top: 1px;
 }
@@ -243,6 +271,7 @@ span.misvis-par {
     font-size: 50px;
     margin: 50px 0;
     animation: fadeIn 1s;
+    text-shadow: 1px 1px #1A5AA5;
 }
 
 .services {
@@ -253,15 +282,15 @@ span.misvis-par {
 .services span {
     display: block;
     margin: 5px 0;
-    background: #1A5AA5;
     padding: 0 10px;
     border-radius: 10px;
+    text-shadow: 1px 1px #1A5AA5;
 }
 
 .emails div {
-    background: #1A5AA5;
     padding: 0 10px;
     border-radius: 10px;
+    text-shadow: 1px 1px #1A5AA5;
 }
 
 .navigation-section {
@@ -277,7 +306,7 @@ span.misvis-par {
 
 .card {
     display: flex;
-    height: 280px;
+    height: auto;
     width: 200px;
     background-color: #1A5AA5;
     border-radius: 10px;
@@ -332,6 +361,16 @@ a.form-link:hover {
 
 .form-cont h2 {
     font-size: 20px;
+}
+
+.contact-us-map iframe {
+    width: 600px;
+    height: 450px;
+    border: 0;
+}
+
+.nav-links i {
+    display: none;
 }
 
 /************************* CAROUSEL **************************/
@@ -401,7 +440,7 @@ th {
 .footer-container {
     max-width: 1280px;
     margin: 0 auto;
-    padding: 10px 0;
+    padding: 10px;
     box-sizing: border-box;
     display: flex;
     justify-content: space-between;
@@ -415,4 +454,124 @@ th {
 
 .footer i {
     font-size: 25px;
+}
+
+/******************* ACTIVITIES CAROUSEL *********************/
+.container-slide {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 50px 10px;
+}
+
+.swiper-container {
+    width: 90%;
+    max-width: 1200px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    margin: auto;
+}
+
+.swiper-slide {
+    background-position: center;
+    background-size: cover;
+    width: 300px;
+    height: 350px;
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s;
+}
+
+.swiper-slide:hover {
+    transform: scale(1.05);
+}
+
+.slide-info {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: var(--font-color);
+}
+
+.swiper-pagination-bullet-active {
+    background: var(--font-color);
+}
+
+/******************* ACTIVITIES CAROUSEL *********************/
+@media only screen and (max-width: 1280px) {}
+
+@media only screen and (max-width: 1180px) {
+    .contact-us-map iframe {
+        width: 400px;
+        height: 345px;
+    }
+
+    .contact-us-cont {
+        justify-content: center;
+    }
+
+    .container-aboutus img {
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width: 890px) {
+    .contact-us-cont {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .peso-menu {
+        justify-content: center;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+
+    html,
+    body {
+        font-size: 13px;
+    }
+
+    span.peso-log {
+        font-size: 25px;
+    }
+
+    .header-title {
+        text-align: center;
+        font-size: 25px;
+        margin: 25px 0;
+    }
+
+    span.misvis-header {
+        font-size: 20px;
+    }
+
+    .org-content.misvis {
+        flex-direction: column;
+    }
+
+    .nav-item {
+        position: unset;
+    }
+
+}
+
+@media only screen and (max-width: 600px) {
+    .nav-links i {
+        display: unset;
+    }
+
+    .nav-links span {
+        display: none;
+    }
 }

@@ -1,9 +1,10 @@
 ﻿@page "/SPES"
+@inject IJSRuntime JS
 
 <PageTitle>Special Program for Employment of Students</PageTitle>
 
 <div class="form-cont">
-    <h1>Special Program for Employment of Students</h1>
+    <h2>Special Program for Employment of Students</h2>
     <p><strong>Rationale:</strong> </p>
     <p> The Special Program for Employment of Students (SPES) is mandated under Republic Act No. 9547 otherwise known 
     as “An Act to help poor but deserving students pursue their education by encouraging their employment during 
@@ -18,81 +19,75 @@
         and/or Christmas vacations.
     </p><br/>
     <h2 style="text-align: center;">SPES REQUIREMENTS</h2>
-    <table>
-        <tr>
-            <th><h3>Pre-Employment Requirements</h3></th>
-            <th><h3>Post-Employment Requirements</h3></th>
-        </tr>
-        <tr>
-            <td>
-                <ul style="list-style-type: none;">
-                    <li style="font-weight: bold;">✓ <a href="#">SPES Application (SPES Form 2)</a></li>
-                    <li><span style="font-weight: bold;">✓ Oath of Undertaking</span> (SPES Form 2.A)</li>
-                    <li><span style="font-weight: bold;">✓ SPES Employment Contract</span> (SPES Form 4)</li>
-                    <li style="font-weight: bold;">✓ <a href="#">SPES Baby Form (Optional)</a></li>
-                    <li style="font-weight: bold;">✓ SPES Survey Form Part 1 & Part 2</li>
-                    <li><span style="font-weight: bold;">✓ Birth Certificate </span>(Photocopy)</li>
-                    <li><span style="font-weight: bold;">✓ Certificate of Indigency (Original)</span> - For Summer Job Purposes</li>
-                    <li style="font-weight: bold;">✓ Report Cards/Form 138 with <span style="color: red;"> No Failing Grades </span> </li>
-                    <ul style="list-style-type: none; font-style: italic;">
-                        <li>- Junior High School Students: Report Cards/Form 138 (last year attended)</li>
-                        <li>- Senior High Students/College Level</li>
-                        <ul style="list-style-type: none;">
-                            <li>(1st Semester Class Cards/Grades S.Y *current year)</li>
-                            <li style="color: red;">With signature of School Registrar and School Logo</li>
+    <div class="table-scroll">
+        <table>
+            <tr>
+                <th><h3>Pre-Employment Requirements</h3></th>
+                <th><h3>Post-Employment Requirements</h3></th>
+            </tr>
+            <tr>
+                <td>
+                    <ul style="list-style-type: none;">
+                        <li style="font-weight: bold;">✓ <a href="#">SPES Application (SPES Form 2)</a></li>
+                        <li><span style="font-weight: bold;">✓ Oath of Undertaking</span> (SPES Form 2.A)</li>
+                        <li><span style="font-weight: bold;">✓ SPES Employment Contract</span> (SPES Form 4)</li>
+                        <li style="font-weight: bold;">✓ <a href="#">SPES Baby Form (Optional)</a></li>
+                        <li style="font-weight: bold;">✓ SPES Survey Form Part 1 & Part 2</li>
+                        <li><span style="font-weight: bold;">✓ Birth Certificate </span>(Photocopy)</li>
+                        <li><span style="font-weight: bold;">✓ Certificate of Indigency (Original)</span> - For Summer Job Purposes</li>
+                        <li style="font-weight: bold;">✓ Report Cards/Form 138 with <span style="color: red;"> No Failing Grades </span> </li>
+                        <ul style="list-style-type: none; font-style: italic;">
+                            <li>- Junior High School Students: Report Cards/Form 138 (last year attended)</li>
+                            <li>- Senior High Students/College Level</li>
+                            <ul style="list-style-type: none;">
+                                <li>(1st Semester Class Cards/Grades S.Y *current year)</li>
+                                <li style="color: red;">With signature of School Registrar and School Logo</li>
+                            </ul>
+                        </ul>
+                        <li style="font-weight: bold;">✓ For Out-of-School Youth (OSY)</li>
+                        <ul style="list-style-type: none; font-style: italic;">
+                            <li>- Barangay Certificate of <span style="font-weight: bold;">OUT-OF-SCHOOL YOUTH</span> indicating the period of last enrollment</li>
+                            <li>- Latest Grade</li>
                         </ul>
                     </ul>
-                    <li style="font-weight: bold;">✓ For Out-of-School Youth (OSY)</li>
-                    <ul style="list-style-type: none; font-style: italic;">
-                        <li>- Barangay Certificate of <span style="font-weight: bold;">OUT-OF-SCHOOL YOUTH</span> indicating the period of last enrollment</li>
-                        <li>- Latest Grade</li>
+                </td>
+                <td style="vertical-align: top;">
+                    <ul style = "list-style-type: none;">
+                        <li>✓ Accomplishment Report</li>
+                        <li>✓ DTR</li>
+                        <li>✓ Any Valid Identification Card (ex. School ID)</li>
+                        <li>✓ Cedula</li>
                     </ul>
-                </ul>
-            </td>
-            <td style="vertical-align: top;">
-                <ul style = "list-style-type: none;">
-                    <li>✓ Accomplishment Report</li>
-                    <li>✓ DTR</li>
-                    <li>✓ Any Valid Identification Card (ex. School ID)</li>
-                    <li>✓ Cedula</li>
-                </ul>
-            </td>
-        </tr>
-    </table>
-</div>
-<div>
-    <h2 style="color: #ff9800; font-size: 2em; margin-bottom: 20px;">Activities</h2>
-    <div class="swiper-container">
-        <div class="swiper-wrapper">
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES1.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES2.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES3.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES4.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES5.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES6.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES7.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES8.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES9.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES10.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES11.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES12.jpg');">
-            </div>
-            <div class="swiper-slide" style="background-image: url('_content/PESOapps.Shared/spes/SPES13.jpg');">
-            </div>
-        </div>
-        <div class="swiper-pagination"></div>
-        <div class="swiper-button-next"></div>
-        <div class="swiper-button-prev"></div>
+                </td>
+            </tr>
+        </table>
     </div>
 </div>
+<div class="header-title">
+    <span class="misvis-title">Activities</span>
+</div>
+<div class="slider-cont">
+    <div class="container-slide">
+       <ImageSlider Images="@imageList" />
+    </div>
+</div>
+
+
+@code {
+    private List<string> imageList = new List<string>
+    {
+        "_content/PESOapps.Shared/spes/SPES1.jpg",
+        "_content/PESOapps.Shared/spes/SPES2.jpg",
+        "_content/PESOapps.Shared/spes/SPES3.jpg",
+        "_content/PESOapps.Shared/spes/SPES4.jpg",
+        "_content/PESOapps.Shared/spes/SPES5.jpg",
+        "_content/PESOapps.Shared/spes/SPES6.jpg",
+        "_content/PESOapps.Shared/spes/SPES7.jpg",
+        "_content/PESOapps.Shared/spes/SPES8.jpg",
+        "_content/PESOapps.Shared/spes/SPES9.jpg",
+        "_content/PESOapps.Shared/spes/SPES10.jpg",
+        "_content/PESOapps.Shared/spes/SPES11.jpg",
+        "_content/PESOapps.Shared/spes/SPES12.jpg",
+        "_content/PESOapps.Shared/spes/SPES13.jpg",
+    };
+}

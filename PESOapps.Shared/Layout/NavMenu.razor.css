@@ -95,3 +95,19 @@ nav.navbar-option {
 .nav-links-sub:hover {
     background-color: #f4f4f4;
 }
+
+@media only screen and (max-width: 768px) {
+    .nav-item {
+        position: unset;
+    }
+
+    .nav-sub {
+        width: 100%;
+        box-sizing: border-box;
+        top: unset;
+    }
+
+    .nav-item.has-submenu:hover .nav-sub a {
+        white-space: unset;
+    }
+}

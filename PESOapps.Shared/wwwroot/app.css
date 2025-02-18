@@ -416,3 +416,7 @@ th {
 .footer i {
     font-size: 25px;
 }
+
+th.center {
+    text-align: center;
+}

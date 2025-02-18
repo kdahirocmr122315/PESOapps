@@ -9,6 +9,7 @@
 
 main {
     margin: 90px 0;
+    min-height: calc(100vh - 228px);
 }
 
 .log-inside {
@@ -297,6 +298,10 @@ span.misvis-par {
     background: var(--maincolor);
 }
 
+.footer {
+    background: var(--maincolor);
+}
+
 /************************* CAROUSEL **************************/
 
 .container {
@@ -356,11 +361,11 @@ a.form-link:hover {
 .form-cont h3 {
     margin-top: .5rem;
     margin-bottom: .5rem;
-    font-size: 20px;
+    font-size: 1.2em;
 }
 
 .form-cont h2 {
-    font-size: 20px;
+    font-size: 1.2em;
 }
 
 .contact-us-map iframe {
@@ -371,6 +376,14 @@ a.form-link:hover {
 
 .nav-links i {
     display: none;
+}
+
+th.center {
+    text-align: center;
+}
+
+.table-scroll {
+    overflow-x: auto;
 }
 
 /************************* CAROUSEL **************************/
@@ -448,10 +461,121 @@ th {
     align-content: center;
 }
 
-.footer {
-    background: var(--maincolor);
+/******************* ACTIVITIES CAROUSEL *********************/
+.container-slide {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 50px 10px;
 }
 
-.footer i {
-    font-size: 25px;
+.swiper-container {
+    width: 90%;
+    max-width: 1200px;
+    padding-top: 50px;
+    padding-bottom: 50px;
+    margin: auto;
+}
+
+.swiper-slide {
+    background-position: center;
+    background-size: cover;
+    width: 300px;
+    height: 350px;
+    border-radius: 15px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s;
+}
+
+.swiper-slide:hover {
+    transform: scale(1.05);
+}
+
+.slide-info {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+.swiper-button-next,
+.swiper-button-prev {
+    color: var(--font-color);
+}
+
+.swiper-pagination-bullet-active {
+    background: var(--font-color);
+}
+
+/******************* ACTIVITIES CAROUSEL *********************/
+@media only screen and (max-width: 1280px) {}
+
+@media only screen and (max-width: 1180px) {
+    .contact-us-map iframe {
+        width: 400px;
+        height: 345px;
+    }
+
+    .contact-us-cont {
+        justify-content: center;
+    }
+
+    .container-aboutus img {
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width: 890px) {
+    .contact-us-cont {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .peso-menu {
+        justify-content: center;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+
+    html,
+    body {
+        font-size: 13px;
+    }
+
+    span.peso-log {
+        font-size: 25px;
+    }
+
+    .header-title {
+        text-align: center;
+        font-size: 25px;
+        margin: 25px 0;
+    }
+
+    span.misvis-header {
+        font-size: 20px;
+    }
+
+    .org-content.misvis {
+        flex-direction: column;
+    }
+
+    .nav-item {
+        position: unset;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .nav-links i {
+        display: unset;
+    }
+
+    .nav-links span {
+        display: none;
+    }
 }

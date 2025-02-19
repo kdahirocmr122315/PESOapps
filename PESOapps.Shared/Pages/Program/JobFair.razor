@@ -18,3 +18,18 @@
 
     </p>
 </div>
+
+<div class="slider-cont">
+    <div class="container-slide">
+        <SliderJobFair Images="@imageList" />
+    </div>
+</div>
+
+
+@code {
+    private List<string> imageList = new List<string>
+    {
+        "_content/PESOapps.Shared/jobfair/Jan22/Jan22_1.jpg",
+        "_content/PESOapps.Shared/jobfair/Jan25/Jan25_1.jpg",
+    };
+}

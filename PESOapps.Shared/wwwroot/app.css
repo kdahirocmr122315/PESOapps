@@ -344,6 +344,10 @@ span.misvis-par {
     margin-bottom: 0px;
 }
 
+.slider-cont {
+    margin: 20px auto;
+}
+
 /************************* CAROUSEL **************************/
 
 .container {
@@ -540,12 +544,16 @@ th {
 
 .slide-info {
     position: absolute;
-    bottom: 10px;
-    left: 10px;
+    bottom: 2%;
+    left: 3%;
     background: rgba(0, 0, 0, 0.6);
     color: white;
-    padding: 15px;
+    padding: 10px;
     border-radius: 10px;
+    width: 94%;
+    font-size: 12px;
+    white-space: pre-line;
+    border-radius: 0 0 15px 15px;
 }
 
 .swiper-button-next,

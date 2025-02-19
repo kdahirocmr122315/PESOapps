@@ -1,0 +1,64 @@
+﻿@inject IJSRuntime JS
+
+<div class="swiper">
+    <div class="swiper-wrapper">
+        @foreach (var image in Images)
+        {
+            <div class="swiper-slide" @onclick="() => OnImageClick(image)">
+                <img src="@image" alt="Image" style="width:100%; height:350px; border-radius: 15px; object-fit: cover;" />
+                <div class="slide-info">@GetImageDescription(image)</div>
+            </div>
+        }
+    </div>
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-prev"></div>
+    <div class="swiper-button-next"></div>
+</div>
+
+<!-- Section to Display Grouped Images -->
+<div class="grouped-images" style="text-align:center;">
+    @foreach (var img in selectedImageGroup)
+    {
+        <img src="@img" alt="Grouped Image" style="width:200px; height:200px; margin: 5px; border-radius: 10px; object-fit: cover;" />
+    }
+</div>
+
+@code {
+    [Parameter] public List<string> Images { get; set; } = new();
+    private List<string> selectedImageGroup = new();
+
+    private Dictionary<string, string> imageDescriptions = new()
+    {
+        { "_content/PESOapps.Shared/spes/SPES1.jpg", "2ND PAGLAUM-MISO,RISE-CDO JOB FAIR\nAtrium, Limketkai Center, CDO\nJanuary 25, 2024"  },
+        { "_content/PESOapps.Shared/spes/SPES2.jpg", "Description for SPES2" },
+        { "_content/PESOapps.Shared/spes/SPES3.jpg", "Description for SPES3" },
+        { "_content/PESOapps.Shared/spes/SPES4.jpg", "Description for SPES4" },
+        { "_content/PESOapps.Shared/spes/SPES5.jpg", "Description for SPES5" },
+        { "_content/PESOapps.Shared/spes/SPES6.jpg", "Description for SPES6" },
+        { "_content/PESOapps.Shared/spes/SPES7.jpg", "Description for SPES7" }
+    };
+
+    private string GetImageDescription(string image)
+    {
+        return imageDescriptions.ContainsKey(image) ? imageDescriptions[image] : "No description available";
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await JS.InvokeVoidAsync("initSwiperMultiSlide");
+        }
+    }
+
+    private void OnImageClick(string image)
+    {
+        var groupedImages = new Dictionary<string, List<string>>
+        {
+            { "_content/PESOapps.Shared/spes/SPES1.jpg", new List<string> { "_content/PESOapps.Shared/spes/SPES1.jpg", "_content/PESOapps.Shared/spes/SPES2.jpg", "_content/PESOapps.Shared/spes/SPES1.jpg", "_content/PESOapps.Shared/spes/SPES2.jpg",  "_content/PESOapps.Shared/spes/SPES1.jpg", "_content/PESOapps.Shared/spes/SPES2.jpg","_content/PESOapps.Shared/spes/SPES1.jpg", "_content/PESOapps.Shared/spes/SPES2.jpg","_content/PESOapps.Shared/spes/SPES1.jpg", "_content/PESOapps.Shared/spes/SPES2.jpg","_content/PESOapps.Shared/spes/SPES3.jpg", "_content/PESOapps.Shared/spes/SPES4.jpg" } },
+            { "_content/PESOapps.Shared/spes/SPES2.jpg", new List<string> { "_content/PESOapps.Shared/spes/SPES5.jpg", "_content/PESOapps.Shared/spes/SPES6.jpg","_content/PESOapps.Shared/spes/SPES7.jpg" } }
+        };
+
+        selectedImageGroup = groupedImages.ContainsKey(image) ? groupedImages[image] : new();
+    }
+}

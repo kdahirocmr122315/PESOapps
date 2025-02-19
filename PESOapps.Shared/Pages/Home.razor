@@ -77,27 +77,12 @@
                 <span class="misvis-title">Awards Received</span>
             </div>
             <div class="container">
-                <div class="card">
-                    <img src="_content/PESOapps.Shared/images/award-1.png" />
-                </div>
-                <div class="card">
-                    <img src="_content/PESOapps.Shared/images/award-2.png" />
-                </div>
-                <div class="card">
-                    <img src="_content/PESOapps.Shared/images/award-3.png" />
-                </div>
-                <div class="card">
-                    <img src="_content/PESOapps.Shared/images/award-4.png" />
-                </div>
-                <div class="card">
-                    <img src="_content/PESOapps.Shared/images/award-5.png" />
-                </div>
-                <div class="card">
-                    <img src="_content/PESOapps.Shared/images/award-6.png" />
-                </div>
-                <div class="card">
-                    <img src="_content/PESOapps.Shared/images/award-7.png" />
-                </div>
+                @foreach (var image in ImagePaths)
+                {
+                    <div class="card" style="cursor: pointer;" @onclick="() => ShowImage(image)">
+                        <img src="@image" />
+                    </div>
+                }
             </div>
          </div> 
      </div>
@@ -109,6 +94,16 @@
             </div>
             <div class="paglaum-divider">
                 <img src="_content/PESOapps.Shared/images/paglaum_small.png" />
+            </div>
+        </div>
+        <div class="aboutus-bub">
+            <div class="header-title">
+                <span class="misvis-title">About Us</span>
+            </div>
+            <div class="cont-ab">
+                <div>The implementing rules and regulations of Republic Act No. 8759 was issued – otherwise known as the Public Employment Service Office (PESO) Act of 1999, “An Act Institutionalizing a National Facilitation Service Network through Establishment of a Public Employment Service Office (PESO) in every Province, Key Cities and other Strategic Areas”, as amended by Republic Act No. 10691.</div>
+                <div>To carry out the above declared policy, PESO shall be operated and maintained by the Local Government Unit (LGU), which shall be linked to the Department of Labor and Employment (DOLE) Regional Office for coordination and technical supervision.</div>
+                <div>On October 7, 2019, the Public Employment Service Office (PESO) was created as a regular department of the Provincial Government of Misamis Oriental (PGMO), with regular Plantilla Positions and corresponding Budgetary Allocation, pursuant to Ordinance Number 1440-2019.</div>
             </div>
         </div>
         <div class="cont-aboutus">
@@ -149,3 +144,35 @@
         </div>
     </div>
 </div>
+<div class="modal fade" id="imageModal" tabindex="-1" aria-labelledby="imageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <img src="@SelectedImage" class="img-fluid" />
+            </div>
+        </div>
+    </div>
+</div>
+@code {
+    private string SelectedImage { get; set; }
+
+    private List<string> ImagePaths = new()
+    {
+        "_content/PESOapps.Shared/images/award-1.png",
+        "_content/PESOapps.Shared/images/award-2.png",
+        "_content/PESOapps.Shared/images/award-3.png",
+        "_content/PESOapps.Shared/images/award-4.png",
+        "_content/PESOapps.Shared/images/award-5.png",
+        "_content/PESOapps.Shared/images/award-6.png",
+        "_content/PESOapps.Shared/images/award-7.png"
+    };
+
+    private void ShowImage(string imagePath)
+    {
+        SelectedImage = imagePath;
+        JS.InvokeVoidAsync("showModal", "imageModal"); // Call JS function to open modal
+    }
+}

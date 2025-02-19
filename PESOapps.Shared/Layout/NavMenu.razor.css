@@ -1,9 +1,3 @@
-:root {
-    --maincolor: #00449E;
-    --mainfade: #00449ed4;
-    --font-color: #ffffff;
-}
-
 .navbars {
     max-width: 1280px;
     margin: 0 auto;
@@ -70,14 +64,18 @@ nav.navbar-option {
     top: 100%;
     min-width: 150px;
     z-index: 1000;
-    box-shadow: 1px -1px 30px -16px rgba(255, 255, 255, 0.75);
-    -webkit-box-shadow: 1px -1px 30px -16px rgba(255, 255, 255, 0.75);
-    -moz-box-shadow: 1px -1px 54px -16px rgba(255, 255, 255, 0.75);
-    background: #1A5AA5;
+    box-shadow: 1px -1px 30px -16px var(--box-shadow);
+    -webkit-box-shadow: 1px -1px 30px -16px var(--box-shadow);
+    -moz-box-shadow: 1px -1px 54px -16px var(--box-shadow);
+    background: var(--1A5AA5);
     border: 1px solid #fff;
     padding: 10px;
 }
 
+.sub-sub-sub {
+    padding-left: 15px;
+    box-sizing: border-box;
+}
 
 .nav-item.has-submenu:hover .nav-sub {
     display: block;

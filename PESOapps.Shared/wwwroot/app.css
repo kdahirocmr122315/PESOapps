@@ -3,12 +3,29 @@
 
 :root {
     --maincolor: #00449E;
+    --bgcolor: #00449E;
     --mainfade: #00449ed4;
     --font-color: #ffffff;
+    --bgfade: #1b6ec2;
+    --1A5AA5: #1A5AA5;
+    --0AA9F9: #0AA9F9;
+    --text-shadow: #1A5AA5;
+    --box-shadow: #FFFFFFBF;
+    --hsla: hsla(0, 0%, 100%, .1);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+#themeButton {
+    position: fixed;
+    bottom: 0;
+    right: 0;
 }
 
 main {
-    margin: 90px 0;
+    margin: 110px 0;
     min-height: calc(100vh - 228px);
 }
 
@@ -61,7 +78,7 @@ body {
 }
 
 body {
-    background: var(--maincolor);
+    background: var(--bgcolor);
 }
 
 .navigation-section {
@@ -80,13 +97,16 @@ a,
     margin: 0 auto;
     padding: 20px;
     box-sizing: border-box;
-    background: #1A5AA5;
+    background: var(--1A5AA5);
+    box-shadow: 0px 0px 30px -16px var(--box-shadow);
+    -webkit-box-shadow: 0px 0px 30px -16px var(--box-shadow);
+    -moz-box-shadow: 0px 0px 30px -16px var(--box-shadow);
 }
 
 .btn-primary {
     color: var(--font-color);
-    background-color: #1b6ec2;
-    border-color: #1861ac;
+    background-color: var(--bgfade);
+    border-color: var(--bgfade);
 }
 
 .btn:focus,
@@ -201,24 +221,20 @@ h1:focus {
 span.peso-log {
     font-size: 40px;
     font-weight: 100;
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 a.typewrite:hover {
     color: var(--font-color);
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 a.typewrite {
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 img.govpic {
     height: 65vh;
-}
-
-.org-logo-cont.texts {
-    align-self: center;
 }
 
 .org-contents,
@@ -232,7 +248,7 @@ img.govpic {
 .org-container.pesomisvis,
 .cont-aboutus,
 .slider-cont {
-    background: hsla(0, 0%, 100%, .1);
+    background: var(--hsla);
     padding-top: 1px;
 }
 
@@ -260,10 +276,10 @@ span.misvis-par {
     margin: 0 1rem;
     border-radius: 10px;
     flex-direction: column;
-    box-shadow: 1px -1px 30px -16px rgba(255, 255, 255, 0.75);
-    -webkit-box-shadow: 1px -1px 30px -16px rgba(255, 255, 255, 0.75);
-    -moz-box-shadow: 1px -1px 54px -16px rgba(255, 255, 255, 0.75);
-    background: #1A5AA5;
+    box-shadow: 1px -1px 30px -16px var(--box-shadow);
+    -webkit-box-shadow: 1px -1px 30px -16px var(--box-shadow);
+    -moz-box-shadow: 1px -1px 54px -16px var(--box-shadow);
+    background: var(--1A5AA5);
     animation: nth 1s;
 }
 
@@ -272,7 +288,7 @@ span.misvis-par {
     font-size: 50px;
     margin: 50px 0;
     animation: fadeIn 1s;
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 .services {
@@ -285,13 +301,13 @@ span.misvis-par {
     margin: 5px 0;
     padding: 0 10px;
     border-radius: 10px;
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 .emails div {
     padding: 0 10px;
     border-radius: 10px;
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 .navigation-section {
@@ -299,7 +315,33 @@ span.misvis-par {
 }
 
 .footer {
-    background: var(--maincolor);
+    background: var(--bgcolor);
+}
+
+.aboutus-bub {
+    max-width: 1280px;
+    margin: 0 auto 50px;
+    padding: 50px 50px;
+    background: var(--1A5AA5);
+    box-shadow: inset 0px 0px 15px -4px var(--box-shadow);
+    border-radius: 10px;
+}
+
+.aboutus-bub .header-title {
+    margin: 0 auto 10px;
+}
+
+.cont-ab > div {
+    text-align: justify;
+}
+
+.cont-ab > div {
+    text-align: justify;
+    margin-bottom: 20px;
+}
+
+.cont-ab > div:last-child {
+    margin-bottom: 0px;
 }
 
 /************************* CAROUSEL **************************/
@@ -313,9 +355,9 @@ span.misvis-par {
     display: flex;
     height: auto;
     width: 200px;
-    background-color: #1A5AA5;
+    background-color: var(--1A5AA5);
     border-radius: 10px;
-    box-shadow: -1rem 0 3rem var(--maincolor);
+    box-shadow: 0px 0px 15px -5px var(--box-shadow);
     transition: 0.4s ease-out;
     position: relative;
     left: 0px;
@@ -386,6 +428,10 @@ th.center {
     overflow-x: auto;
 }
 
+.org-logo {
+    margin-top: 20vh;
+}
+
 /************************* CAROUSEL **************************/
 a.form-link,
 .nav-item.has-submenu .nav-sub a {
@@ -400,7 +446,7 @@ a.form-link:after,
     width: 0%;
     position: absolute;
     bottom: 0px;
-    background: #fff;
+    background: var(--font-color);
     left: 0;
     transition: 0.5s ease-out;
 }
@@ -420,13 +466,13 @@ table {
 
 th,
 td {
-    border: 1px solid #ffffff;
+    border: 1px solid var(--font-color);
     padding: 8px;
     text-align: left;
 }
 
 th {
-    background-color: #0AA9F9;
+    background-color: var(--0AA9F9);
 }
 
 .container-aboutus {
@@ -511,7 +557,132 @@ th {
     background: var(--font-color);
 }
 
-/******************* ACTIVITIES CAROUSEL *********************/
+/******************* END ACTIVITIES CAROUSEL *********************/
+/******************* MODAL ZOOM *********************/
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    border-bottom: 0;
+}
+
+.modal-content {
+    max-width: 90%;
+    max-height: 90vh;
+    border-radius: 10px;
+    background: var(--maincolor);
+    margin: 0 auto;
+}
+
+.close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+}
+
+.fade:not(.show) {
+    display: none;
+}
+
+.modal-backdrop.show {
+    display: none;
+}
+
+.img-fluid {
+    max-width: 100%;
+    height: 60vh;
+}
+
+.modal-header .btn-close {
+    background-color: var(--font-color);
+}
+
+/******************* END MODAL ZOOM *********************/
+
+
+.btn {
+    background-color: #fff;
+    width: 5em;
+    height: 3em;
+    border-radius: 10em;
+    padding: 0 0.5em;
+    box-shadow: inset 0 8px 60px rgba(0, 0, 0, .1), inset 0 8px 8px rgba(0, 0, 0, .1), inset 0 -4px 4px rgba(0, 0, 0, .1);
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.btn__indicator {
+    background-color: #fff;
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+
+    position: absolute;
+
+    box-shadow: 0 8px 40px rgba(0, 0, 0, .2);
+
+    transition: transform .3s ease;
+}
+
+.btn__icon-container {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn__icon {
+    color: var(--light-icon-color);
+    font-size: 1.4rem;
+}
+
+/* -------------- ANIMATION ------------ */
+.btn__icon.animated {
+    animation: spin 0.5s;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* -------------- DARKMODE -------------- */
+.light-mode .btn {
+    box-shadow: inset 0 8px 60px rgba(0, 0, 0, .3),
+        inset 8px 0 8px rgba(0, 0, 0, .3),
+        inset 0 -4px 4px rgba(0, 0, 0, .3);
+}
+
+.light-mode .btn__indicator {
+    transform: translateX(2em);
+    background-color: var(--dark-color);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, .3);
+}
+
+.light-mode .btn__icon {
+    color: var(--dark-icon-color);
+}
+
+/* -------------- END ANIMATION ------------ */
+/* -------------- MEDIA ------------ */
 @media only screen and (max-width: 1280px) {}
 
 @media only screen and (max-width: 1180px) {
@@ -568,6 +739,10 @@ th {
     .nav-item {
         position: unset;
     }
+
+    .aboutus-bub {
+        padding: 20px 20px;
+    }
 }
 
 @media only screen and (max-width: 600px) {
@@ -578,4 +753,12 @@ th {
     .nav-links span {
         display: none;
     }
+}
+
+@media only screen and (max-width: 600px) {
+    .contact-us-map iframe {
+        width: 300px;
+        height: 250px;
+    }
+
 }

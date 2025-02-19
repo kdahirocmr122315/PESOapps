@@ -348,6 +348,10 @@ span.misvis-par {
     margin: 20px auto;
 }
 
+.peso-logos {
+    text-align: right;
+}
+
 /************************* CAROUSEL **************************/
 
 .container {
@@ -769,4 +773,18 @@ th {
         height: 250px;
     }
 
+}
+
+@media only screen and (max-width: 425px) {
+    .peso-logos.peso-logo-im img {
+        width: 100px;
+    }
+
+    .navbars {
+        padding: 15px 10px;
+    }
+
+    .footer {
+        font-size: 10px;
+    }
 }

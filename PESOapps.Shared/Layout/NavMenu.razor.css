@@ -109,3 +109,10 @@ nav.navbar-option {
         white-space: unset;
     }
 }
+
+@media only screen and (max-width: 425px) {
+
+    .navbars {
+        padding: 15px 10px;
+    }
+}

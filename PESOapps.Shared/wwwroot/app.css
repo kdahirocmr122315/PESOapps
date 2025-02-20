@@ -375,6 +375,10 @@ span.misvis-par {
     font-weight: 600;
 }
 
+.just {
+    text-align: justify;
+}
+
 /************************* CAROUSEL **************************/
 
 .container {
@@ -438,7 +442,7 @@ a.form-link:hover {
 }
 
 .form-cont h2 {
-    font-size: 1.2em;
+    font-size: 1.15em;
 }
 
 .contact-us-map iframe {
@@ -466,6 +470,12 @@ th.center {
 span.misor-log.wrap {
     font-family: Dancing Script;
     font-size: 1.5em;
+    text-shadow: 1px 1px var(--text-shadow);
+}
+
+.form-cont a {
+    color: #000;
+    text-decoration: underline;
 }
 
 /************************* CAROUSEL **************************/
@@ -478,7 +488,6 @@ a.form-link {
     color: #000000;
 }
 
-a.form-link:after,
 .nav-item.has-submenu .nav-sub a:after,
 .nav-links:after {
     content: "";
@@ -495,7 +504,6 @@ a.form-link:after {
     background: #000000;
 }
 
-a.form-link:hover:after,
 .nav-item.has-submenu .nav-sub a:hover:after,
 .nav-links:hover:after,
 .nav-links.active:after {
@@ -584,14 +592,14 @@ th {
 
 .slide-info {
     position: absolute;
-    bottom: 2%;
-    left: 3%;
+    bottom: 1%;
+    left: 1%;
     background: rgba(0, 0, 0, 0.6);
     color: white;
-    padding: 10px;
+    padding: 5px;
     border-radius: 10px;
-    width: 94%;
-    font-size: 12px;
+    width: 98%;
+    font-size: 10px;
     white-space: pre-line;
     border-radius: 0 0 15px 15px;
 }

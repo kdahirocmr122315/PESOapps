@@ -19,22 +19,33 @@
 <div class="grouped-images" style="text-align:center;">
     @foreach (var img in selectedImageGroup)
     {
-        <img src="@img" alt="Grouped Image" style="width:200px; height:200px; margin: 5px; border-radius: 10px; object-fit: cover;" />
+        <img src="@img" alt="Grouped Image" style="width:200px; height:200px; margin: 5px; border-radius: 10px; object-fit: cover; cursor:pointer;"
+             @onclick="() => OpenImagePopup(img)" />
     }
 </div>
 
+<!-- Pop-Up Zoom Modal -->
+@if (isPopupOpen)
+{
+    <div class="popup-overlay" @onclick="CloseImagePopup">
+        <div class="popup-content" @onclick:stopPropagation>
+            <img src="@selectedImage" alt="Zoomed Image" />
+        </div>
+    </div>
+}
 @code {
     [Parameter] public List<string> Images { get; set; } = new();
     private List<string> selectedImageGroup = new();
-
-    private Dictionary<string, string> imageDescriptions = new()
-    {
-        { "_content/PESOapps.Shared/jobfair/Jan22/Jan22_1.jpg", "January 22, 2025 \nPadayon PAGLAUM Job Fair 2025 Atrium, Limketkai, CDOC"  },
-        { "_content/PESOapps.Shared/jobfair/Jan25/Jan25_1.jpg", "January 25, 2024 \n2ND PAGLAUM-MISO,RISE-CDO JOB FAIR Atrium, Limketkai Center, CDO" },
-    };
+    private bool isPopupOpen = false;
+    private string selectedImage = "";
 
     private string GetImageDescription(string image)
     {
+        var imageDescriptions = new Dictionary<string, string>
+        {
+        { "_content/PESOapps.Shared/jobfair/Jan22/Jan22_1.jpg", "January 22, 2025 \nPadayon PAGLAUM Job Fair 2025 Atrium, Limketkai, CDOC"  },
+        { "_content/PESOapps.Shared/jobfair/Jan25/Jan25_1.jpg", "January 25, 2024 \n2ND PAGLAUM-MISO,RISE-CDO JOB FAIR Atrium, Limketkai Center, CDO" },
+    };
         return imageDescriptions.ContainsKey(image) ? imageDescriptions[image] : "No description available";
     }
 
@@ -52,8 +63,19 @@
         {
             { "_content/PESOapps.Shared/jobfair/Jan22/Jan22_1.jpg", new List<string> {"_content/PESOapps.Shared/jobfair/Jan22/Jan22_2.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_3.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_4.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_5.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_6.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_7.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_8.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_9.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_10.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_11.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_12.jpg", "_content/PESOapps.Shared/jobfair/Jan22/Jan22_13.jpg"} },
             { "_content/PESOapps.Shared/jobfair/Jan25/Jan25_1.jpg", new List<string> {"_content/PESOapps.Shared/jobfair/Jan25/Jan25_2.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_3.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_4.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_5.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_6.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_7.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_8.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_9.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_10.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_11.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_12.jpg", "_content/PESOapps.Shared/jobfair/Jan25/Jan25_13.jpg"} }
-    };
+        };
 
         selectedImageGroup = groupedImages.ContainsKey(image) ? groupedImages[image] : new();
+    }
+
+    private void OpenImagePopup(string img)
+    {
+        selectedImage = img;
+        isPopupOpen = true;
+    }
+
+    private void CloseImagePopup()
+    {
+        isPopupOpen = false;
     }
 }

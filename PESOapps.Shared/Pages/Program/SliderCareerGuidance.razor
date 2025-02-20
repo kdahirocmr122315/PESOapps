@@ -15,32 +15,44 @@
     <div class="swiper-button-next"></div>
 </div>
 
-<!-- Section to Display Grouped Images -->
+<!-- Grouped Images Section -->
 <div class="grouped-images" style="text-align:center;">
     @foreach (var img in selectedImageGroup)
     {
-        <img src="@img" alt="Grouped Image" style="width:200px; height:200px; margin: 5px; border-radius: 10px; object-fit: cover;" />
+        <img src="@img" alt="Grouped Image" style="width:200px; height:200px; margin: 5px; border-radius: 10px; object-fit: cover; cursor:pointer;"
+             @onclick="() => OpenImagePopup(img)" />
     }
 </div>
+
+<!-- Pop-Up Zoom Modal -->
+@if (isPopupOpen)
+{
+    <div class="popup-overlay" @onclick="CloseImagePopup">
+        <div class="popup-content" @onclick:stopPropagation>
+            <img src="@selectedImage" alt="Zoomed Image" />
+        </div>
+    </div>
+}
 
 @code {
     [Parameter] public List<string> Images { get; set; } = new();
     private List<string> selectedImageGroup = new();
-
-    private Dictionary<string, string> imageDescriptions = new()
-    {
-        { "_content/PESOapps.Shared/career/Mar5/Mar5_1.jpg", "MARCH 05, 2024 \nCAREER GUIDANCE AND EMPLOYMENT COACHING @BAGOCBOC NATIONAL HIGH SCHOOL. OPOL, MISAMIS ORIENTAL"  },
-        { "_content/PESOapps.Shared/career/Apr4/Apr4_1.jpg", "April 4, 2024 \nCareer Guidance Advocacy Program Kalacapan National High School Initao, Misamis Oriental 146 Students" },
-        { "_content/PESOapps.Shared/career/May4-man/May4-man_1.jpg", "May 4, 2024 \nCareer Guidance Advocacy Program Tuod Integrated School Tuod, Manticao, Misamis Oriental Students: 46" },
-        { "_content/PESOapps.Shared/career/May4/May4_1.jpg", "May 4, 2024 \nCareer Guidance Advocacy Program Mayahay Integrated School Mayahay, Manticao, Misamis Oriental Students: 19" },
-        { "_content/PESOapps.Shared/career/May7/May7_1.jpg", "May 7, 2024 \nCareer Guidance Advocacy Program Punta Silum Integrated School Punta Silum, Manticao, Misamis Oriental" },
-        { "_content/PESOapps.Shared/career/June4/June4_1.jpg", "June 4,2024 \nCareer Coaching and Labor Education for Graduating Students University of Science and Technology Southern Philippines (USTP) @ USTP Admin Bldg. 3rd Floor CLAVERIA MISAMIS ORIENTAL" },
-        { "_content/PESOapps.Shared/career/Dec2/Dec2_1.jpg", "December 2, 2022 \nCareer Coaching for Grade 10 Junior High School Students Tagoloan National High School Tagoloan, Misamis Oriental" },
-        { "_content/PESOapps.Shared/career/Dec5/Dec5_1.jpg", "December 5, 2024 \nCareer Guidance and Employment Coaching Matangad National High School Matangad, Gitagum Misamis Oriental" }
-    };
+    private bool isPopupOpen = false;
+    private string selectedImage = "";
 
     private string GetImageDescription(string image)
     {
+        var imageDescriptions = new Dictionary<string, string>
+        {
+            { "_content/PESOapps.Shared/career/Mar5/Mar5_1.jpg", "MARCH 05, 2024 \nCAREER GUIDANCE AND EMPLOYMENT COACHING @BAGOCBOC NATIONAL HIGH SCHOOL. OPOL, MISAMIS ORIENTAL"  },
+            { "_content/PESOapps.Shared/career/Apr4/Apr4_1.jpg", "April 4, 2024 \nCareer Guidance Advocacy Program Kalacapan National High School Initao, Misamis Oriental 146 Students" },
+            { "_content/PESOapps.Shared/career/May4-man/May4-man_1.jpg", "May 4, 2024 \nCareer Guidance Advocacy Program Tuod Integrated School Tuod, Manticao, Misamis Oriental Students: 46" },
+            { "_content/PESOapps.Shared/career/May4/May4_1.jpg", "May 4, 2024 \nCareer Guidance Advocacy Program Mayahay Integrated School Mayahay, Manticao, Misamis Oriental Students: 19" },
+            { "_content/PESOapps.Shared/career/May7/May7_1.jpg", "May 7, 2024 \nCareer Guidance Advocacy Program Punta Silum Integrated School Punta Silum, Manticao, Misamis Oriental" },
+            { "_content/PESOapps.Shared/career/June4/June4_1.jpg", "June 4,2024 \nCareer Coaching and Labor Education for Graduating Students University of Science and Technology Southern Philippines (USTP) @ USTP Admin Bldg. 3rd Floor CLAVERIA MISAMIS ORIENTAL" },
+            { "_content/PESOapps.Shared/career/Dec2/Dec2_1.jpg", "December 2, 2022 \nCareer Coaching for Grade 10 Junior High School Students Tagoloan National High School Tagoloan, Misamis Oriental" },
+            { "_content/PESOapps.Shared/career/Dec5/Dec5_1.jpg", "December 5, 2024 \nCareer Guidance and Employment Coaching Matangad National High School Matangad, Gitagum Misamis Oriental" }
+        };
         return imageDescriptions.ContainsKey(image) ? imageDescriptions[image] : "No description available";
     }
 
@@ -67,5 +79,16 @@
         };
 
         selectedImageGroup = groupedImages.ContainsKey(image) ? groupedImages[image] : new();
+    }
+
+    private void OpenImagePopup(string img)
+    {
+        selectedImage = img;
+        isPopupOpen = true;
+    }
+
+    private void CloseImagePopup()
+    {
+        isPopupOpen = false;
     }
 }

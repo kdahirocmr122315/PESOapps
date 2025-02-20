@@ -92,12 +92,13 @@ a,
 }
 
 .form-cont {
+    color: #000;
     max-width: 1280px;
     width: 100%;
     margin: 0 auto;
     padding: 20px;
     box-sizing: border-box;
-    background: var(--1A5AA5);
+    background: #fff;
     box-shadow: 0px 0px 30px -16px var(--box-shadow);
     -webkit-box-shadow: 0px 0px 30px -16px var(--box-shadow);
     -moz-box-shadow: 0px 0px 30px -16px var(--box-shadow);
@@ -352,6 +353,10 @@ span.misvis-par {
     text-align: right;
 }
 
+.center-align {
+    text-align: center;
+}
+
 /************************* CAROUSEL **************************/
 
 .container {
@@ -446,6 +451,10 @@ a.form-link,
     position: relative;
 }
 
+a.form-link {
+    color: #000000;
+}
+
 a.form-link:after,
 .nav-item.has-submenu .nav-sub a:after,
 .nav-links:after {
@@ -457,6 +466,10 @@ a.form-link:after,
     background: var(--font-color);
     left: 0;
     transition: 0.5s ease-out;
+}
+
+a.form-link:after {
+    background: #000000;
 }
 
 a.form-link:hover:after,
@@ -474,13 +487,13 @@ table {
 
 th,
 td {
-    border: 1px solid var(--font-color);
+    border: 1px solid #000000;
     padding: 8px;
     text-align: left;
 }
 
 th {
-    background-color: var(--0AA9F9);
+    background-color: #C6D9F1;
 }
 
 .container-aboutus {
@@ -598,7 +611,7 @@ th {
     cursor: pointer;
     transition: transform 0.3s ease;
     object-fit: fill;
-    
+
 }
 
 .close-btn {
@@ -643,6 +656,7 @@ th {
     transition: transform 0.3s ease;
     object-fit: fill;
 }
+
 .popup-content img:hover,
 .image-modal-content img:hover {
     transform: scale(1.05);

@@ -86,6 +86,7 @@ body {
     z-index: 5;
 }
 
+.footer a.form-link,
 a,
 .btn-link {
     color: var(--font-color);
@@ -260,18 +261,6 @@ img.govpic {
     gap: 20px;
 }
 
-.justify {
-    max-width: 850px;
-    width: 100%;
-    margin: 0 auto;
-    text-align: left;
-}
-
-.headers {
-    max-width: 800px;
-    width: 100%;
-    margin: 0 auto;
-}
 
 span.misvis-header {
     display: block;
@@ -370,6 +359,20 @@ span.misvis-par {
 
 .center-align {
     text-align: center;
+}
+
+.justify {
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto 5px;
+    text-align: justify;
+}
+
+.headers {
+    max-width: 850px;
+    width: 100%;
+    margin: 0 auto 10px;
+    font-weight: 600;
 }
 
 /************************* CAROUSEL **************************/

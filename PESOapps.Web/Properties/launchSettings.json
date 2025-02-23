@@ -5,6 +5,7 @@
       "anonymousAuthentication": true,
       "iisExpress": {
         "applicationUrl": "http://localhost:47405",
+        "launchUrl": "https://localhost:47405/pesobeta",
         "sslPort": 44396
       }
     },
@@ -14,6 +15,7 @@
         "dotnetRunMessages": true,
         "launchBrowser": true,
         "applicationUrl": "http://localhost:5119",
+        "launchUrl": "https://localhost:5119/pesobeta",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development"
         }
@@ -23,6 +25,7 @@
         "dotnetRunMessages": true,
         "launchBrowser": true,
         "applicationUrl": "https://localhost:7283;http://localhost:5119",
+        "launchUrl": "https://localhost:7283/pesobeta",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development"
         }

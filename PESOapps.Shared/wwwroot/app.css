@@ -1,14 +1,32 @@
 @import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
 @import url('https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css');
 
 :root {
     --maincolor: #00449E;
+    --bgcolor: #00449E;
     --mainfade: #00449ed4;
     --font-color: #ffffff;
+    --bgfade: #1b6ec2;
+    --1A5AA5: #1A5AA5;
+    --0AA9F9: #0AA9F9;
+    --text-shadow: #1A5AA5;
+    --box-shadow: #FFFFFFBF;
+    --hsla: hsla(0, 0%, 100%, .1);
+}
+
+html {
+    scroll-behavior: smooth;
+}
+
+#themeButton {
+    position: fixed;
+    bottom: 0;
+    right: 0;
 }
 
 main {
-    margin: 90px 0;
+    margin: 110px 0;
     min-height: calc(100vh - 228px);
 }
 
@@ -61,13 +79,14 @@ body {
 }
 
 body {
-    background: var(--maincolor);
+    background: var(--bgcolor);
 }
 
 .navigation-section {
     z-index: 5;
 }
 
+.footer a.form-link,
 a,
 .btn-link {
     color: var(--font-color);
@@ -75,16 +94,22 @@ a,
 }
 
 .form-cont {
+    color: #000;
     max-width: 1280px;
     width: 100%;
     margin: 0 auto;
     padding: 20px;
     box-sizing: border-box;
-    background: #1A5AA5;
+    background: #fff;
+    box-shadow: 0px 0px 30px -16px var(--box-shadow);
+    -webkit-box-shadow: 0px 0px 30px -16px var(--box-shadow);
+    -moz-box-shadow: 0px 0px 30px -16px var(--box-shadow);
 }
 
 .btn-primary {
-    border-color: #1861ac;
+    color: var(--font-color);
+    background-color: var(--bgfade);
+    border-color: var(--bgfade);
 }
 
 .btn:focus,
@@ -199,16 +224,16 @@ h1:focus {
 span.peso-log {
     font-size: 40px;
     font-weight: 100;
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 a.typewrite:hover {
     color: var(--font-color);
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 a.typewrite {
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 img.govpic {
@@ -219,6 +244,8 @@ img.govpic {
     align-self: center;
 }
 
+.org-contents,
+.container-aboutus {
     max-width: 1280px;
     margin: 0 auto;
     padding: 1px 20px 50px;
@@ -228,7 +255,7 @@ img.govpic {
 .org-container.pesomisvis,
 .cont-aboutus,
 .slider-cont {
-    background: hsla(0, 0%, 100%, .1);
+    background: var(--hsla);
     padding-top: 1px;
 }
 
@@ -237,6 +264,7 @@ img.govpic {
     flex-direction: row;
     gap: 20px;
 }
+
 
 span.misvis-header {
     display: block;
@@ -247,6 +275,7 @@ span.misvis-header {
 span.misvis-par {
     font-weight: 100;
     line-height: 2;
+    text-align: justify;
 }
 
 .misvis-divider {
@@ -256,10 +285,10 @@ span.misvis-par {
     margin: 0 1rem;
     border-radius: 10px;
     flex-direction: column;
-    box-shadow: 1px -1px 30px -16px rgba(255, 255, 255, 0.75);
-    -webkit-box-shadow: 1px -1px 30px -16px rgba(255, 255, 255, 0.75);
-    -moz-box-shadow: 1px -1px 54px -16px rgba(255, 255, 255, 0.75);
-    background: #1A5AA5;
+    box-shadow: 1px -1px 30px -16px var(--box-shadow);
+    -webkit-box-shadow: 1px -1px 30px -16px var(--box-shadow);
+    -moz-box-shadow: 1px -1px 54px -16px var(--box-shadow);
+    background: var(--1A5AA5);
     animation: nth 1s;
 }
 
@@ -268,7 +297,7 @@ span.misvis-par {
     font-size: 50px;
     margin: 50px 0;
     animation: fadeIn 1s;
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 .services {
@@ -282,13 +311,13 @@ span.misvis-par {
     margin: 5px 0;
     padding: 0 10px;
     border-radius: 10px;
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 .emails div {
     padding: 0 10px;
     border-radius: 10px;
-    text-shadow: 1px 1px #1A5AA5;
+    text-shadow: 1px 1px var(--text-shadow);
 }
 
 .navigation-section {
@@ -296,7 +325,64 @@ span.misvis-par {
 }
 
 .footer {
-    background: var(--maincolor);
+    background: var(--bgcolor);
+}
+
+.aboutus-bub {
+    max-width: 1280px;
+    margin: 0 auto 50px;
+    padding: 50px 50px;
+    background: var(--1A5AA5);
+    box-shadow: inset 0px 0px 15px -4px var(--box-shadow);
+    border-radius: 10px;
+}
+
+.aboutus-bub .header-title {
+    margin: 0 auto 10px;
+}
+
+.cont-ab > div {
+    text-align: justify;
+}
+
+.cont-ab > div {
+    text-align: justify;
+    margin-bottom: 20px;
+}
+
+.cont-ab > div:last-child {
+    margin-bottom: 0px;
+}
+
+.slider-cont {
+    margin: 20px auto;
+}
+
+.peso-logos {
+    text-align: right;
+}
+
+.center-align {
+    text-align: center;
+}
+
+.justify {
+    max-width: 1100px;
+    width: 100%;
+    margin: 0 auto 5px;
+    text-align: justify;
+}
+
+.headers {
+    max-width: 970px;
+    width: 100%;
+    margin: 0 auto 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.just {
+    text-align: justify;
 }
 
 /************************* CAROUSEL **************************/
@@ -310,9 +396,9 @@ span.misvis-par {
     display: flex;
     height: auto;
     width: 200px;
-    background-color: #1A5AA5;
+    background-color: var(--1A5AA5);
     border-radius: 10px;
-    box-shadow: -1rem 0 3rem var(--maincolor);
+    box-shadow: 0px 0px 15px -5px var(--box-shadow);
     transition: 0.4s ease-out;
     position: relative;
     left: 0px;
@@ -362,7 +448,7 @@ a.form-link:hover {
 }
 
 .form-cont h2 {
-    font-size: 1.2em;
+    font-size: 1.15em;
 }
 
 .contact-us-map iframe {
@@ -383,13 +469,31 @@ th.center {
     overflow-x: auto;
 }
 
+.org-logo {
+    margin-top: 20vh;
+}
+
+span.misor-log.wrap {
+    font-family: Dancing Script;
+    font-size: 1.5em;
+    text-shadow: 1px 1px var(--text-shadow);
+}
+
+.form-cont a {
+    color: #000;
+    text-decoration: underline;
+}
+
 /************************* CAROUSEL **************************/
 a.form-link,
 .nav-item.has-submenu .nav-sub a {
     position: relative;
 }
 
-a.form-link:after,
+a.form-link {
+    color: #000000;
+}
+
 .nav-item.has-submenu .nav-sub a:after,
 .nav-links:after {
     content: "";
@@ -397,12 +501,15 @@ a.form-link:after,
     width: 0%;
     position: absolute;
     bottom: 0px;
-    background: #fff;
+    background: var(--font-color);
     left: 0;
     transition: 0.5s ease-out;
 }
 
-a.form-link:hover:after,
+a.form-link:after {
+    background: #000000;
+}
+
 .nav-item.has-submenu .nav-sub a:hover:after,
 .nav-links:hover:after,
 .nav-links.active:after {
@@ -417,13 +524,13 @@ table {
 
 th,
 td {
-    border: 1px solid #ffffff;
+    border: 1px solid #000000;
     padding: 8px;
     text-align: left;
 }
 
 th {
-    background-color: #0AA9F9;
+    background-color: #C6D9F1;
 }
 
 .container-aboutus {
@@ -491,12 +598,16 @@ th {
 
 .slide-info {
     position: absolute;
-    bottom: 10px;
-    left: 10px;
+    bottom: 1%;
+    left: 1%;
     background: rgba(0, 0, 0, 0.6);
     color: white;
-    padding: 15px;
+    padding: 5px;
     border-radius: 10px;
+    width: 98%;
+    font-size: 10px;
+    white-space: pre-line;
+    border-radius: 0 0 15px 15px;
 }
 
 .swiper-button-next,
@@ -508,7 +619,211 @@ th {
     background: var(--font-color);
 }
 
-/******************* ACTIVITIES CAROUSEL *********************/
+/******************* POP-UP ACTIVITIES CAROUSEL *********************/
+.popup-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.popup-content {
+    position: relative;
+    padding: 10px;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.popup-content img {
+    max-width: 800px;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    object-fit: fill;
+
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: var(--bgcolor);
+    color: var(--font-color);
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 50%;
+}
+
+/******************* END ACTIVITIES CAROUSEL *********************/
+.image-modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.image-modal-content {
+    max-width: 80%;
+    max-height: 80%;
+    overflow: hidden;
+}
+
+.image-modal-content img {
+    max-width: 800px;
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    object-fit: fill;
+}
+
+.popup-content img:hover,
+.image-modal-content img:hover {
+    transform: scale(1.05);
+}
+
+/******************* MODAL ZOOM *********************/
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+    border-bottom: 0;
+}
+
+.modal-content {
+    max-width: 90%;
+    max-height: 90vh;
+    border-radius: 10px;
+    background: var(--maincolor);
+    margin: 0 auto;
+}
+
+.close {
+    position: absolute;
+    top: 20px;
+    right: 30px;
+    font-size: 40px;
+    color: white;
+    cursor: pointer;
+}
+
+.fade:not(.show) {
+    display: none;
+}
+
+.modal-backdrop.show {
+    display: none;
+}
+
+.img-fluid {
+    max-width: 100%;
+    height: 60vh;
+}
+
+.modal-header .btn-close {
+    background-color: var(--font-color);
+}
+
+/******************* END MODAL ZOOM *********************/
+
+
+.btn {
+    background-color: #fff;
+    width: 5em;
+    height: 3em;
+    border-radius: 10em;
+    padding: 0 0.5em;
+    box-shadow: inset 0 8px 60px rgba(0, 0, 0, .1), inset 0 8px 8px rgba(0, 0, 0, .1), inset 0 -4px 4px rgba(0, 0, 0, .1);
+    position: relative;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.btn__indicator {
+    background-color: #fff;
+    width: 2em;
+    height: 2em;
+    border-radius: 50%;
+
+    position: absolute;
+
+    box-shadow: 0 8px 40px rgba(0, 0, 0, .2);
+
+    transition: transform .3s ease;
+}
+
+.btn__icon-container {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.btn__icon {
+    color: var(--light-icon-color);
+    font-size: 1.4rem;
+}
+
+/* -------------- ANIMATION ------------ */
+.btn__icon.animated {
+    animation: spin 0.5s;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* -------------- DARKMODE -------------- */
+.light-mode .btn {
+    box-shadow: inset 0 8px 60px rgba(0, 0, 0, .3),
+        inset 8px 0 8px rgba(0, 0, 0, .3),
+        inset 0 -4px 4px rgba(0, 0, 0, .3);
+}
+
+.light-mode .btn__indicator {
+    transform: translateX(2em);
+    background-color: var(--dark-color);
+    box-shadow: 0 8px 40px rgba(0, 0, 0, .3);
+}
+
+.light-mode .btn__icon {
+    color: var(--dark-icon-color);
+}
+
+/* -------------- END ANIMATION ------------ */
+/* -------------- MEDIA ------------ */
 @media only screen and (max-width: 1280px) {}
 
 @media only screen and (max-width: 1180px) {
@@ -565,6 +880,10 @@ th {
     .nav-item {
         position: unset;
     }
+
+    .aboutus-bub {
+        padding: 20px 20px;
+    }
 }
 
 @media only screen and (max-width: 600px) {
@@ -574,5 +893,27 @@ th {
 
     .nav-links span {
         display: none;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .contact-us-map iframe {
+        width: 300px;
+        height: 250px;
+    }
+
+}
+
+@media only screen and (max-width: 425px) {
+    .peso-logos.peso-logo-im img {
+        width: 100px;
+    }
+
+    .navbars {
+        padding: 15px 10px;
+    }
+
+    .footer {
+        font-size: 10px;
     }
 }

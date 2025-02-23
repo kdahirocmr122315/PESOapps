@@ -7,17 +7,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Pages\NewFolder\**" />
-    <Compile Remove="wwwroot\images\**" />
-    <Content Remove="Pages\NewFolder\**" />
-    <Content Remove="wwwroot\images\**" />
-    <EmbeddedResource Remove="Pages\NewFolder\**" />
-    <EmbeddedResource Remove="wwwroot\images\**" />
-    <None Remove="Pages\NewFolder\**" />
-    <None Remove="wwwroot\images\**" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Content Remove="wwwroot\peso_logo.png" />
   </ItemGroup>
 
@@ -28,6 +17,12 @@
   <ItemGroup>
     <PackageReference Include="BlazorCarousel" Version="1.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Update="wwwroot\pdf\SPES-APPLICATION-FORM.pdf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,116 @@
+﻿@page "/Tupadreg"
+
+<PageTitle>TUPAD Beneficiary Registration</PageTitle>
+
+<h2 class="center-align headers">TUPAD Beneficiary Registration</h2>
+<div class="tupad-container">
+    <form>
+        <div class="input-group">
+            <label>First Name</label>
+            <input type="text" name="first_name" placeholder="Enter first name" required="required">
+        </div>
+
+        <div class="input-group">
+            <label>Last Name</label>
+            <input type="text" name="last_name" placeholder="Enter last name" required="required">
+        </div>
+
+        <div class="input-group">
+            <label>Birthdate</label>
+            <input type="date" name="birthdate" required="required">
+        </div>
+
+        <div class="input-group">
+            <label>Barangay</label>
+            <input type="text" name="barangay" placeholder="Enter barangay" required="required">
+        </div>
+
+        <div class="input-group">
+            <label>City/Municipality</label>
+            <input type="text" name="city_municipality" placeholder="Enter city/municipality" required="required">
+        </div>
+
+        <div class="input-group">
+            <label>Province</label>
+            <input type="text" name="province" placeholder="Enter province" required="required">
+        </div>
+
+        <div class="input-group">
+            <label>Type of ID</label>
+            <select name="type_of_id">
+                <option value="SSS">SSS</option>
+                <option value="Voter's ID">Voter's ID</option>
+                <option value="Passport">Passport</option>
+                <option value="Others">Others</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>ID Number</label>
+            <input type="text" name="id_number" placeholder="Enter ID number">
+        </div>
+
+        <div class="input-group">
+            <label>Contact Number</label>
+            <input type="text" name="contact_no" placeholder="Enter contact number" required="required">
+        </div>
+
+        <div class="input-group">
+            <label>E-payment/Bank Account No.</label>
+            <input type="text" name="bank_account" placeholder="Enter bank account">
+        </div>
+
+        <div class="input-group">
+            <label>Occupation</label>
+            <input type="text" name="occupation" placeholder="Enter occupation">
+        </div>
+
+        <div class="input-group">
+            <label>Sex</label>
+            <select name="sex" required="required">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Civil Status</label>
+            <select name="civil_status" required="required">
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Widowed">Widowed</option>
+                <option value="Separated">Separated</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <label>Age</label>
+            <input type="number" name="age" placeholder="Enter age" required="required">
+        </div>
+
+        <div class="input-group">
+            <label>Average Monthly Income</label>
+            <input type="number" name="monthly_income" placeholder="Enter income">
+        </div>
+
+        <div class="input-group">
+            <label>Dependent (Micro-insurance Holder)</label>
+            <input type="text" name="dependent" placeholder="Enter dependent name">
+        </div>
+
+        <div class="input-group">
+            <label>Interested in Wage/Self-Employment?</label>
+            <select name="employment_interest">
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+            </select>
+        </div>
+
+        <div class="input-group full-width">
+            <label>Skills Training Needed</label>
+            <input type="text" name="skills_training_needed" placeholder="Enter skills needed">
+        </div>
+
+        <button type="submit" class="btn-submit">Submit</button>
+    </form>
+</div>

@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PESOapps.Shared", "PESOapps
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PESOapps.Web", "PESOapps.Web\PESOapps.Web.csproj", "{6693EBC2-32A5-4178-9C34-EAFD3215959E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "webapi_peso", "webapi_peso\webapi_peso.csproj", "{FE3EA4F0-0745-42F2-944B-6C3A3F99354D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -26,6 +28,10 @@ Global
 		{6693EBC2-32A5-4178-9C34-EAFD3215959E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6693EBC2-32A5-4178-9C34-EAFD3215959E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6693EBC2-32A5-4178-9C34-EAFD3215959E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FE3EA4F0-0745-42F2-944B-6C3A3F99354D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FE3EA4F0-0745-42F2-944B-6C3A3F99354D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FE3EA4F0-0745-42F2-944B-6C3A3F99354D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FE3EA4F0-0745-42F2-944B-6C3A3F99354D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

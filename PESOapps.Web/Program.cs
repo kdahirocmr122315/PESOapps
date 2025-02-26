@@ -8,6 +8,11 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
+
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5167/api/Tupad/getall") });
+builder.Services.AddScoped<ApiService>();
+
+
 // Add device-specific services used by the PESOapps.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 

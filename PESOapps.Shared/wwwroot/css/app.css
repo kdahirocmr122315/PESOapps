@@ -380,6 +380,13 @@ span.misvis-par {
     text-align: justify;
 }
 
+button.buttons-tup {
+    background: #ffffff;
+    border: 1px solid #ffff;
+    border-radius: 2px;
+}
+
+
 /************************* CAROUSEL **************************/
 
 .container {
@@ -479,6 +486,22 @@ span.misor-log.wrap {
     text-decoration: underline;
 }
 
+button.nav-link {
+    padding: 5px !important;
+    border-radius: 5px;
+    border: 1px solid var(--font-color);
+    color: var(--font-color);
+    width: 100%;
+    height: 100%;
+}
+
+button.nav-link:hover,
+button.nav-link:active {
+    border: 1px solid var(--font-color);
+    background: var(--font-color);
+    color: #000;
+}
+
 /************************* CAROUSEL **************************/
 a.form-link,
 .nav-item.has-submenu .nav-sub a {
@@ -559,6 +582,11 @@ th {
     align-items: center;
     align-content: center;
 }
+
+a.nav-links-sub.tupad:after {
+    display: none;
+}
+
 
 /******************* ACTIVITIES CAROUSEL *********************/
 .container-slide {

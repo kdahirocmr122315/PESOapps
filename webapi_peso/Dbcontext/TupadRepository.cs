@@ -45,7 +45,7 @@ namespace webapi_peso.Dbcontext
             using (var connection = Connection)
             {
                 connection.Open();
-                var sql = "INSERT INTO tbl_tupadbeneficiary (Firstname, Lastname,Age,Email) VALUES (@Firstname, @Lastname, @Age, @Email)";
+                var sql = "INSERT INTO tbl_tupadbeneficiary (Firstname, Middlename, Lastname, ExtenstionName, Birthday, Barangay, Municipality, Province, District, IDType, IDNumber, ContactNo, Epayment, TypeOfBenef, Occupation, Sex, CivilStatus, Age, AverageIncome, Dependent, InterestWage, SkillsTraining) VALUES (@Firstname, @Middlename, @Lastname, @ExtenstionName, @Birthday, @Barangay, @Municipality, @Province, @District, @IDType, @IDNumber, @ContactNo, @Epayment, @TypeOfBenef, @Occupation, @Sex, @CivilStatus, @Age, @AverageIncome, @Dependent, @InterestWage, @SkillsTraining)";
                 connection.Execute(sql, beneficiary);
             }
         }

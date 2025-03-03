@@ -1,4 +1,5 @@
 ﻿using Dapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.Common;
@@ -9,7 +10,7 @@ namespace webapi_peso.Controllers
 {
     [ApiController]
     [Route("Api/[controller]")]
-        
+    [Authorize]
         public class TupadController : ControllerBase
         {
                 private readonly TupadRepository _TupadRepository;

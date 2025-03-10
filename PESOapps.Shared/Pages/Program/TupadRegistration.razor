@@ -1,10 +1,12 @@
 ﻿@page "/Tupadreg"
+@using PESOapps.Shared.Address
+@inject AddressService AddressService
 
 <PageTitle>TUPAD Beneficiary Registration</PageTitle>
 
 <h2 class="center-align headers">TUPAD Beneficiary Registration</h2>
 <div class="tupad-container">
-    <form>
+    <form onsubmit="return validateForm()">
         <div class="input-group">
             <label>First Name</label>
             <input type="text" name="first_name" placeholder="Enter first name">
@@ -31,18 +33,76 @@
         </div>
 
         <div class="input-group">
-            <label>Barangay</label>
-            <input type="text"  name="barangay" placeholder="Enter barangay">
+            <label>Age</label>
+            <input type="number" name="age" placeholder="Enter age">
         </div>
 
         <div class="input-group">
-            <label>City/Municipality</label>
-            <input type="text" name="city_municipality" placeholder="Enter city/municipality">
+            <label>Sex</label>
+            <select name="sex">
+                <option value="Male">Male</option>
+                <option value="Female">Female</option>
+            </select>
         </div>
 
+        <div class="input-group">
+            <label>Civil Status</label>
+            <select name="civil_status">
+                <option value="Single">Single</option>
+                <option value="Married">Married</option>
+                <option value="Widowed">Widowed</option>
+                <option value="Separated">Separated</option>
+            </select>
+        </div>
+
+
+        <!-- REGION DROPDOWN -->
+        <div class="input-group">
+            <label>Region</label>
+            <select @onchange="LoadProvinces">
+                <option value="">Select Region</option>
+                @foreach (var region in Regions)
+                {
+                    <option value="@region.RegCode">@region.RegDesc</option>
+                }
+            </select>
+        </div>
+        <!-- PROVINCE DROPDOWN -->
         <div class="input-group">
             <label>Province</label>
-            <input type="text" name="province" placeholder="Enter province">
+            <select @onchange="LoadCities" disabled="@(!HasSelectedRegion)">
+                <option value="">Select Province</option>
+                @foreach (var province in Provinces)
+                {
+                    <option value="@province.ProvCode">@province.ProvDesc</option>
+                }
+            </select>
+        </div>
+        <!-- CITY DROPDOWN -->
+        <div class="input-group">
+            <label>City/Municipality</label>
+            <select @onchange="LoadBarangays" disabled="@(!HasSelectedProvince)">
+                <option value="">Select City/Municipality</option>
+                @foreach (var city in Cities)
+                {
+                    <option value="@city.CitymunCode">@city.CitymunDesc</option>
+                }
+            </select>
+        </div>
+        <!-- BARANGAY DROPDOWN -->
+        <div class="input-group">
+            <label>Barangay</label>
+            <select @bind="SelectedBarangayCode" disabled="@(!HasSelectedCity)">
+                <option value="">Select Barangay</option>
+                @foreach (var barangay in Barangays)
+                {
+                    <option value="@barangay.BrgyCode">@barangay.BrgyDesc</option>
+                }
+            </select>
+        </div>
+        <div class="input-group">
+            <label>House No./ Street Village</label>
+            <input type="text" name="street" placeholder="Enter Street">
         </div>
 
         <div class="input-group">
@@ -81,29 +141,6 @@
         </div>
 
         <div class="input-group">
-            <label>Sex</label>
-            <select name="sex">
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <label>Civil Status</label>
-            <select name="civil_status">
-                <option value="Single">Single</option>
-                <option value="Married">Married</option>
-                <option value="Widowed">Widowed</option>
-                <option value="Separated">Separated</option>
-            </select>
-        </div>
-
-        <div class="input-group">
-            <label>Age</label>
-            <input type="number" name="age" placeholder="Enter age">
-        </div>
-
-        <div class="input-group">
             <label>Average Monthly Income</label>
             <input type="number" name="monthly_income" placeholder="Enter income">
         </div>
@@ -121,13 +158,177 @@
             </select>
         </div>
 
-        <div class="input-group full-width">
+        <div class="input-group">
             <label>Skills Training Needed</label>
             <input type="text" name="skills_training_needed" placeholder="Enter skills needed">
         </div>
 
-
+        <div class="authorization">
+            <h3>AUTHORIZATION/CONSENT</h3>
+            <label><input type="checkbox" id="checkbox1"> I understand that all data/information that I will provide are true to the best of my knowledge.</label><br>
+            <label><input type="checkbox" id="checkbox2"> I authorize PESO to include my profile and use my personal information for employment facilitation.</label><br>
+            <label><input type="checkbox" id="checkbox3"> I am aware that PESO is not obligated to seek employment on my behalf.</label>
+            <label class="label-red"><i class="fa-solid fa-circle-exclamation"></i> We value and protect your personal information and the same shall be stored in the database/compendium of jobseekers accessible only to PESO and our partner-employment providers, which shall be used solely for employment facilitation purposes.</label>
+        </div>
         <button type="submit" class="btn-submit">Submit</button>
     </form>
 </div>
+<script>
+    function validateForm() {
+        let checkbox1 = document.getElementById("checkbox1").checked;
+        let checkbox2 = document.getElementById("checkbox2").checked;
+        let checkbox3 = document.getElementById("checkbox3").checked;
 
+        if (!checkbox1 || !checkbox2 || !checkbox3) {
+            alert("You must agree to all terms before proceeding.");
+            return false; // Prevent form submission
+        }
+        return true; // Allow form submission
+    }
+    let addressData = {}; // JSON data will be stored here
+
+    // Fetch JSON file
+    fetch("_content/PESOapps.Shared/json/refregion.json")
+        .then(response => response.json())
+        .then(data => {
+            addressData = data;
+            populateRegions();
+        });
+
+    function populateRegions() {
+        let regionSelect = document.getElementById("region");
+        for (let region in addressData) {
+            let option = new Option(region, region);
+            regionSelect.add(option);
+        }
+    }
+
+    function populateProvinces() {
+        let region = document.getElementById("region").value;
+        let provinceSelect = document.getElementById("province");
+        provinceSelect.innerHTML = "<option value=''>Select Province</option>";
+        document.getElementById("city").innerHTML = "<option value=''>Select City/Municipality</option>";
+        document.getElementById("barangay").innerHTML = "<option value=''>Select Barangay</option>";
+
+        if (region) {
+            for (let province in addressData[region]) {
+                let option = new Option(province, province);
+                provinceSelect.add(option);
+            }
+            provinceSelect.disabled = false;
+        } else {
+            provinceSelect.disabled = true;
+            document.getElementById("city").disabled = true;
+            document.getElementById("barangay").disabled = true;
+        }
+    }
+
+    function populateCities() {
+        let region = document.getElementById("region").value;
+        let province = document.getElementById("province").value;
+        let citySelect = document.getElementById("city");
+        citySelect.innerHTML = "<option value=''>Select City/Municipality</option>";
+        document.getElementById("barangay").innerHTML = "<option value=''>Select Barangay</option>";
+
+        if (province) {
+            for (let city in addressData[region][province]) {
+                let option = new Option(city, city);
+                citySelect.add(option);
+            }
+            citySelect.disabled = false;
+        } else {
+            citySelect.disabled = true;
+            document.getElementById("barangay").disabled = true;
+        }
+    }
+
+    function populateBarangays() {
+        let region = document.getElementById("region").value;
+        let province = document.getElementById("province").value;
+        let city = document.getElementById("city").value;
+        let barangaySelect = document.getElementById("barangay");
+        barangaySelect.innerHTML = "<option value=''>Select Barangay</option>";
+
+        if (city) {
+            addressData[region][province][city].forEach(barangay => {
+                let option = new Option(barangay, barangay);
+                barangaySelect.add(option);
+            });
+            barangaySelect.disabled = false;
+        } else {
+            barangaySelect.disabled = true;
+        }
+    }
+
+</script>
+@code {
+    private List<Region> Regions = new();
+    private List<Province> Provinces = new();
+    private List<CityMunicipality> Cities = new();
+    private List<Barangay> Barangays = new();
+
+    private string? SelectedRegionCode;
+    private string? SelectedProvinceCode;
+    private string? SelectedCityCode;
+    private string? SelectedBarangayCode;
+
+    private bool HasSelectedRegion => !string.IsNullOrEmpty(SelectedRegionCode);
+    private bool HasSelectedProvince => !string.IsNullOrEmpty(SelectedProvinceCode);
+    private bool HasSelectedCity => !string.IsNullOrEmpty(SelectedCityCode);
+
+    protected override async Task OnInitializedAsync()
+    {
+        Regions = await AddressService.GetRegionsAsync();
+    }
+
+    private async Task LoadProvinces(ChangeEventArgs e)
+    {
+        SelectedRegionCode = e.Value?.ToString();
+        SelectedProvinceCode = null;
+        SelectedCityCode = null;
+        SelectedBarangayCode = null;
+
+        if (HasSelectedRegion)
+        {
+            Provinces = (await AddressService.GetProvincesAsync()).Where(p => p.RegCode == SelectedRegionCode).ToList();
+        }
+        else
+        {
+            Provinces.Clear();
+        }
+        Cities.Clear();
+        Barangays.Clear();
+    }
+
+    private async Task LoadCities(ChangeEventArgs e)
+    {
+        SelectedProvinceCode = e.Value?.ToString();
+        SelectedCityCode = null;
+        SelectedBarangayCode = null;
+
+        if (HasSelectedProvince)
+        {
+            Cities = (await AddressService.GetCitiesAsync()).Where(c => c.ProvCode == SelectedProvinceCode).ToList();
+        }
+        else
+        {
+            Cities.Clear();
+        }
+        Barangays.Clear();
+    }
+
+    private async Task LoadBarangays(ChangeEventArgs e)
+    {
+        SelectedCityCode = e.Value?.ToString();
+        SelectedBarangayCode = null;
+
+        if (HasSelectedCity)
+        {
+            Barangays = (await AddressService.GetBarangaysAsync()).Where(b => b.CitymunCode == SelectedCityCode).ToList();
+        }
+        else
+        {
+            Barangays.Clear();
+        }
+    }
+}

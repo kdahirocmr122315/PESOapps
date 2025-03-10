@@ -1,3 +1,4 @@
+using MainpesoRepository.Dbcontext;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
@@ -49,7 +50,7 @@ builder.Services.AddSwaggerGen(option =>
 
 
 builder.Services.AddSingleton<TupadRepository>();
-
+builder.Services.AddSingleton<MainRepository>();
 
 
 

@@ -69,5 +69,23 @@ namespace webapi_peso.Dbcontext
                 connection.Execute(sql, new { Id = id });
             }
         }
+
+        public IEnumerable<Beneficiary> VerifiedBeneficiary()
+        {
+            using (var connection = Connection)
+            {
+                connection.Open();
+                return connection.Query<Beneficiary>("SELECT * FROM tbl_tupadbeneficiary WHERE Verification = 'YES'").ToList();
+            }
+        }
+
+        public IEnumerable<Beneficiary> UnverifiedBeneficiary()
+        {
+            using (var connection = Connection)
+            {
+                connection.Open();
+                return connection.Query<Beneficiary>("SELECT * FROM tbl_tupadbeneficiary WHERE Verification = 'NO'").ToList();
+            }
+        }
     }
 }

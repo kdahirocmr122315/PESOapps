@@ -23,7 +23,7 @@ namespace MainpesoRepository.Dbcontext
 
                 connection.Open();
 
-                string query = @"select Email,password from UserAccounts WHERE Email= '" + Nlog_user.Username + "' AND password = '" + Nlog_user.Password + "' AND UserType =2";
+                string query = @"select Email,password from UserAccounts WHERE Email= '" + Nlog_user.Username + "' AND password = '" + Nlog_user.Password + "' AND UserType IN (1, 2)";
 
                 var log_users = await Connection.QueryAsync<Log_user>(query);
                 bool rt = false;

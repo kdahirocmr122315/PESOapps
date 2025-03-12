@@ -64,7 +64,19 @@ namespace webapi_peso.Controllers
                             return NoContent();
                             }
 
+                    [HttpGet("verified/")]
+                    public IEnumerable<Beneficiary> GetVerifiedBeneficiaries()
+                    {
+                        var list = _TupadRepository.VerifiedBeneficiary();
+                        return list;
+                    }
 
+                    [HttpGet("unverified/")]
+                    public IEnumerable<Beneficiary> GetUnverifiedBeneficiaries()
+                    {
+                        var list = _TupadRepository.UnverifiedBeneficiary();
+                        return list;
+                    }
 
     }
 

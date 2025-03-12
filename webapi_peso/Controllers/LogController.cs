@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.Common;
 using MainpesoRepository.Dbcontext;
-using static Pesomain.Model.tbl_pesomain;
+using static Pesomain.Model.Tbl_pesomain;
 
 namespace User_log.Controllers
 {

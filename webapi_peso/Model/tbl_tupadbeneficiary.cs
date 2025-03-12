@@ -1,6 +1,6 @@
 ﻿namespace webapi_peso.Model
 {
-    public class tbl_tupadbeneficiary
+    public class Tbl_tupadbeneficiary
     {
         public class Beneficiary
         {
@@ -11,6 +11,7 @@
             
             public string? ExtensionName { get; set; }
             public string? Birthday { get; set; }
+            public string? Street { get; set; }
             public string? Barangay { get; set; }
             public string? Municipality { get; set; }
             public string? Province { get; set; }

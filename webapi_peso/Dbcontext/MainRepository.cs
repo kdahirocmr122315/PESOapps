@@ -4,7 +4,7 @@ using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
-using static Pesomain.Model.tbl_pesomain;
+using static Pesomain.Model.Tbl_pesomain;
 
 
 namespace MainpesoRepository.Dbcontext

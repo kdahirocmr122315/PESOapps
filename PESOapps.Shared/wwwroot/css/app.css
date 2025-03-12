@@ -499,7 +499,7 @@ button.nav-link:hover,
 button.nav-link:active {
     border: 1px solid var(--font-color);
     background: var(--font-color);
-    color: #000;
+    color: var(--bgcolor);
 }
 
 label.label-red {
@@ -520,6 +520,11 @@ label.label-red i {
 .input-group input,
 .input-group select {
     width: 100%;
+}
+
+label.color-required {
+    color: red;
+    line-height: 1;
 }
 
 /************************* CAROUSEL **************************/

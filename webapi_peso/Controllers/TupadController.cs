@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System.Data;
 using System.Data.Common;
 using webapi_peso.Dbcontext;
-using static webapi_peso.Model.tbl_tupadbeneficiary;
+using static webapi_peso.Model.Tbl_tupadbeneficiary;
 
 namespace webapi_peso.Controllers
 {

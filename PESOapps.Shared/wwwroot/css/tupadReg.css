@@ -25,13 +25,13 @@ form {
 }
 
 .input-group {
-    width: 24%;
+    width: 32%;
     display: flex;
     flex-direction: column;
 }
 
 .input-group label {
-    font-size: 14px;
+    font-size: 12px;
     margin-bottom: 5px;
     font-weight: bold;
 }
@@ -41,7 +41,7 @@ form {
     padding: 10px;
     border: 1px solid #ccc;
     border-radius: 5px;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 .input-group input:focus,

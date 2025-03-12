@@ -1,5 +1,8 @@
 ﻿@page "/Tupadreg"
 @using PESOapps.Shared.Address
+@using System.Text.Json
+@using System.Text
+@using System.Net.Http.Headers
 @inject AddressService AddressService
 
 <PageTitle>TUPAD Beneficiary Registration</PageTitle>
@@ -8,46 +11,48 @@
 <div class="tupad-container">
     <form onsubmit="return validateForm()">
         <div class="input-group">
-            <label>First Name</label>
-            <input type="text" name="first_name" placeholder="Enter first name">
+            <label>First Name <label class="color-required">*</label></label>
+            <input type="text" name="first_name" @bind="Beneficiary.FirstName" placeholder="Enter first name" required>
         </div>
 
         <div class="input-group">
             <label>Middle Name</label>
-            <input type="text" name="middle_name" placeholder="Enter middle name">
+            <input type="text" name="middle_name" @bind="Beneficiary.MiddleName" placeholder="Enter middle name">
         </div>
 
         <div class="input-group">
-            <label>Last Name</label>
-            <input type="text" name="last_name" placeholder="Enter last name">
+            <label>Last Name <label class="color-required">*</label></label>
+            <input type="text" name="last_name" @bind="Beneficiary.LastName" placeholder="Enter last name" required>
         </div>
 
         <div class="input-group">
             <label>Extension Name</label>
-            <input type="text" name="extension_name" placeholder="Enter Extension name">
+            <input type="text" name="extension_name" @bind="Beneficiary.ExtensionName" placeholder="Enter Extension name">
         </div>
 
         <div class="input-group">
-            <label>Birthdate</label>
-            <input type="date" name="birthdate">
+            <label>Birthdate <label class="color-required">*</label></label>
+            <input type="date" name="birthdate" @bind="Beneficiary.Birthdate" required>
         </div>
 
         <div class="input-group">
-            <label>Age</label>
-            <input type="number" name="age" placeholder="Enter age">
+            <label>Age <label class="color-required">*</label></label>
+            <input type="text" name="age" placeholder="Enter age" @bind="Beneficiary.Age" required>
         </div>
 
         <div class="input-group">
-            <label>Sex</label>
-            <select name="sex">
+            <label>Sex <label class="color-required">*</label></label>
+            <select name="sex" @bind="Beneficiary.Sex" required>
                 <option value="Male">Male</option>
                 <option value="Female">Female</option>
             </select>
         </div>
 
         <div class="input-group">
-            <label>Civil Status</label>
-            <select name="civil_status">
+            <label>
+                Civil Status <label class="color-required">*</label>
+            </label>
+            <select name="civil_status" @bind="Beneficiary.CivilStatus" required>
                 <option value="Single">Single</option>
                 <option value="Married">Married</option>
                 <option value="Widowed">Widowed</option>
@@ -56,32 +61,19 @@
         </div>
 
 
-        <!-- REGION DROPDOWN -->
+        <!-- District DROPDOWN -->
         <div class="input-group">
-            <label>Region</label>
-            <select @onchange="LoadProvinces">
-                <option value="">Select Region</option>
-                @foreach (var region in Regions)
-                {
-                    <option value="@region.RegCode">@region.RegDesc</option>
-                }
+            <label>District  <label class="color-required">*</label></label>
+            <select name="district" required="true" @bind="Beneficiary.District">
+                <option value="1">1</option>
+                <option value="2">2</option>
             </select>
         </div>
-        <!-- PROVINCE DROPDOWN -->
-        <div class="input-group">
-            <label>Province</label>
-            <select @onchange="LoadCities" disabled="@(!HasSelectedRegion)">
-                <option value="">Select Province</option>
-                @foreach (var province in Provinces)
-                {
-                    <option value="@province.ProvCode">@province.ProvDesc</option>
-                }
-            </select>
-        </div>
+
         <!-- CITY DROPDOWN -->
         <div class="input-group">
-            <label>City/Municipality</label>
-            <select @onchange="LoadBarangays" disabled="@(!HasSelectedProvince)">
+            <label>City/Municipality <label class="color-required">*</label></label>
+            <select @onchange="LoadBarangays" disabled="@(!HasSelectedProvince)" required>
                 <option value="">Select City/Municipality</option>
                 @foreach (var city in Cities)
                 {
@@ -91,8 +83,9 @@
         </div>
         <!-- BARANGAY DROPDOWN -->
         <div class="input-group">
-            <label>Barangay</label>
-            <select @bind="SelectedBarangayCode" disabled="@(!HasSelectedCity)">
+            <label>Barangay <label class="color-required">*</label></label>
+            <select @onchange="SetBarangayName"
+                    disabled="@(!HasSelectedCity)" required>
                 <option value="">Select Barangay</option>
                 @foreach (var barangay in Barangays)
                 {
@@ -101,13 +94,13 @@
             </select>
         </div>
         <div class="input-group">
-            <label>House No./ Street Village</label>
-            <input type="text" name="street" placeholder="Enter Street">
+            <label>House No./ Street Village<label class="color-required">*</label></label>
+            <input type="text" name="street" placeholder="Enter Street" @bind="Beneficiary.Street">
         </div>
 
         <div class="input-group">
-            <label>Type of ID</label>
-            <select name="type_of_id" >
+            <label>Type of ID (e.g. SSS, Voter's ID)<label class="color-required">*</label></label>
+            <select name="type_of_id" @bind="Beneficiary.TypeOfID">
                 <option value="SSS">SSS</option>
                 <option value="Voter's ID">Voter's ID</option>
                 <option value="Passport">Passport</option>
@@ -116,43 +109,43 @@
         </div>
 
         <div class="input-group">
-            <label>ID Number</label>
-            <input type="text" name="id_number" placeholder="Enter ID number">
+            <label>ID Number<label class="color-required">*</label></label>
+            <input type="text" name="id_number" placeholder="Enter ID number" @bind="Beneficiary.IDNumber">
         </div>
 
         <div class="input-group">
-            <label>Contact Number</label>
-            <input type="text" name="contact_no" placeholder="Enter contact number">
+            <label>Contact Number <label class="color-required">*</label></label>
+            <input type="text" name="contact_no" placeholder="Enter contact number" @bind="Beneficiary.ContactNo" required>
         </div>
 
         <div class="input-group">
-            <label>E-payment/Bank Account No.</label>
-            <input type="text" name="bank_account" placeholder="Enter bank account">
+            <label>Occupation <label class="color-required">*</label></label>
+            <input type="text" name="occupation" placeholder="Enter occupation" @bind="Beneficiary.Occupation">
         </div>
 
         <div class="input-group">
-            <label>Type of Beneficiary</label>
-            <input type="text" name="Type_beneficiary" placeholder="Enter Type">
+            <label>Average Monthly Income <label class="color-required">*</label></label>
+            <input type="text" name="monthly_income" placeholder="Enter income" @bind="Beneficiary.MonthlyIncome">
         </div>
 
         <div class="input-group">
-            <label>Occupation</label>
-            <input type="text" name="occupation" placeholder="Enter occupation">
+            <label>Type of Beneficiary <label class="color-required">*</label></label>
+            <input type="text" name="Type_beneficiary" placeholder="Enter Type" @bind="Beneficiary.TypeBeneficiary">
         </div>
 
         <div class="input-group">
-            <label>Average Monthly Income</label>
-            <input type="number" name="monthly_income" placeholder="Enter income">
+            <label>E-payment/Bank Account No. (indicate the type of account and no. as applicable)<label class="color-required">*</label></label>
+            <input type="text" name="bank_account" placeholder="Enter bank account" @bind="Beneficiary.BankAccount">
         </div>
 
         <div class="input-group">
-            <label>Dependent (Micro-insurance Holder)</label>
-            <input type="text" name="dependent" placeholder="Enter dependent name">
+            <label>Dependent (Name of Beneficiary of the Micro-insurance Holder)<label class="color-required">*</label></label>
+            <input type="text" name="dependent" placeholder="Enter dependent name" @bind="Beneficiary.Dependent">
         </div>
 
         <div class="input-group">
-            <label>Interested in Wage/Self-Employment?</label>
-            <select name="employment_interest" >
+            <label>Interested in wage employment or self- employment? (Yes/No?)<label class="color-required">*</label></label>
+            <select name="employment_interest" @bind="Beneficiary.EmploymentInterest">
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
             </select>
@@ -160,7 +153,7 @@
 
         <div class="input-group">
             <label>Skills Training Needed</label>
-            <input type="text" name="skills_training_needed" placeholder="Enter skills needed">
+            <input type="text" name="skills_training_needed" placeholder="Enter skills needed" @bind="Beneficiary.SkillsTrainingNeeded">
         </div>
 
         <div class="authorization">
@@ -170,151 +163,149 @@
             <label><input type="checkbox" id="checkbox3"> I am aware that PESO is not obligated to seek employment on my behalf.</label>
             <label class="label-red"><i class="fa-solid fa-circle-exclamation"></i> We value and protect your personal information and the same shall be stored in the database/compendium of jobseekers accessible only to PESO and our partner-employment providers, which shall be used solely for employment facilitation purposes.</label>
         </div>
-        <button type="submit" class="btn-submit">Submit</button>
+        <button type="button" class="btn-submit" @onclick="SubmitForm">Submit</button>
     </form>
 </div>
 <script>
     function validateForm() {
-        let checkbox1 = document.getElementById("checkbox1").checked;
-        let checkbox2 = document.getElementById("checkbox2").checked;
-        let checkbox3 = document.getElementById("checkbox3").checked;
+    let checkbox1 = document.getElementById("checkbox1").checked;
+    let checkbox2 = document.getElementById("checkbox2").checked;
+    let checkbox3 = document.getElementById("checkbox3").checked;
 
-        if (!checkbox1 || !checkbox2 || !checkbox3) {
-            alert("You must agree to all terms before proceeding.");
-            return false; // Prevent form submission
-        }
-        return true; // Allow form submission
+    if (!checkbox1 || !checkbox2 || !checkbox3) {
+    alert("You must agree to all terms before proceeding.");
+    return false; // Prevent form submission
+    }
+    return true; // Allow form submission
     }
     let addressData = {}; // JSON data will be stored here
 
     // Fetch JSON file
     fetch("_content/PESOapps.Shared/json/refregion.json")
-        .then(response => response.json())
-        .then(data => {
-            addressData = data;
-            populateRegions();
-        });
+    .then(response => response.json())
+    .then(data => {
+    addressData = data;
+    populateRegions();
+    });
 
     function populateRegions() {
-        let regionSelect = document.getElementById("region");
-        for (let region in addressData) {
-            let option = new Option(region, region);
-            regionSelect.add(option);
-        }
+    let regionSelect = document.getElementById("region");
+    for (let region in addressData) {
+    let option = new Option(region, region);
+    regionSelect.add(option);
+    }
     }
 
     function populateProvinces() {
-        let region = document.getElementById("region").value;
-        let provinceSelect = document.getElementById("province");
-        provinceSelect.innerHTML = "<option value=''>Select Province</option>";
-        document.getElementById("city").innerHTML = "<option value=''>Select City/Municipality</option>";
-        document.getElementById("barangay").innerHTML = "<option value=''>Select Barangay</option>";
+    let region = document.getElementById("region").value;
+    let provinceSelect = document.getElementById("province");
+    provinceSelect.innerHTML = "<option value=''>Select Province</option>";
+    document.getElementById("city").innerHTML = "<option value=''>Select City/Municipality</option>";
+    document.getElementById("barangay").innerHTML = "<option value=''>Select Barangay</option>";
 
-        if (region) {
-            for (let province in addressData[region]) {
-                let option = new Option(province, province);
-                provinceSelect.add(option);
-            }
-            provinceSelect.disabled = false;
-        } else {
-            provinceSelect.disabled = true;
-            document.getElementById("city").disabled = true;
-            document.getElementById("barangay").disabled = true;
-        }
+    if (region) {
+    for (let province in addressData[region]) {
+    let option = new Option(province, province);
+    provinceSelect.add(option);
+    }
+    provinceSelect.disabled = false;
+    } else {
+    provinceSelect.disabled = true;
+    document.getElementById("city").disabled = true;
+    document.getElementById("barangay").disabled = true;
+    }
     }
 
     function populateCities() {
-        let region = document.getElementById("region").value;
-        let province = document.getElementById("province").value;
-        let citySelect = document.getElementById("city");
-        citySelect.innerHTML = "<option value=''>Select City/Municipality</option>";
-        document.getElementById("barangay").innerHTML = "<option value=''>Select Barangay</option>";
+    let region = document.getElementById("region").value;
+    let province = document.getElementById("province").value;
+    let citySelect = document.getElementById("city");
+    citySelect.innerHTML = "<option value=''>Select City/Municipality</option>";
+    document.getElementById("barangay").innerHTML = "<option value=''>Select Barangay</option>";
 
-        if (province) {
-            for (let city in addressData[region][province]) {
-                let option = new Option(city, city);
-                citySelect.add(option);
-            }
-            citySelect.disabled = false;
-        } else {
-            citySelect.disabled = true;
-            document.getElementById("barangay").disabled = true;
-        }
+    if (province) {
+    for (let city in addressData[region][province]) {
+    let option = new Option(city, city);
+    citySelect.add(option);
+    }
+    citySelect.disabled = false;
+    } else {
+    citySelect.disabled = true;
+    document.getElementById("barangay").disabled = true;
+    }
     }
 
     function populateBarangays() {
-        let region = document.getElementById("region").value;
-        let province = document.getElementById("province").value;
-        let city = document.getElementById("city").value;
-        let barangaySelect = document.getElementById("barangay");
-        barangaySelect.innerHTML = "<option value=''>Select Barangay</option>";
+    let region = document.getElementById("region").value;
+    let province = document.getElementById("province").value;
+    let city = document.getElementById("city").value;
+    let barangaySelect = document.getElementById("barangay");
+    barangaySelect.innerHTML = "<option value=''>Select Barangay</option>";
 
-        if (city) {
-            addressData[region][province][city].forEach(barangay => {
-                let option = new Option(barangay, barangay);
-                barangaySelect.add(option);
-            });
-            barangaySelect.disabled = false;
-        } else {
-            barangaySelect.disabled = true;
-        }
+    if (city) {
+    addressData[region][province][city].forEach(barangay => {
+    let option = new Option(barangay, barangay);
+    barangaySelect.add(option);
+    });
+    barangaySelect.disabled = false;
+    } else {
+    barangaySelect.disabled = true;
+    }
     }
 
+
 </script>
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using System.ComponentModel.DataAnnotations;
 @code {
-    private List<Region> Regions = new();
     private List<Province> Provinces = new();
     private List<CityMunicipality> Cities = new();
     private List<Barangay> Barangays = new();
 
-    private string? SelectedRegionCode;
     private string? SelectedProvinceCode;
     private string? SelectedCityCode;
     private string? SelectedBarangayCode;
 
-    private bool HasSelectedRegion => !string.IsNullOrEmpty(SelectedRegionCode);
     private bool HasSelectedProvince => !string.IsNullOrEmpty(SelectedProvinceCode);
     private bool HasSelectedCity => !string.IsNullOrEmpty(SelectedCityCode);
 
     protected override async Task OnInitializedAsync()
     {
-        Regions = await AddressService.GetRegionsAsync();
+        // Load provinces
+        Provinces = await AddressService.GetProvincesAsync();
+
+        // Set default province to Misamis Oriental (1043) if it exists
+        if (Provinces.Any(p => p.ProvCode == "1043"))
+        {
+            SelectedProvinceCode = "1043";
+            await LoadCities("1043"); // ✅ Call LoadCities with direct value
+        }
     }
 
-    private async Task LoadProvinces(ChangeEventArgs e)
+    private async Task LoadCities(string provinceCode)
     {
-        SelectedRegionCode = e.Value?.ToString();
-        SelectedProvinceCode = null;
-        SelectedCityCode = null;
-        SelectedBarangayCode = null;
-
-        if (HasSelectedRegion)
-        {
-            Provinces = (await AddressService.GetProvincesAsync()).Where(p => p.RegCode == SelectedRegionCode).ToList();
-        }
-        else
-        {
-            Provinces.Clear();
-        }
-        Cities.Clear();
-        Barangays.Clear();
-    }
-
-    private async Task LoadCities(ChangeEventArgs e)
-    {
-        SelectedProvinceCode = e.Value?.ToString();
+        SelectedProvinceCode = provinceCode;
         SelectedCityCode = null;
         SelectedBarangayCode = null;
 
         if (HasSelectedProvince)
         {
-            Cities = (await AddressService.GetCitiesAsync()).Where(c => c.ProvCode == SelectedProvinceCode).ToList();
+            Cities = (await AddressService.GetCitiesAsync())
+                     .Where(c => c.ProvCode == SelectedProvinceCode)
+                     .ToList();
         }
         else
         {
             Cities.Clear();
         }
         Barangays.Clear();
+    }
+
+    // For dropdown onchange event
+    private async Task LoadCities(ChangeEventArgs e)
+    {
+        await LoadCities(e.Value?.ToString() ?? "");
     }
 
     private async Task LoadBarangays(ChangeEventArgs e)
@@ -324,11 +315,149 @@
 
         if (HasSelectedCity)
         {
-            Barangays = (await AddressService.GetBarangaysAsync()).Where(b => b.CitymunCode == SelectedCityCode).ToList();
+            Barangays = (await AddressService.GetBarangaysAsync())
+                        .Where(b => b.CitymunCode == SelectedCityCode)
+                        .ToList();
         }
         else
         {
             Barangays.Clear();
         }
+
+        var selectedCityCode = e.Value?.ToString();
+        SelectedCityCode = selectedCityCode;
+        SelectedBarangayCode = null;
+
+        if (!string.IsNullOrEmpty(selectedCityCode))
+        {
+            // Get the city name based on the selected CitymunCode
+            var selectedCity = Cities.FirstOrDefault(c => c.CitymunCode == selectedCityCode);
+            Beneficiary.Municipality = selectedCity?.CitymunDesc ?? string.Empty;
+
+            // Load barangays for the selected city
+            Barangays = (await AddressService.GetBarangaysAsync())
+                        .Where(b => b.CitymunCode == selectedCityCode)
+                        .ToList();
+        }
+        else
+        {
+            Beneficiary.Municipality = string.Empty;
+            Barangays.Clear();
+        }
     }
-}
+
+    private void SetBarangayName(ChangeEventArgs e)
+    {
+        SelectedBarangayCode = e.Value?.ToString();
+
+        if (!string.IsNullOrEmpty(SelectedBarangayCode))
+        {
+            // Get the barangay name based on BrgyCode
+            var selectedBarangay = Barangays.FirstOrDefault(b => b.BrgyCode == SelectedBarangayCode);
+            Beneficiary.Barangay = selectedBarangay?.BrgyDesc ?? string.Empty;
+        }
+        else
+        {
+            Beneficiary.Barangay = string.Empty;
+        }
+    }
+
+    public class TupadBeneficiary
+    {
+        public string FirstName { get; set; } = string.Empty;
+        public string MiddleName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string? ExtensionName { get; set; }
+        public DateTime? Birthdate { get; set; }
+        public string Age { get; set; } = string.Empty;
+        public string Sex { get; set; } = string.Empty;
+        public string CivilStatus { get; set; } = string.Empty;
+        public string District { get; set; } = string.Empty;
+        public string Province { get; set; } = "Misamis Oriental";
+        public string Municipality { get; set; } = string.Empty;
+        public string Barangay { get; set; } = string.Empty;
+        public string Street { get; set; } = string.Empty;
+        public string TypeOfID { get; set; } = string.Empty;
+        public string IDNumber { get; set; } = string.Empty;
+        public string ContactNo { get; set; } = string.Empty;
+        public string BankAccount { get; set; } = string.Empty;
+        public string TypeBeneficiary { get; set; } = string.Empty;
+        public string Occupation { get; set; } = string.Empty;
+        public string MonthlyIncome { get; set; } = string.Empty;
+        public string Dependent { get; set; } = string.Empty;
+        public string EmploymentInterest { get; set; } = string.Empty;
+        public string SkillsTrainingNeeded { get; set; } = string.Empty;
+    }
+  
+    private TupadBeneficiary Beneficiary = new TupadBeneficiary();
+    private string apiUrl = "http://localhost:5167/Api/Tupad";
+    private string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
+
+    private async Task SubmitForm()
+    {
+            try
+            {
+                // Ensure all checkboxes are checked using JavaScript interop
+                bool checkbox1 = await JS.InvokeAsync<bool>("eval", "document.getElementById('checkbox1').checked");
+                bool checkbox2 = await JS.InvokeAsync<bool>("eval", "document.getElementById('checkbox2').checked");
+                bool checkbox3 = await JS.InvokeAsync<bool>("eval", "document.getElementById('checkbox3').checked");
+
+                if (!checkbox1 || !checkbox2 || !checkbox3)
+                {
+                    await JS.InvokeVoidAsync("alert", "You must agree to all terms before proceeding.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(Beneficiary.FirstName) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.LastName) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.Age) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.Sex) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.CivilStatus) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.ContactNo) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.District) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.Municipality) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.Barangay) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.Street) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.TypeOfID) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.IDNumber) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.ContactNo) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.BankAccount) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.TypeBeneficiary) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.Occupation) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.MonthlyIncome) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.Dependent) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.EmploymentInterest))
+                {
+                    // Show an alert if required fields are missing
+                    await JS.InvokeVoidAsync("alert", "Please fill the required box");
+                }
+                else
+                {
+                    // Set up HTTP request
+                    var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+                        {
+                            Content = new StringContent(JsonSerializer.Serialize(Beneficiary), Encoding.UTF8, "application/json")
+                        };
+                    requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+                    // Send request
+                    var response = await Http.SendAsync(requestMessage);
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        await JS.InvokeVoidAsync("alert", "Data submitted successfully!");
+                        await JS.InvokeVoidAsync("location.reload");
+                    }
+                    else
+                    {
+                        string errorMsg = await response.Content.ReadAsStringAsync();
+                        await JS.InvokeVoidAsync("alert", $"Failed to submit data: {errorMsg}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"An error occurred: {ex.Message}");
+            }
+        }
+    }

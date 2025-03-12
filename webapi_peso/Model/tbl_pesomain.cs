@@ -1,6 +1,6 @@
 ﻿namespace Pesomain.Model
 {
-    public class tbl_pesomain
+    public class Tbl_pesomain
     {
         public class Log_user
         {

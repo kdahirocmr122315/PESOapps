@@ -909,7 +909,15 @@ a.nav-links-sub.tupad:after {
 .modal-header .btn-close {
     background-color: var(--font-color);
 }
-
+.buts.lo .btn {
+    margin-left: auto;
+    font-size: 1.5em;
+    padding: 10px 10px;
+}
+.buts.ex .btn {
+    font-size: 1.5em;
+    padding: 10px 10px;
+}
 /******************* END MODAL ZOOM *********************/
 
 

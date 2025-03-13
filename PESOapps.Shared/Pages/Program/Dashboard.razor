@@ -10,9 +10,12 @@
 else
 {
     <div class="form-cont dashb">
-        <button class="btn" @onclick="Logout">Logout</button>
-        <button class="btn" @onclick="DownloadExcel">Export to Excel</button>
-
+        <div class="buts lo">
+            <button class="btn" @onclick="Logout">Logout</button>
+        </div>
+        <div class="buts ex">
+            <button class="btn" @onclick="DownloadExcel">Export to Excel</button>
+        </div>
         <h3>Verified Tupad List</h3>
         <div class="table-scroll">
             <table class="table">

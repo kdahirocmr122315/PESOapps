@@ -29,6 +29,8 @@
             public string? Dependent { get; set; }
             public string? InterestWage { get; set; }
             public string? SkillsTraining { get; set; }
+            public string? Verification { get; set; }
+
         }
     }
 }

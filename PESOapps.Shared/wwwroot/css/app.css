@@ -106,6 +106,10 @@ a,
     -moz-box-shadow: 0px 0px 30px -16px var(--box-shadow);
 }
 
+.form-cont.dashb {
+    max-width: 1500px;
+}
+
 .btn-primary {
     color: var(--font-color);
     background-color: var(--bgfade);
@@ -357,9 +361,7 @@ span.misvis-par {
     text-align: right;
 }
 
-.center-align {
-    text-align: center;
-}
+
 
 .justify {
     max-width: 1100px;
@@ -386,6 +388,81 @@ button.buttons-tup {
     border-radius: 2px;
 }
 
+a.nav-links-sub.tupad {
+    display: inline-block !important;
+}
+
+
+/********************** LOGIN ************************/
+.login-containers {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+}
+
+.login-cards {
+    background: #FFFFFF;
+    padding: 20px;
+    box-shadow: 0px 4px 10px var(--box-shadow);
+    text-align: center;
+    width: 350px;
+}
+
+.login-cards h2 {
+    margin-bottom: 1rem;
+    color: #333;
+}
+
+.input-groups {
+    margin-bottom: 1rem;
+    text-align: left;
+}
+
+.input-groups label {
+    display: block;
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #000000;
+}
+
+.input-groups input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+}
+
+.login-containers button {
+    width: 100%;
+    padding: 10px;
+    background-color: #005AA7;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.login-containers button:hover {
+    background-color: #003F7F;
+}
+
+.login-containers .error-message {
+    background: #ff7979;
+    color: white;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 1rem;
+}
+
+.dashb {
+    font-size: .7em;
+}
+
+/********************** LOGIN ************************/
 
 /************************* CAROUSEL **************************/
 
@@ -612,6 +689,40 @@ a.nav-links-sub.tupad:after {
     display: none;
 }
 
+.form-cont.dashb .btn {
+    font-size: 1em;
+    width: auto;
+    height: auto;
+    padding: 5px;
+    line-height: 1;
+}
+
+.btn-danger,
+.btn-success {
+    color: #000;
+}
+
+.form-cont.dashb th {
+    text-align: center;
+    background-color: #C6D9F1;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.form-cont.dashb td {
+    padding: .2rem;
+    vertical-align: middle;
+    text-align: left;
+}
+
+.nowrap {
+    white-space: nowrap;
+}
+
+.form-cont.dashb td.center-align,
+.center-align {
+    text-align: center;
+}
 
 /******************* ACTIVITIES CAROUSEL *********************/
 .container-slide {

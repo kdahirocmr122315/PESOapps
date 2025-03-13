@@ -15,7 +15,7 @@ builder.Services.AddScoped<HttpClient>(sp =>
     // Here we use a hardcoded base URI (use your app's base URI if needed)
     return new HttpClient { BaseAddress = new Uri("https://localhost:7283/pesobeta/Tupadreg") };  // You can set your base URL here
 });
-
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5167/") });
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -23,7 +23,8 @@ builder.Services.AddRazorComponents()
 
 // Add device-specific services used by the PESOapps.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
-
+builder.Services.AddProtectedBrowserStorage();
+builder.Services.AddScoped<ExcelService>();
 // Register AddressService (Ensure it properly loads JSON)
 builder.Services.AddScoped<AddressService>(sp =>
 {

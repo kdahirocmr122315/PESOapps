@@ -55,7 +55,7 @@ namespace webapi_peso.Dbcontext
             using (var connection = Connection)
             {
                 connection.Open();
-                var sql = "UPDATE tbl_tupadbeneficiary SET Firstname = @Firstname, Lastname = @Lastname, Age = @Age, Email = @Email WHERE Id = @ID";
+                var sql = "UPDATE tbl_tupadbeneficiary SET Verification = @Verification WHERE Id = @ID";
                 connection.Execute(sql, beneficiary);
             }
         }

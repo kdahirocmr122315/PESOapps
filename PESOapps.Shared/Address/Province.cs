@@ -3,8 +3,8 @@
 public class Province
 {
     public int Id { get; set; }
-    public string PsgcCode { get; set; } = string.Empty;
-    public string ProvDesc { get; set; } = string.Empty;
-    public string RegCode { get; set; } = string.Empty;
-    public string ProvCode { get; set; } = string.Empty;
+    public string psgcCode { get; set; } = string.Empty;
+    public string provDesc { get; set; } = string.Empty;
+    public string regCode { get; set; } = string.Empty;
+    public string provCode { get; set; } = string.Empty;
 }

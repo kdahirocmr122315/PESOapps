@@ -2,10 +2,10 @@
 
 public class CityMunicipality
 {
-    public int Id { get; set; }
-    public string PsgcCode { get; set; } = string.Empty;
-    public string CitymunDesc { get; set; } = string.Empty;
-    public string RegCode { get; set; } = string.Empty;
-    public string ProvCode { get; set; } = string.Empty;
-    public string CitymunCode { get; set; } = string.Empty;
+    public int id { get; set; }
+    public string psgcCode { get; set; } = string.Empty;
+    public string citymunDesc { get; set; } = string.Empty;
+    public string regCode { get; set; } = string.Empty;
+    public string provCode { get; set; } = string.Empty;
+    public string citymunCode { get; set; } = string.Empty;
 }

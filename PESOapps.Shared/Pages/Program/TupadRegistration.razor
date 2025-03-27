@@ -77,7 +77,7 @@
                 <option value="">Select City/Municipality</option>
                 @foreach (var city in Cities)
                 {
-                    <option value="@city.CitymunCode">@city.CitymunDesc</option>
+                    <option value="@city.citymunCode">@city.citymunDesc</option>
                 }
             </select>
         </div>
@@ -89,7 +89,7 @@
                 <option value="">Select Barangay</option>
                 @foreach (var barangay in Barangays)
                 {
-                    <option value="@barangay.BrgyCode">@barangay.BrgyDesc</option>
+                    <option value="@barangay.brgyCode">@barangay.brgyDesc</option>
                 }
             </select>
         </div>
@@ -181,7 +181,7 @@
     let addressData = {}; // JSON data will be stored here
 
     // Fetch JSON file
-    fetch("_content/PESOapps.Shared/json/refregion.json")
+    fetch("_content/PESOapps.Shared/json/reprovince.json")
     .then(response => response.json())
     .then(data => {
     addressData = data;
@@ -259,6 +259,7 @@
 @inject IJSRuntime JS
 @using System.ComponentModel.DataAnnotations;
 @code {
+
     private List<Province> Provinces = new();
     private List<CityMunicipality> Cities = new();
     private List<Barangay> Barangays = new();
@@ -270,16 +271,14 @@
     private bool HasSelectedProvince => !string.IsNullOrEmpty(SelectedProvinceCode);
     private bool HasSelectedCity => !string.IsNullOrEmpty(SelectedCityCode);
 
+
     protected override async Task OnInitializedAsync()
     {
-        // Load provinces
         Provinces = await AddressService.GetProvincesAsync();
-
-        // Set default province to Misamis Oriental (1043) if it exists
-        if (Provinces.Any(p => p.ProvCode == "1043"))
+        if (Provinces.Any(p => p.provCode == "1043"))
         {
             SelectedProvinceCode = "1043";
-            await LoadCities("1043"); // ✅ Call LoadCities with direct value
+            await LoadCities("1043");
         }
     }
 
@@ -292,7 +291,7 @@
         if (HasSelectedProvince)
         {
             Cities = (await AddressService.GetCitiesAsync())
-                     .Where(c => c.ProvCode == SelectedProvinceCode)
+                     .Where(c => c.provCode == "1043")
                      .ToList();
         }
         else
@@ -316,7 +315,7 @@
         if (HasSelectedCity)
         {
             Barangays = (await AddressService.GetBarangaysAsync())
-                        .Where(b => b.CitymunCode == SelectedCityCode)
+                        .Where(b => b.citymunCode == SelectedCityCode)
                         .ToList();
         }
         else
@@ -331,12 +330,12 @@
         if (!string.IsNullOrEmpty(selectedCityCode))
         {
             // Get the city name based on the selected CitymunCode
-            var selectedCity = Cities.FirstOrDefault(c => c.CitymunCode == selectedCityCode);
-            Beneficiary.Municipality = selectedCity?.CitymunDesc ?? string.Empty;
+            var selectedCity = Cities.FirstOrDefault(c => c.citymunCode == selectedCityCode);
+            Beneficiary.Municipality = selectedCity?.citymunDesc ?? string.Empty;
 
             // Load barangays for the selected city
             Barangays = (await AddressService.GetBarangaysAsync())
-                        .Where(b => b.CitymunCode == selectedCityCode)
+                        .Where(b => b.citymunCode == selectedCityCode)
                         .ToList();
         }
         else
@@ -353,8 +352,8 @@
         if (!string.IsNullOrEmpty(SelectedBarangayCode))
         {
             // Get the barangay name based on BrgyCode
-            var selectedBarangay = Barangays.FirstOrDefault(b => b.BrgyCode == SelectedBarangayCode);
-            Beneficiary.Barangay = selectedBarangay?.BrgyDesc ?? string.Empty;
+            var selectedBarangay = Barangays.FirstOrDefault(b => b.brgyCode == SelectedBarangayCode);
+            Beneficiary.Barangay = selectedBarangay?.brgyDesc ?? string.Empty;
         }
         else
         {
@@ -367,7 +366,7 @@
         public string FirstName { get; set; } = string.Empty;
         public string MiddleName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
-        public string? ExtensionName { get; set; }
+        public string ExtensionName { get; set; } = string.Empty;
         public DateTime? Birthdate { get; set; }
         public string Age { get; set; } = string.Empty;
         public string Sex { get; set; } = string.Empty;

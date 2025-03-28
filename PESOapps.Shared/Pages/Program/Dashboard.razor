@@ -11,11 +11,21 @@
 else
 {
     <div class="form-cont dashb">
-        <div class="buts lo">
-            <button class="btn" @onclick="Logout">Logout</button>
-        </div>
-        <div class="buts ex">
-            <button class="btn" @onclick="DownloadExcel">Export to Excel</button>
+        <div class="monitoring-boxes">
+            <div class="box verified">
+                <div class="boxdiv">
+                    <h4>Verified</h4>
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <p class="totals">Total: </p><p>@VerifiedList.Count</p>
+            </div>
+            <div class="box unverified">
+                <div class="boxdiv">
+                    <h4>Unverified</h4>
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+                <p class="totals">Total: </p><p>@UnverifiedList.Count</p>
+            </div>
         </div>
         <h3>Verified Tupad List</h3>
         <div class="table-scroll">
@@ -43,10 +53,10 @@ else
                     </tr>
                 </thead>
                 <tbody>
-                    @if (VerifiedList != null)
+                    @if (PaginatedVerifiedList != null)
                     {
-                        int count = 1; // Start ID from 1
-                        @foreach (var item in VerifiedList)
+                        int count = (currentPageVerified - 1) * pageSize + 1;
+                        @foreach (var item in PaginatedVerifiedList)
                         {
                             <tr>
                                 <td class="center-align">@count</td>
@@ -75,9 +85,13 @@ else
                             count++;
                         }
                     }
-
                 </tbody>
             </table>
+            <div class="pagination">
+                <button class="btn" @onclick="PreviousPageVerified" disabled="@(currentPageVerified == 1)">Previous</button>
+                <span> Page @currentPageVerified of @TotalPagesVerified </span>
+                <button class="btn" @onclick="NextPageVerified" disabled="@(currentPageVerified == TotalPagesVerified)">Next</button>
+            </div>
         </div>
         <h3>Unverified Tupad List</h3>
         <div class="table-scroll">
@@ -106,10 +120,10 @@ else
                     </tr>
                 </thead>
                 <tbody>
-                    @if (UnverifiedList != null)
+                    @if (PaginatedUnverifiedList != null)
                     {
-                        int count = 1;
-                        @foreach (var item in UnverifiedList)
+                        int count = (currentPageUnverified - 1) * pageSize + 1;
+                        @foreach (var item in PaginatedUnverifiedList)
                         {
                             <tr>
                                 <td class="center-align">@count</td>
@@ -123,15 +137,14 @@ else
                                         Delete
                                     </button>
                                 </td>
-                                <td class="nowrap center-align">@item.Lastname , @item.Firstname @item.MiddleName @item.ExtensionName</td>
+                                <td class="nowrap center-align">@item.Lastname, @item.Firstname @item.MiddleName @item.ExtensionName</td>
                                 <td>@(DateTime.TryParse(item.Birthday, out var birthDate) ? birthDate.ToString("yyyy/MM/dd") : item.Birthday)</td>
-                                <td>@item.Barangay, @item.Municipality, @item.Province ,District @item.District</td>
+                                <td>@item.Barangay, @item.Municipality, @item.Province, District @item.District</td>
                                 <td>@item.IDType</td>
                                 <td>@item.IDNumber</td>
                                 <td>@item.ContactNo</td>
                                 <td>@item.Epayment</td>
                                 <td>@item.TypeOfBenef</td>
-
                                 <td>@item.Occupation</td>
                                 <td class="center-align">@item.Sex</td>
                                 <td class="center-align">@item.CivilStatus</td>
@@ -146,6 +159,15 @@ else
                     }
                 </tbody>
             </table>
+            <div class="pagination">
+                <button class="btn" @onclick="PreviousPageUnverified" disabled="@(currentPageUnverified == 1)">Previous</button>
+                <span> Page @currentPageUnverified of @TotalPagesUnverified </span>
+                <button class="btn" @onclick="NextPageUnverified" disabled="@(currentPageUnverified == TotalPagesUnverified)">Next</button>
+            </div>
+        </div>
+        <div class="buts lo">
+            <button class="btn" @onclick="DownloadExcel">Export to Excel</button>
+            <button class="btn" @onclick="Logout">Logout</button>
         </div>
     </div>
 }
@@ -162,7 +184,6 @@ else
 @using iTextSharp.text;
 @using iTextSharp.text.pdf;
 @using Microsoft.JSInterop;
-    using PESOapps.Shared.Services;
 
 @code {
     private bool isUserLoggedIn = false;
@@ -346,5 +367,38 @@ else
         var fileContent = await ExcelService.GenerateExcelAsync(beneficiaries);
         var fileName = "TUPAD_Beneficiaries.xlsx";
         await JS.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileContent));
+    }
+
+    private int currentPageVerified = 1;
+    private int currentPageUnverified = 1;
+    private int pageSize = 5;
+
+    private int TotalPagesVerified => (VerifiedList.Count + pageSize - 1) / pageSize;
+    private int TotalPagesUnverified => (UnverifiedList.Count + pageSize - 1) / pageSize;
+
+    private List<TupadModel> PaginatedVerifiedList =>
+        VerifiedList.Skip((currentPageVerified - 1) * pageSize).Take(pageSize).ToList();
+
+    private List<TupadModel> PaginatedUnverifiedList =>
+        UnverifiedList.Skip((currentPageUnverified - 1) * pageSize).Take(pageSize).ToList();
+
+    private void NextPageVerified()
+    {
+        if (currentPageVerified < TotalPagesVerified) currentPageVerified++;
+    }
+
+    private void PreviousPageVerified()
+    {
+        if (currentPageVerified > 1) currentPageVerified--;
+    }
+
+    private void NextPageUnverified()
+    {
+        if (currentPageUnverified < TotalPagesUnverified) currentPageUnverified++;
+    }
+
+    private void PreviousPageUnverified()
+    {
+        if (currentPageUnverified > 1) currentPageUnverified--;
     }
 }

@@ -10,7 +10,7 @@
             public string? Lastname { get; set; }
             
             public string? ExtensionName { get; set; }
-            public string? Birthday { get; set; }
+            public DateTime? Birthday { get; set; }
             public string? Street { get; set; }
             public string? Barangay { get; set; }
             public string? Municipality { get; set; }

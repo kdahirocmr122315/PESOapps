@@ -43,18 +43,18 @@ namespace webapi_peso.Dbcontext
         public void Addbeneficiary(Beneficiary beneficiary)
         {
             Console.WriteLine($"Birthdate: {beneficiary.Birthday}");
-            using (var connection = Connection)
-    
+            using (var connection = new SqlConnection(_connectionString))
+
             {
                 connection.Open();
-                var sql = "INSERT INTO tbl_tupadbeneficiary (Firstname, Middlename, Lastname, ExtensionName, Birthday, Street, Barangay, Municipality, Province, District, IDType, IDNumber, ContactNo, Epayment, TypeOfBenef, Occupation, Sex, CivilStatus, Age, AverageIncome, Dependent, InterestWage, SkillsTraining) VALUES (@Firstname, @Middlename, @Lastname, @ExtensionName, @Street, @Birthday, @Barangay, @Municipality, @Province, @District, @IDType, @IDNumber, @ContactNo, @Epayment, @TypeOfBenef, @Occupation, @Sex, @CivilStatus, @Age, @AverageIncome, @Dependent, @InterestWage, @SkillsTraining)";
+                var sql = "INSERT INTO tbl_tupadbeneficiary (Firstname, Middlename, Lastname, ExtensionName, Birthday, Street, Barangay, Municipality, Province, District, IDType, IDNumber, ContactNo, Epayment, TypeOfBenef, Occupation, Sex, CivilStatus, Age, AverageIncome, Dependent, InterestWage, SkillsTraining) VALUES (@Firstname, @Middlename, @Lastname, @ExtensionName, @Birthday, @Street, @Barangay, @Municipality, @Province, @District, @IDType, @IDNumber, @ContactNo, @Epayment, @TypeOfBenef, @Occupation, @Sex, @CivilStatus, @Age, @AverageIncome, @Dependent, @InterestWage, @SkillsTraining)";
                 connection.Execute(sql, new
                 {
                     Firstname = beneficiary.Firstname,
-                    Middlename = beneficiary.MiddleName,
+                    MiddleName = beneficiary.MiddleName,
                     Lastname = beneficiary.Lastname,
                     ExtensionName = beneficiary.ExtensionName,
-                    Birthday = beneficiary.Birthday,  // ✅ Pass DateTime? directly
+                    Birthday = beneficiary.Birthday ?? (object)DBNull.Value,  // ✅ Allow NULL in SQL
                     Street = beneficiary.Street,
                     Barangay = beneficiary.Barangay,
                     Municipality = beneficiary.Municipality,

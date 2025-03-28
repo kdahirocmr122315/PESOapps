@@ -32,7 +32,7 @@
 
         <div class="input-group">
             <label>Birthdate <label class="color-required">*</label></label>
-            <input type="date" name="birthdate" @bind="Beneficiary.Birthdate" required>
+            <input type="date" name="birthdate" @bind="Beneficiary.Birthday" required>
         </div>
 
         <div class="input-group">
@@ -100,7 +100,7 @@
 
         <div class="input-group">
             <label>Type of ID (e.g. SSS, Voter's ID)<label class="color-required">*</label></label>
-            <select name="type_of_id" @bind="Beneficiary.TypeOfID">
+            <select name="type_of_id" @bind="Beneficiary.IDType">
                 <option value="SSS">SSS</option>
                 <option value="Voter's ID">Voter's ID</option>
                 <option value="Passport">Passport</option>
@@ -125,17 +125,17 @@
 
         <div class="input-group">
             <label>Average Monthly Income <label class="color-required">*</label></label>
-            <input type="text" name="monthly_income" placeholder="Enter income" @bind="Beneficiary.MonthlyIncome">
+            <input type="text" name="monthly_income" placeholder="Enter income" @bind="Beneficiary.AverageIncome">
         </div>
 
         <div class="input-group">
             <label>Type of Beneficiary <label class="color-required">*</label></label>
-            <input type="text" name="Type_beneficiary" placeholder="Enter Type" @bind="Beneficiary.TypeBeneficiary">
+            <input type="text" name="Type_beneficiary" placeholder="Enter Type" @bind="Beneficiary.TypeOfBenef">
         </div>
 
         <div class="input-group">
             <label>E-payment/Bank Account No. (indicate the type of account and no. as applicable)<label class="color-required">*</label></label>
-            <input type="text" name="bank_account" placeholder="Enter bank account" @bind="Beneficiary.BankAccount">
+            <input type="text" name="bank_account" placeholder="Enter bank account" @bind="Beneficiary.Epayment">
         </div>
 
         <div class="input-group">
@@ -145,7 +145,7 @@
 
         <div class="input-group">
             <label>Interested in wage employment or self- employment? (Yes/No?)<label class="color-required">*</label></label>
-            <select name="employment_interest" @bind="Beneficiary.EmploymentInterest">
+            <select name="employment_interest" @bind="Beneficiary.InterestWage">
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
             </select>
@@ -153,7 +153,7 @@
 
         <div class="input-group">
             <label>Skills Training Needed</label>
-            <input type="text" name="skills_training_needed" placeholder="Enter skills needed" @bind="Beneficiary.SkillsTrainingNeeded">
+            <input type="text" name="skills_training_needed" placeholder="Enter skills needed" @bind="Beneficiary.SkillsTraining">
         </div>
 
         <div class="authorization">
@@ -367,7 +367,7 @@
         public string MiddleName { get; set; } = string.Empty;
         public string LastName { get; set; } = string.Empty;
         public string ExtensionName { get; set; } = string.Empty;
-        public DateTime? Birthdate { get; set; }
+        public DateTime? Birthday { get; set; } 
         public string Age { get; set; } = string.Empty;
         public string Sex { get; set; } = string.Empty;
         public string CivilStatus { get; set; } = string.Empty;
@@ -376,16 +376,16 @@
         public string Municipality { get; set; } = string.Empty;
         public string Barangay { get; set; } = string.Empty;
         public string Street { get; set; } = string.Empty;
-        public string TypeOfID { get; set; } = string.Empty;
+        public string IDType { get; set; } = string.Empty;
         public string IDNumber { get; set; } = string.Empty;
         public string ContactNo { get; set; } = string.Empty;
-        public string BankAccount { get; set; } = string.Empty;
-        public string TypeBeneficiary { get; set; } = string.Empty;
+        public string Epayment { get; set; } = string.Empty;
+        public string TypeOfBenef { get; set; } = string.Empty;
         public string Occupation { get; set; } = string.Empty;
-        public string MonthlyIncome { get; set; } = string.Empty;
+        public string AverageIncome { get; set; } = string.Empty;
         public string Dependent { get; set; } = string.Empty;
-        public string EmploymentInterest { get; set; } = string.Empty;
-        public string SkillsTrainingNeeded { get; set; } = string.Empty;
+        public string InterestWage { get; set; } = string.Empty;
+        public string SkillsTraining { get; set; } = string.Empty;
     }
   
     private TupadBeneficiary Beneficiary = new TupadBeneficiary();
@@ -417,15 +417,15 @@
                     string.IsNullOrWhiteSpace(Beneficiary.Municipality) ||
                     string.IsNullOrWhiteSpace(Beneficiary.Barangay) ||
                      string.IsNullOrWhiteSpace(Beneficiary.Street) ||
-                     string.IsNullOrWhiteSpace(Beneficiary.TypeOfID) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.IDType) ||
                      string.IsNullOrWhiteSpace(Beneficiary.IDNumber) ||
                      string.IsNullOrWhiteSpace(Beneficiary.ContactNo) ||
-                     string.IsNullOrWhiteSpace(Beneficiary.BankAccount) ||
-                     string.IsNullOrWhiteSpace(Beneficiary.TypeBeneficiary) ||
+                    string.IsNullOrWhiteSpace(Beneficiary.Epayment) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.TypeOfBenef) ||
                      string.IsNullOrWhiteSpace(Beneficiary.Occupation) ||
-                     string.IsNullOrWhiteSpace(Beneficiary.MonthlyIncome) ||
+                     string.IsNullOrWhiteSpace(Beneficiary.AverageIncome) ||
                      string.IsNullOrWhiteSpace(Beneficiary.Dependent) ||
-                     string.IsNullOrWhiteSpace(Beneficiary.EmploymentInterest))
+                     string.IsNullOrWhiteSpace(Beneficiary.InterestWage))
                 {
                     // Show an alert if required fields are missing
                     await JS.InvokeVoidAsync("alert", "Please fill the required box");

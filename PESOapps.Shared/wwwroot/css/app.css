@@ -407,7 +407,12 @@ a.nav-links-sub.tupad {
     display: inline-block !important;
 }
 
-
+#infoModal .modal-content {
+    background: var(--bgcolor);
+}
+#infoModal .modal-header .btn-close {
+    background-color: var(--bgcolor);
+}
 /********************** LOGIN ************************/
 .login-containers {
     display: flex;
@@ -911,6 +916,14 @@ p.totals {
 .popup-content img:hover,
 .image-modal-content img:hover {
     transform: scale(1.05);
+}
+
+a:hover span {
+    color: var(--font-color);
+}
+
+.nav-scrollable.arrow:hover {
+    cursor: pointer;
 }
 
 /******************* MODAL ZOOM *********************/

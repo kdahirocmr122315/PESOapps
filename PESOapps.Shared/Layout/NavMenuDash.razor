@@ -1,0 +1,27 @@
+﻿@using PESOapps.Shared.Services
+@inject AuthService AuthService
+<div class="navbars">
+    <div class="navbar-container">
+        <div class="navbar-logo">
+                <div class="log-diver">
+                    <img src="_content/PESOapps.Shared/images/peso.png" />
+                    <div class="log-inside-conts">
+                    <div class="log-inside">
+                        <h5>P</h5><h5 class="ext">ublic</h5>
+                        <h5>E</h5><h5 class="ext">mployment</h5>
+                        <h5>S</h5><h5 class="ext">ervice</h5>
+                        <h5>O</h5><h5 class="ext">ffice</h5>
+                    </div>
+                    <div class="log-inside">
+                    <span>Misamis Oriental</span>
+                    </div>
+                    </div>
+                </div>
+        </div>
+        <div class="nav-scrollable arrow">
+            <div class="navbar-option">
+                <div class="nav-item" @onclick="AuthService.Logout">Logout <i class="fa-solid fa-arrow-right-from-bracket"></i></div>
+            </div>
+        </div>
+    </div>
+</div>

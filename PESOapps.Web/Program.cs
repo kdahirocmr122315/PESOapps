@@ -5,7 +5,7 @@ using PESOapps.Web.Services;
 using System.Net.Http;
 
 var builder = WebApplication.CreateBuilder(args);
-
+builder.Services.AddScoped<AuthService>();
 // Register HttpClient
 builder.Services.AddScoped<HttpClient>(sp =>
 {

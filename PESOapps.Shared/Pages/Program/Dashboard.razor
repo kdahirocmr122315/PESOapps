@@ -28,28 +28,29 @@ else
             </div>
         </div>
         <h3>Verified Tupad List</h3>
-        <div class="table-scroll">
+        <div class="table-responsive">
             <table class="table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Verification</th>
-                        <th>Name</th>
-                        <th>Birthdate</th>
-                        <th>Address</th>
-                        <th>Type Of ID</th>
-                        <th>ID Number</th>
-                        <th>Contact No.</th>
-                        <th>E Payment</th>
-                        <th>Type Of Beneficiary</th>
-                        <th>Occupation</th>
-                        <th>Sex</th>
-                        <th>Civil Status</th>
-                        <th>Age</th>
-                        <th>Average Income</th>
-                        <th>Dependent</th>
-                        <th>Interest Wage</th>
-                        <th>Skills</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">Verification</th>
+                        <th scope="col">Details</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Birthdate</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Type Of ID</th>
+                        <th scope="col">ID Number</th>
+                        <th scope="col">Contact No.</th>
+                        <th scope="col">E Payment</th>
+                        <th scope="col">Type Of Beneficiary</th>
+                        <th scope="col">Occupation</th>
+                        <th scope="col">Sex</th>
+                        <th scope="col">Civil Status</th>
+                        <th scope="col">Age</th>
+                        <th scope="col">Average Income</th>
+                        <th scope="col">Dependent</th>
+                        <th scope="col">Interest Wage</th>
+                        <th scope="col">Skills</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -59,10 +60,15 @@ else
                         @foreach (var item in PaginatedVerifiedList)
                         {
                             <tr>
-                                <td class="center-align">@count</td>
+                                <td scope="row" class="center-align">@count</td>
                                 <td>
                                     <button class="btn btn-warning" @onclick="() => ChangeVerificationStatus(item.ID, false)">
-                                        Set as Unverified
+                                        Verified
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-info" @onclick="() => ShowInfoDetails(item.ID)">
+                                        Details
                                     </button>
                                 </td>
                                 <td class="nowrap center-align">@item.Lastname, @item.Firstname @item.MiddleName @item.ExtensionName</td>
@@ -98,25 +104,26 @@ else
             <table class="table">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Verification</th>
-                        <th>Delete</th>
-                        <th>Name</th>
-                        <th>Birthdate</th>
-                        <th>Address</th>
-                        <th>Type Of ID</th>
-                        <th>ID Number</th>
-                        <th>Contact No.</th>
-                        <th>E Payment</th>
-                        <th>Type Of Beneficiary</th>
-                        <th>Occupation</th>
-                        <th>Sex</th>
-                        <th>Civil Status</th>
-                        <th>Age</th>
-                        <th>Average Income</th>
-                        <th>Dependent</th>
-                        <th>Interest Wage</th>
-                        <th>Skills</th>
+                        <th scope="col">ID</th>
+                        <th scope="col">Verification</th>
+                        <th scope="col">Delete</th>
+                        <th scope="col">Details</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Birthdate</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Type Of ID</th>
+                        <th scope="col">ID Number</th>
+                        <th scope="col">Contact No.</th>
+                        <th scope="col">E Payment</th>
+                        <th scope="col">Type Of Beneficiary</th>
+                        <th scope="col">Occupation</th>
+                        <th scope="col">Sex</th>
+                        <th scope="col">Civil Status</th>
+                        <th scope="col">Age</th>
+                        <th scope="col">Average Income</th>
+                        <th scope="col">Dependent</th>
+                        <th scope="col">Interest Wage</th>
+                        <th scope="col">Skills</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -126,15 +133,20 @@ else
                         @foreach (var item in PaginatedUnverifiedList)
                         {
                             <tr>
-                                <td class="center-align">@count</td>
+                                <td scope="row" class="center-align">@count</td>
                                 <td>
                                     <button class="btn btn-success" @onclick="() => ChangeVerificationStatus(item.ID, true)">
-                                        Set as Verified
+                                       Unverify
                                     </button>
                                 </td>
                                 <td>
                                     <button class="btn btn-danger" @onclick="() => ConfirmDelete(item.ID)">
                                         Delete
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-info" @onclick="() => ShowInfoDetails(item.ID)">
+                                        Details
                                     </button>
                                 </td>
                                 <td class="nowrap center-align">@item.Lastname, @item.Firstname @item.MiddleName @item.ExtensionName</td>
@@ -167,9 +179,42 @@ else
         </div>
         <div class="buts lo">
             <button class="btn" @onclick="DownloadExcel">Export to Excel</button>
-            <button class="btn" @onclick="Logout">Logout</button>
         </div>
     </div>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalLabel">Beneficiary Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if (selectedBeneficiary != null)
+                    {
+                        <p><strong>Name : </strong> @selectedBeneficiary.Lastname, @selectedBeneficiary.Firstname @selectedBeneficiary.MiddleName</p>
+                        <p><strong>Birthdate : </strong> @(DateTime.TryParse(selectedBeneficiary.Birthday, out var birthDate) ? birthDate.ToString("yyyy/MM/dd") : selectedBeneficiary.Birthday)</p>
+                        <p><strong>Address : </strong> @selectedBeneficiary.Barangay, @selectedBeneficiary.Municipality, @selectedBeneficiary.Province</p>
+                        <p><strong>Type of ID : </strong> @selectedBeneficiary.IDType</p>
+                        <p><strong>ID Number : </strong> @selectedBeneficiary.IDNumber</p>
+                        <p><strong>Contact No. : </strong> @selectedBeneficiary.ContactNo</p>
+                        <p><strong>Occupation : </strong> @selectedBeneficiary.Occupation</p>
+                        <p><strong>Sex : </strong> @selectedBeneficiary.Sex</p>
+                        <p><strong>Age : </strong> @selectedBeneficiary.Age</p>
+                        <p><strong>Average Income : </strong> @selectedBeneficiary.AverageIncome</p>
+                        <p><strong>Dependent : </strong> @selectedBeneficiary.Dependent</p>
+                        <p><strong>Skills : </strong> @selectedBeneficiary.SkillsTraining</p>
+                    }
+                    else
+                    {
+                        <p>Loading details...</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
 }
 
 @inject HttpClient Http
@@ -401,4 +446,24 @@ else
     {
         if (currentPageUnverified > 1) currentPageUnverified--;
     }
+
+    <!-- Bootstrap Modal -->
+    private TupadModel? selectedBeneficiary;
+
+    private async Task ShowInfoDetails(int id)
+    {
+        selectedBeneficiary = VerifiedList.FirstOrDefault(b => b.ID == id) ??
+                              UnverifiedList.FirstOrDefault(b => b.ID == id);
+
+        if (selectedBeneficiary != null)
+        {
+            await JS.InvokeVoidAsync("showModal", "#infoModal"); // Show Bootstrap Modal
+        }
+    }
 }
+<script>
+    function showModal(modalId) {
+        var modal = new bootstrap.Modal(document.querySelector(modalId));
+        modal.show();
+    }
+</script>

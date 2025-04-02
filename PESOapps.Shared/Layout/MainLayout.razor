@@ -1,9 +1,17 @@
 ﻿@inherits LayoutComponentBase
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
 
 <div class="main-container-layout">
     <div class="navigation-section">
-        <NavMenu />
+        @if (Navigation.Uri.EndsWith("/dashboard", StringComparison.OrdinalIgnoreCase))
+        {
+            <NavMenuDash />
+        }
+        else
+        {
+            <NavMenu />
+        }
     </div>
     <div class="cover">
         <img class="bg-image" src="_content/PESOapps.Shared/images/banner_img.png">

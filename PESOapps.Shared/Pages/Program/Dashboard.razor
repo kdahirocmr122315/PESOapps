@@ -35,6 +35,7 @@ else
                         <th scope="col">ID</th>
                         <th scope="col">Verification</th>
                         <th scope="col">Details</th>
+                        <th scope="col">Delete</th>
                         <th scope="col">Name</th>
                         <th scope="col">Birthdate</th>
                         <th scope="col">Address</th>
@@ -71,9 +72,14 @@ else
                                         Details
                                     </button>
                                 </td>
+                                <td>
+                                    <button class="btn btn-danger" @onclick="() => ConfirmDelete(item.ID)">
+                                        Delete
+                                    </button>
+                                </td>
                                 <td class="nowrap center-align">@item.Lastname, @item.Firstname @item.MiddleName @item.ExtensionName</td>
                                 <td>@(DateTime.TryParse(item.Birthday, out var birthDate) ? birthDate.ToString("yyyy/MM/dd") : item.Birthday)</td>
-                                <td>@item.Barangay, @item.Municipality, @item.Province, District @item.District</td>
+                                <td>@item.Street @item.Barangay, @item.Municipality, @item.Province, District @item.District</td>
                                 <td>@item.IDType</td>
                                 <td>@item.IDNumber</td>
                                 <td>@item.ContactNo</td>
@@ -106,8 +112,8 @@ else
                     <tr>
                         <th scope="col">ID</th>
                         <th scope="col">Verification</th>
-                        <th scope="col">Delete</th>
                         <th scope="col">Details</th>
+                        <th scope="col">Delete</th>
                         <th scope="col">Name</th>
                         <th scope="col">Birthdate</th>
                         <th scope="col">Address</th>
@@ -140,18 +146,18 @@ else
                                     </button>
                                 </td>
                                 <td>
-                                    <button class="btn btn-danger" @onclick="() => ConfirmDelete(item.ID)">
-                                        Delete
-                                    </button>
-                                </td>
-                                <td>
                                     <button class="btn btn-info" @onclick="() => ShowInfoDetails(item.ID)">
                                         Details
                                     </button>
                                 </td>
+                                <td>
+                                    <button class="btn btn-danger" @onclick="() => ConfirmDelete(item.ID)">
+                                        Delete
+                                    </button>
+                                </td>
                                 <td class="nowrap center-align">@item.Lastname, @item.Firstname @item.MiddleName @item.ExtensionName</td>
                                 <td>@(DateTime.TryParse(item.Birthday, out var birthDate) ? birthDate.ToString("yyyy/MM/dd") : item.Birthday)</td>
-                                <td>@item.Barangay, @item.Municipality, @item.Province, District @item.District</td>
+                                <td>@item.Street @item.Barangay, @item.Municipality, @item.Province, District @item.District</td>
                                 <td>@item.IDType</td>
                                 <td>@item.IDNumber</td>
                                 <td>@item.ContactNo</td>
@@ -195,7 +201,7 @@ else
                     {
                         <p><strong>Name : </strong> @selectedBeneficiary.Lastname, @selectedBeneficiary.Firstname @selectedBeneficiary.MiddleName</p>
                         <p><strong>Birthdate : </strong> @(DateTime.TryParse(selectedBeneficiary.Birthday, out var birthDate) ? birthDate.ToString("yyyy/MM/dd") : selectedBeneficiary.Birthday)</p>
-                        <p><strong>Address : </strong> @selectedBeneficiary.Barangay, @selectedBeneficiary.Municipality, @selectedBeneficiary.Province</p>
+                        <p><strong>Address : </strong> @selectedBeneficiary.Street @selectedBeneficiary.Barangay, @selectedBeneficiary.Municipality, @selectedBeneficiary.Province</p>
                         <p><strong>Type of ID : </strong> @selectedBeneficiary.IDType</p>
                         <p><strong>ID Number : </strong> @selectedBeneficiary.IDNumber</p>
                         <p><strong>Contact No. : </strong> @selectedBeneficiary.ContactNo</p>
@@ -343,6 +349,7 @@ else
 
         public string? Birthday { get; set; }
 
+        public string? Street { get; set; }
         public string? Barangay { get; set; }
         public string? Municipality { get; set; }
         public string? Province { get; set; }
@@ -362,6 +369,7 @@ else
         public string? InterestWage { get; set; }
         public string? SkillsTraining { get; set; }
         public string? Verification { get; set; }
+        public string? Deleted { get; set; }
    
     }
 
@@ -370,7 +378,8 @@ else
         bool confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this record?");
         if (confirm)
         {
-            await DeleteRecord(id);
+            await DeleteRecord(id); // Call DeleteRecord to mark the record as deleted
+            await LoadData();  // Refresh data
         }
     }
 
@@ -378,25 +387,38 @@ else
     {
         try
         {
-            var requestMessage = new HttpRequestMessage(HttpMethod.Delete, $"http://localhost:5167/Api/Tupad/{id}");
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", Token);
+            var deleteupdate = new
+            {
+                Verification = "deleted",
+                DeletedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") // Add the current timestamp
+            };
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"http://localhost:5167/Api/Tupad/{id}")
+                {
+                    Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(deleteupdate), System.Text.Encoding.UTF8, "application/json")
+                };
+
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
 
             var response = await Http.SendAsync(requestMessage);
 
             if (response.IsSuccessStatusCode)
             {
-                await LoadData(); // Refresh data after deletion
+                await LoadData(); // Refresh the data
             }
             else
             {
-                Console.WriteLine($"Failed to delete record: {response.StatusCode}");
+                string errorMessage = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Failed to mark record as deleted: {response.StatusCode} - {errorMessage}");
             }
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error deleting record: {ex.Message}");
+            Console.WriteLine($"Error marking record as deleted: {ex.Message}");
         }
     }
+
+
 
     private List<TupadBeneficiary> beneficiaries = new();
 

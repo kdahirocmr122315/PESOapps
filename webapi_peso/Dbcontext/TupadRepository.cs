@@ -82,11 +82,10 @@ namespace webapi_peso.Dbcontext
             using (var connection = Connection)
             {
                 connection.Open();
-                var sql = "UPDATE tbl_tupadbeneficiary SET Verification = @Verification WHERE Id = @ID";
+                var sql = "UPDATE tbl_tupadbeneficiary SET Verification = @Verification, DeletedDate = GETDATE() WHERE Id = @ID";
                 connection.Execute(sql, beneficiary);
             }
         }
-
         public void Deletebeneficiary(int id)
         {
             using (var connection = Connection)

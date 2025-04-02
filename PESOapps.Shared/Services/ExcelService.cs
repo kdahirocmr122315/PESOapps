@@ -164,7 +164,7 @@ public class ExcelService
                 worksheet.Cell(row, 5).Value = beneficiary.ExtensionName;
                 worksheet.Cell(row, 6).Value = beneficiary.Birthday;
                 worksheet.Cell(row, 6).Value = beneficiary.FormattedBirthday;
-                worksheet.Cell(row, 7).Value = beneficiary.Barangay;
+                worksheet.Cell(row, 7).Value = $"{beneficiary.Street} {beneficiary.Barangay}";
                 worksheet.Cell(row, 8).Value = beneficiary.Municipality;
                 worksheet.Cell(row, 9).Value = beneficiary.Province;
                 worksheet.Cell(row, 10).Value = beneficiary.District;
@@ -205,6 +205,8 @@ public class TupadBeneficiary
     public string? Birthday { get; set; }
     public string FormattedBirthday =>
     DateTime.TryParse(Birthday, out DateTime date) ? date.ToString("yyyy/MM/dd") : Birthday ?? "";
+
+    public string? Street { get; set; }
     public string? Barangay { get; set; }
     public string? Municipality { get; set; }
     public string? Province { get; set; }

@@ -107,7 +107,7 @@ a,
 }
 
 .form-cont.dashb {
-    max-width: unset;
+    max-width: 1900px;
 }
 
 .btn-primary {
@@ -412,6 +412,9 @@ a.nav-links-sub.tupad {
 }
 #infoModal .modal-header .btn-close {
     background-color: var(--bgcolor);
+}
+.navbars.dash {
+    max-width: 1900px;
 }
 /********************** LOGIN ************************/
 .login-containers {

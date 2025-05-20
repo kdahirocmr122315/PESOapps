@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
+using webapi_peso.Model;
 using static Pesomain.Model.Tbl_pesomain;
 
 
@@ -16,25 +17,20 @@ namespace MainpesoRepository.Dbcontext
 
         private IDbConnection Connection => new SqlConnection(_connectionString);
 
-        public async Task<bool> verifyUser(Log_user Nlog_user)
+        public User VerifyUser(Log_user log_user)
         {
             using (var connection = Connection)
             {
 
                 connection.Open();
 
-                string query = @"select Email,password from UserAccounts WHERE Email= '" + Nlog_user.Username + "' AND password = '" + Nlog_user.Password + "' AND UserType IN (1, 2)";
+                string query = @"SELECT * from UserAccounts WHERE Email= @Email AND Password = @Password";
 
-                var log_users = await Connection.QueryAsync<Log_user>(query);
-                bool rt = false;
-
-                if (log_users.Count() > 0)
+                return connection.QueryFirstOrDefault<User>(query, new
                 {
-                    rt = true;
-                }               
-
-
-                return rt;
+                    Email = log_user.Email,
+                    Password = log_user.Password
+                });
 
             }
         }

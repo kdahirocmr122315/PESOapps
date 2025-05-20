@@ -1,4 +1,4 @@
-﻿namespace authpro
+﻿namespace webapi_peso.Model
 {
     public class AdminAuth
     {

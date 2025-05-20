@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net;
+using webapi_peso.Model;
 using webapi_peso.ViewModels;
 
 namespace webapi_peso.Controllers
@@ -232,5 +233,107 @@ namespace webapi_peso.Controllers
                 return Ok(rs);
             }
         }
+
+        [HttpGet("GetEmployerDetailsByEmail/{AccountId}")]
+        public IActionResult GetEmployerDetailsByEmail(string AccountId)
+        {
+            using var db = dbFactory.CreateDbContext();
+
+            var account = db.UserAccounts.Where(x => x.Id == AccountId).FirstOrDefault();
+            if (account != null)
+            {
+                var emDetails = db.EmployerDetails.Where(x => x.ContactEmailAddress == account.Email).FirstOrDefault();
+                if (emDetails != null)
+                {
+                    return Ok(emDetails);
+                }
+            }
+
+            return BadRequest();
+        }
+
+        [HttpGet("GetEstablishmentDataWithUserAccountId/{userId}")]
+        public EmployerRegistrationViewModel GetEstablishmentDataWithUserAccountId(string userId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var data = cache.Get<EmployerRegistrationViewModel>($"GetEstablishmentDataWithUserAccountId/{userId}");
+            if (data == null)
+            {
+                data = new EmployerRegistrationViewModel();
+                var userAccount = db.UserAccounts.Find(userId);
+                if (userAccount != null)
+                {
+                    data.EmployerDetails = db.EmployerDetails.Include(x => x.JobPosts.Where(x => (bool)!x.IsDeleted)).Where(x => x.ContactEmailAddress == userAccount.Email).FirstOrDefault();
+                    if (data.EmployerDetails != null && data.EmployerDetails.JobPosts != null)
+                    {
+                        foreach (var job in data.EmployerDetails.JobPosts)
+                        {
+                            if (!job.Expiry.HasValue)
+                            {
+                                job.Expiry = DateTime.Now.AddMonths(2);
+                            }
+                            if (job.Expiry.Value.ToString("yyyy-MM-dd") == "0001-01-01")
+                            {
+                                job.Expiry = DateTime.Now.AddMonths(2);
+                            }
+                            db.EmployerJobPost.Update(job);
+                        }
+                        db.SaveChanges();
+                    }
+                    data.ListOfAttachments = new();
+                    //var attachmentsDirectory = System.IO.Path.Combine(env.WebRootPath, "files", "employers", data.EmployerDetails.Id);
+                    //if (!System.IO.Directory.Exists(attachmentsDirectory))
+                    //    System.IO.Directory.CreateDirectory(attachmentsDirectory);
+                    //foreach (var file in Directory.GetFiles(attachmentsDirectory))
+                    //{
+                    //    var fileInfo = new FileInfo(file);
+                    //    data.ListOfAttachments.Add(new()
+                    //    {
+                    //        Id = data.EmployerDetails.Id,
+                    //        FileName = System.IO.Path.GetFileName(file),
+                    //        FolderName = data.EmployerDetails.Id,
+                    //        FileSize = Helper.SizeSuffix(fileInfo.Length),
+                    //        IsAlreadyUploaded = 1
+                    //    });
+                    //}
+                }
+                cache.Set($"GetEstablishmentDataWithUserAccountId/{userId}", data, TimeSpan.FromSeconds(30));
+            }
+
+            return data;
+        }
+
+        [HttpPost("AddEmpJobPost")]
+        public IActionResult AddEmpJobPost(EmployerDetails data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            db.EmployerDetails.Update(data);
+            db.SaveChanges();
+            return Ok(data.JobPosts.OrderByDescending(x => x.DatePosted).FirstOrDefault());
+        }
+        [HttpPost("UpdateEmpJobPost")]
+        public IActionResult UpdateEmpJobPost(EmployerJobPost data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            db.EmployerJobPost.Update(data);
+            db.SaveChanges();
+            return Ok(data);
+        }
+        [HttpGet("DeleteEmpJobPost/{Id}/{UserId}")]
+        public IActionResult DeleteEmpJobPost(string Id, string UserId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var job = db.EmployerJobPost.Where(x => x.Id == Id).FirstOrDefault();
+            if (job != null)
+            {
+                job.IsDeleted = true;
+                db.EmployerJobPost.Update(job);
+                db.SaveChanges();
+            }
+            cache.Remove($"GetEstablishmentDataWithUserAccountId/{UserId}");
+            return Ok();
+        }
+
+
     }
 }

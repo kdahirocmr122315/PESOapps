@@ -10,6 +10,7 @@ namespace webapi_peso.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
+    [Authorize]
     public class EmployerController : ControllerBase
     {
         private readonly IDbContextFactory<ApplicationDbContext> dbFactory;

@@ -13,9 +13,9 @@ builder.Services.AddScoped<HttpClient>(sp =>
     var environment = sp.GetRequiredService<IHostEnvironment>();
 
     // Here we use a hardcoded base URI (use your app's base URI if needed)
-    return new HttpClient { BaseAddress = new Uri("https://localhost:7283/pesobeta/Tupadreg") };  // You can set your base URL here
+    return new HttpClient { BaseAddress = new Uri("https://portal.misamisoriental.gov.ph/pesobeta/Tupadreg") };  // You can set your base URL here
 });
-builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5167/") });
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("https://portal.misamisoriental.gov.ph/peso2api/") });
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

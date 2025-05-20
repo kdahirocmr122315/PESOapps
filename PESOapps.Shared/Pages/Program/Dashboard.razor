@@ -296,7 +296,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5167/Api/Tupad/verified");
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/verified");
         requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
 
         var response = await Http.SendAsync(requestMessage);
@@ -317,7 +317,7 @@ else
     {
         try
         {
-            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5167/Api/Tupad/verified");
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/verified");
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
             var response = await Http.SendAsync(requestMessage);
             if (response.IsSuccessStatusCode)
@@ -325,7 +325,7 @@ else
                 VerifiedList = await response.Content.ReadFromJsonAsync<List<TupadModel>>();
             }
 
-            requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5167/Api/Tupad/unverified");
+            requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/unverified");
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
             response = await Http.SendAsync(requestMessage);
             if (response.IsSuccessStatusCode)
@@ -344,7 +344,7 @@ else
         try
         {
             var updateData = new { Verification = isVerified ? "Yes" : "No" };
-            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"http://localhost:5167/Api/Tupad/{id}")
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/{id}")
                 {
                     Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(updateData), System.Text.Encoding.UTF8, "application/json")
                 };
@@ -421,7 +421,7 @@ else
                 DeletedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") // Add the current timestamp
             };
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"http://localhost:5167/Api/Tupad/{id}")
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/{id}")
                 {
                     Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(deleteupdate), System.Text.Encoding.UTF8, "application/json")
                 };
@@ -470,6 +470,7 @@ else
 
     private int TotalPagesVerified => (int)Math.Ceiling(FilteredVerified.Count / (double)pageSize);
     private int TotalPagesUnverified => (int)Math.Ceiling(FilteredUnverified.Count / (double)pageSize);
+
 
     private List<TupadModel> PaginatedVerifiedList =>
         FilteredVerified.Skip((currentPageVerified - 1) * pageSize).Take(pageSize).ToList();

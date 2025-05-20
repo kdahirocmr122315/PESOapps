@@ -3,16 +3,16 @@
 @import url('https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css');
 
 :root {
-    --maincolor: #00449E;
-    --bgcolor: #00449E;
+    --maincolor: #00449e;
+    --bgcolor: #ffffff;
     --mainfade: #00449ed4;
-    --font-color: #ffffff;
+    --font-color: #000000;
     --bgfade: #1b6ec2;
-    --1A5AA5: #1A5AA5;
-    --0AA9F9: #0AA9F9;
-    --text-shadow: #1A5AA5;
-    --box-shadow: #FFFFFFBF;
-    --hsla: hsla(0, 0%, 100%, .1);
+    --1A5AA5: #ffffff;
+    --0AA9F9: #e1e1e1;
+    --text-shadow: #ffffff;
+    --box-shadow: #000000BF;
+    --hsla: rgb(255, 255, 255, .8);
 }
 
 html {
@@ -410,12 +410,70 @@ a.nav-links-sub.tupad {
 #infoModal .modal-content {
     background: var(--bgcolor);
 }
+
 #infoModal .modal-header .btn-close {
     background-color: var(--bgcolor);
 }
+
 .navbars.dash {
     max-width: 1900px;
 }
+
+/**********************************************/
+.container1 {
+    margin-top: 10vh;
+}
+
+.card1 {
+    color: var(--font-color);
+    border-radius: 12px;
+    padding: 0;
+    margin: 20px .5% 0;
+    width: 48%;
+    text-align: center;
+    display: inline-block;
+    vertical-align: top;
+}
+
+.card1:first-child {
+    display: block;
+    margin: 0 auto;
+}
+
+.card1 h2 {
+    margin-top: 0;
+    font-size: 1.5em;
+    text-shadow: 1px 1px var(--text-shadow);
+}
+
+.card1 p {
+    font-size: .80em;
+    text-shadow: 1px 1px var(--text-shadow);
+}
+
+.btn1 {
+    background-color: var(--maincolor);
+    color: #ffffff;
+    padding: 0.6rem 1.2rem;
+    margin: 0.5rem;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: normal;
+    display: inline-block;
+}
+
+.btn1:hover {
+    background-color: #003f7a;
+    color: #fff;
+}
+
+.org-logo-cont.texts {
+    max-width: 1000px;
+    width: 100%;
+}
+
+/**********************************************/
 /********************** LOGIN ************************/
 .login-containers {
     display: flex;
@@ -572,7 +630,7 @@ th.center {
 }
 
 .org-logo {
-    margin-top: 20vh;
+    margin-top: 10vh;
 }
 
 span.misor-log.wrap {
@@ -951,7 +1009,7 @@ a:hover span {
     max-width: 90%;
     max-height: 90vh;
     border-radius: 10px;
-    background: var(--maincolor);
+    background: var(--bgcolor);
     margin: 0 auto;
 }
 
@@ -977,9 +1035,11 @@ a:hover span {
     height: 60vh;
 }
 
+/*
 .modal-header .btn-close {
     background-color: var(--font-color);
 }
+*/
 
 .buts.lo .btn {
     font-size: 1em;

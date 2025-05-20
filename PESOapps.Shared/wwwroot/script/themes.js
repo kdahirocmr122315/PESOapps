@@ -5,10 +5,29 @@
     let icon = document.getElementById('icons');
     let anim = document.querySelector(".btn__icon");
 
-    if (currentBg === '#00449E') {
+    if (currentBg === '#ffffff') {
+        // Switch to light mode
+        root.style.setProperty('--bgcolor', '#00449E');
+        root.style.setProperty('--font-color', '#ffffff');
+        root.style.setProperty('--text-shadow', '#1A5AA5');
+        root.style.setProperty('--box-shadow', '#FFFFFFBF');
+        root.style.setProperty('--1A5AA5', '#1A5AA5')
+        root.style.setProperty('--0AA9F9', '#0AA9F9');;
+        root.style.setProperty('--hsla', 'hsla(0, 0%, 100%, .1)');
+        button.classList.add("dark-mode");
+        button.classList.remove("light-mode");
+        icon.classList.remove('fa-sun');
+        icon.classList.add('fa-moon');
+        anim.classList.add('animated');
+
+        setTimeout(() => {
+            anim.classList.remove('animated');
+        }, 500)
+    } else {
+
         // Switch to dark mode
-        root.style.setProperty('--bgcolor', '#ffffff'); 
-        root.style.setProperty('--font-color', '#000000'); 
+        root.style.setProperty('--bgcolor', '#ffffff');
+        root.style.setProperty('--font-color', '#000000');
         root.style.setProperty('--text-shadow', '#ffffff');
         root.style.setProperty('--box-shadow', '#000000BF');
         root.style.setProperty('--1A5AA5', '#ffffff');
@@ -23,24 +42,7 @@
         setTimeout(() => {
             anim.classList.remove('animated');
         }, 500)
-    } else {
-        // Switch to light mode
-        root.style.setProperty('--bgcolor', '#00449E');  
-        root.style.setProperty('--font-color', '#ffffff'); 
-        root.style.setProperty('--text-shadow', '#1A5AA5');
-        root.style.setProperty('--box-shadow', '#FFFFFFBF'); 
-        root.style.setProperty('--1A5AA5', '#1A5AA5')
-        root.style.setProperty('--0AA9F9', '#0AA9F9');            ;
-        root.style.setProperty('--hsla', 'hsla(0, 0%, 100%, .1)'); 
-        button.classList.add("dark-mode");
-        button.classList.remove("light-mode");
-        icon.classList.remove('fa-sun');
-        icon.classList.add('fa-moon');
-        anim.classList.add('animated');
 
-        setTimeout(() => {
-            anim.classList.remove('animated');
-        }, 500)
     }
 
 }

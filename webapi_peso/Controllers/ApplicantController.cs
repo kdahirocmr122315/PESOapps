@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq;
+using webapi_peso.Model;
 using webapi_peso.ViewModels;
 
 namespace webapi_peso.Controllers
@@ -164,6 +165,20 @@ namespace webapi_peso.Controllers
             }
 
             return BadRequest();
+        }
+
+        [HttpGet("GetEmployerDetails/{empId}")]
+        public IActionResult GetEmployerDetails(string empId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var rs = cache.Get<EmployerDetails>($"GetEmployerDetails/{empId}");
+            if (rs == null)
+            {
+                rs = new EmployerDetails();
+                rs = db.EmployerDetails.Where(x => x.Id == empId).FirstOrDefault();
+                cache.Set($"GetEmployerDetails/{empId}", rs, TimeSpan.FromSeconds(30));
+            }
+            return Ok(rs);
         }
     }
 }

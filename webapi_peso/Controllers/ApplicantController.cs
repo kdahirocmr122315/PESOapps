@@ -147,5 +147,23 @@ namespace webapi_peso.Controllers
             }
             return Ok(count);
         }
+
+        [HttpGet("GetEmployerDetailsByEmail/{AccountId}")]
+        public IActionResult GetEmployerDetailsByEmail(string AccountId)
+        {
+            using var db = dbFactory.CreateDbContext();
+
+            var account = db.UserAccounts.Where(x => x.Id == AccountId).FirstOrDefault();
+            if (account != null)
+            {
+                var emDetails = db.EmployerDetails.Where(x => x.ContactEmailAddress == account.Email).FirstOrDefault();
+                if (emDetails != null)
+                {
+                    return Ok(emDetails);
+                }
+            }
+
+            return BadRequest();
+        }
     }
 }

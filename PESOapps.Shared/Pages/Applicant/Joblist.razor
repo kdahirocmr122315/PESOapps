@@ -1,0 +1,119 @@
+﻿@page "/Joblist/dash"
+@using System.Text.Json
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+
+@if (!isUserLoggedIn)
+{
+    <p>Redirecting to login...</p>
+}
+else if (profile == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="job-board">
+        <div class="job-list">
+            @if (jobList == null)
+            {
+                <p>Loading jobs...</p>
+            }
+            else
+            {
+                @foreach (var job in jobList)
+                {
+                    <div class="job-card @(selectedJob?.JobPost?.Id == job.JobPost?.Id ? "selected" : "")" @onclick="@(() => SelectJob(job))">
+                        <strong>@job.JobPost?.Description</strong><br />
+                        <span>@job.JobPost?.EmployerDetailsId</span><br />
+                        <small>Location</small>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="job-details">
+            @if (selectedJob != null)
+            {
+                <h2>@selectedJob.JobPost?.Description</h2>
+                <p><strong>@selectedJob.JobPost?.EmployerDetailsId</strong></p>
+                <p>Location</p>
+                <p><em>@selectedJob.JobPost?.DatePosted</em></p>
+                <hr />
+                <p>@selectedJob.JobPost?.Description2</p>
+            }
+            else
+            {
+                <p>Select a job to view details</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private AccountAndInformationViewModel? profile;
+    private bool isUserLoggedIn = false;
+    private bool loaded = false;
+
+    private List<JobPostViewModel>? jobList;
+    private JobPostViewModel? selectedJob;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !loaded)
+        {
+            loaded = true;
+
+            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+            var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+
+            if (!string.IsNullOrWhiteSpace(userId) && isLoggedIn == "true")
+            {
+                isUserLoggedIn = true;
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                try
+                {
+                    var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        // Load job list after confirming user profile
+                        jobList = await Http.GetFromJsonAsync<List<JobPostViewModel>>("http://localhost:5167/api/Applicant/GetJobLists");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex.Message);
+                }
+
+                StateHasChanged(); // Refresh the UI
+            }
+            else
+            {
+                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            }
+        }
+    }
+
+    void SelectJob(JobPostViewModel job)
+    {
+        selectedJob = job;
+    }
+
+    public class JobPostViewModel
+    {
+        public EmployerDetails? EmpDetails { get; set; }
+        public EmployerJobPost? JobPost { get; set; }
+        public string? FirstImage { get; set; }
+    }
+}

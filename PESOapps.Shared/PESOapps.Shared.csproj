@@ -36,6 +36,11 @@
 
   <ItemGroup>
     <Folder Include="Model\" />
+    <Folder Include="wwwroot\glb\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\webapi_peso\webapi_peso.csproj" />
   </ItemGroup>
 
 </Project>

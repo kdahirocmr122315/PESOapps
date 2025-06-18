@@ -26,6 +26,17 @@ namespace PESOapps
             builder.Logging.AddDebug();
 #endif
 
+#if ANDROID
+            // For development ONLY: accept all SSL certificates on Android
+            builder.Services.AddScoped(sp => new HttpClient(new HttpClientHandler
+            {
+                ServerCertificateCustomValidationCallback = (message, cert, chain, errors) => true
+            }));
+#else
+            // Default for Windows, iOS, Mac
+            builder.Services.AddScoped(sp => new HttpClient());
+#endif
+
             return builder.Build();
         }
     }

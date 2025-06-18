@@ -53,9 +53,5 @@ namespace User_log.Controllers
 
             return Ok(response);
         }
-
-
-
-
     }
 }

@@ -1,15 +1,14 @@
 ﻿@page "/Login"
-@using Microsoft.AspNetCore.Components.ProtectedBrowserStorage
+@using webapi_peso.Model
 @inject HttpClient Http
 @inject NavigationManager Navigation
-@inject ProtectedSessionStorage SessionStorage
-
+@inject IJSRuntime JS
 
 <PageTitle>Login</PageTitle>
 
 <div class="login-containers">
     <div class="login-cards">
-        <h2>Admin Login</h2>
+        <h2>Login</h2>
 
         @if (!string.IsNullOrEmpty(Message))
         {
@@ -17,8 +16,8 @@
         }
 
         <div class="input-groups">
-            <label>Username</label>
-            <input type="text" @bind="username" placeholder="Enter your username" />
+            <label>Email</label>
+            <input type="text" @bind="username" placeholder="Enter your Email" />
         </div>
 
         <div class="input-groups">
@@ -34,8 +33,11 @@
     private string? username { get; set; }
     private string? password { get; set; }
     private string? Message { get; set; }
-    private string apiUrl = "https://portal.misamisoriental.gov.ph/peso2api/Log/User";
-    private string token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
+
+    private string apiUrl = "http://localhost:5167/Log/User";
+
+    // ✅ This is the token required by the API to allow login (admin key or pre-auth token)
+    private string initialBearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
 
     private async Task LoginUser()
     {
@@ -43,33 +45,65 @@
         {
             var request = new HttpRequestMessage(HttpMethod.Post, apiUrl)
             {
-                Content = new StringContent($"{{\"username\":\"{username ?? ""}\", \"password\":\"{password ?? ""}\"}}", 
-                    System.Text.Encoding.UTF8, "application/json")
+                Content = new StringContent(
+                    $"{{\"email\":\"{username?.Trim()}\", \"password\":\"{password?.Trim()}\"}}",
+                    System.Text.Encoding.UTF8,
+                    "application/json")
             };
-            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            // ✅ Add the required Bearer token to authenticate the login call itself
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", initialBearerToken);
 
             var response = await Http.SendAsync(request);
+
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadAsStringAsync();
-                if (result.ToLower().Trim() == "true")
+                var json = await response.Content.ReadAsStringAsync();
+
+                var user = System.Text.Json.JsonSerializer.Deserialize<LoginResponse>(json,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (user != null)
                 {
-                    await SessionStorage.SetAsync("IsLoggedIn", true); // Store login state
-                    Navigation.NavigateTo("/pesobeta/dashboard");
+                    // ✅ Store values in localStorage for later use (including new Token returned by API)
+                    await JS.InvokeVoidAsync("localStorage.setItem", "UserId", user.Id);
+                    await JS.InvokeVoidAsync("localStorage.setItem", "UserType", user.UserType.ToString());
+                    await JS.InvokeVoidAsync("localStorage.setItem", "Token", user.Token);
+                    await JS.InvokeVoidAsync("localStorage.setItem", "IsLoggedIn", "true");
+
+                    if (user.UserType == 1 || user.UserType == 2)
+                    {
+                        Navigation.NavigateTo("/pesobeta/Profile/dash");
+                    }
+                    else if (user.UserType == 3)
+                    {
+                        Navigation.NavigateTo("/pesobeta/Profile/dash");
+                    }
+                    else
+                    {
+                        Message = "Unknown user type.";
+                    }
                 }
-                else
-                {
-                    Message = "Invalid credentials. Please try again.";
-                }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Message = "Invalid username or password.";
             }
             else
             {
-                Message = "Error connecting to server.";
+                Message = $"Server error: {response.StatusCode}";
             }
         }
         catch (Exception ex)
         {
             Message = $"Error: {ex.Message}";
         }
+    }
+
+    public class LoginResponse
+    {
+        public string? Id { get; set; }
+        public int UserType { get; set; }
+        public string? Token { get; set; } // ✅ Make sure backend includes this in response
     }
 }

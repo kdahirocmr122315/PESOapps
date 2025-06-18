@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Components.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.StaticFiles;
 using PESOapps.Shared.Address;
 using PESOapps.Shared.Services;
 using PESOapps.Web.Components;
@@ -24,7 +26,9 @@ builder.Services.AddRazorComponents()
 // Add device-specific services used by the PESOapps.Shared project
 builder.Services.AddSingleton<IFormFactor, FormFactor>();
 builder.Services.AddProtectedBrowserStorage();
+builder.Services.AddScoped<ProtectedLocalStorage>();
 builder.Services.AddScoped<ExcelService>();
+builder.Services.AddScoped<UiStateService>();
 // Register AddressService (Ensure it properly loads JSON)
 builder.Services.AddScoped<AddressService>(sp =>
 {
@@ -42,6 +46,13 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+var provider = new FileExtensionContentTypeProvider();
+provider.Mappings[".glb"] = "model/gltf-binary";
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    ContentTypeProvider = provider
+});
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

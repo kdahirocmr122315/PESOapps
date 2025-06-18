@@ -1,0 +1,132 @@
+﻿@page "/Profile/dash"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using webapi_peso.ViewModels
+@using System.Text.Json
+
+@if (!isUserLoggedIn)
+{
+    <p>Redirecting to login...</p>
+}
+else if (profile == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="profile-page">
+        <!-- Cover Photo -->
+        <div class="prof-cover">
+            <!-- Profile Picture -->
+            <div class="profile-picture position-absolute" style="bottom: -60px; left: 30px;">
+                <img src="https://pesoapi.misamisoriental.gov.ph/image/profile_placeholder.png"
+                     class="rounded-circle border border-white shadow"
+                     style="width: 120px; height: 120px; object-fit: cover;" />
+            </div>
+        </div>
+
+        <!-- Main Profile Content -->
+        <div class="prof-container">
+            <div class="prof-flex d-flex justify-content-between align-items-start flex-wrap">
+                <div>
+                    <h3 class="fw-bold mb-1">
+                        @profile.ApplicantInformation?.FirstName @profile.ApplicantInformation?.MiddleName @profile.ApplicantInformation?.SurName @profile.ApplicantInformation?.Suffix
+                    </h3>
+                    <p class="text-muted mb-2">@profile.ApplicantInformation?.Email</p>
+                </div>
+            </div>
+
+            <!-- Profile Summary Section -->
+            <div class="row mt-4">
+                <div class="col-md-6 mb-3">
+                    <p class="mb-1 text-muted">Phone</p>
+                    <p>@profile.ApplicantInformation?.CellphoneNumber</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-1 text-muted">Date of Birth</p>
+                    <p>
+                        @if (profile.ApplicantInformation?.DateOfBirth is not null)
+                        {
+                            @DateTimeOffset.FromUnixTimeMilliseconds(profile.ApplicantInformation.DateOfBirth).ToString("MMMM dd, yyyy")
+                        }
+                        else
+                        {
+                            <span>N/A</span>
+                        }
+                    </p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-1 text-muted">Place of Birth</p>
+                    <p>@profile.ApplicantInformation?.PlaceOfBirth</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-1 text-muted">Gender</p>
+                    <p>@profile.ApplicantInformation?.Gender</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-1 text-muted">Religion</p>
+                    <p>@profile.ApplicantInformation?.Religion</p>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <p class="mb-1 text-muted">Civil Status</p>
+                    <p>@profile.ApplicantInformation?.CivilStatus</p>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isUserLoggedIn = false;
+    private AccountAndInformationViewModel? profile;
+    private bool loaded = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !loaded)
+        {
+            loaded = true;
+
+            // Safely call localStorage after JS runtime is ready
+            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+            var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+
+            if (!string.IsNullOrWhiteSpace(userId) && isLoggedIn == "true")
+            {
+                isUserLoggedIn = true;
+
+                // Add token to HTTP header
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                try
+                {
+                    var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    }
+                    else
+                    {
+                        Console.WriteLine("Failed to fetch profile: " + response.StatusCode);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error fetching profile: " + ex.Message);
+                }
+
+                StateHasChanged(); // Refresh the UI
+            }
+            else
+            {
+                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            }
+        }
+    }
+}

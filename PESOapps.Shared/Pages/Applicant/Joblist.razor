@@ -27,9 +27,17 @@ else
                 @foreach (var job in jobList)
                 {
                     <div class="job-card @(selectedJob?.JobPost?.Id == job.JobPost?.Id ? "selected" : "")" @onclick="@(() => SelectJob(job))">
-                        <strong>@job.JobPost?.Description</strong><br />
-                        <span>@job.JobPost?.EmployerDetailsId</span><br />
-                        <small>Location</small>
+                        <h2>@job.JobPost?.Description</h2>
+                        <p><strong>@GetEstablishmentName(job)</strong></p>
+                        <p>Location</p>
+                        <p><em>@job.JobPost?.DatePosted</em></p>
+                    </div>
+
+                    <div>
+                           <small>PostID: @job.JobPost?.Id <br />
+                            EmployerDetailsId: @job.JobPost?.EmployerDetailsId <br />
+                            EmpDetailsId: @job.EmpDetails?.Id <br />
+                            Name: @job.EmpDetails?.EstablishmentName</small>
                     </div>
                 }
             }
@@ -39,11 +47,11 @@ else
             @if (selectedJob != null)
             {
                 <h2>@selectedJob.JobPost?.Description</h2>
-                <p><strong>@selectedJob.JobPost?.EmployerDetailsId</strong></p>
+                <p><strong>@selectedJob?.EmpDetails?.EstablishmentName</strong></p>
                 <p>Location</p>
-                <p><em>@selectedJob.JobPost?.DatePosted</em></p>
+                <p><em>@selectedJob?.JobPost?.DatePosted</em></p>
                 <hr />
-                <p>@selectedJob.JobPost?.Description2</p>
+                <p>@selectedJob?.JobPost?.Description2</p>
             }
             else
             {
@@ -116,4 +124,17 @@ else
         public EmployerJobPost? JobPost { get; set; }
         public string? FirstImage { get; set; }
     }
+
+    private string? GetEstablishmentName(JobPostViewModel job)
+    {
+        if (job.JobPost?.EmployerDetailsId != null && job.EmpDetails?.Id != null)
+        {
+            if (job.JobPost.EmployerDetailsId == job.EmpDetails.Id)
+            {
+                return job.EmpDetails.EstablishmentName;
+            }
+        }
+        return "Unknown Establishment";
+    }
+
 }

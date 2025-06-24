@@ -3,9 +3,9 @@
 @import url('https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css');
 
 :root {
-    --maincolor: #00449e;
+    --maincolor: #07522D;
     --bgcolor: #F2F4F7;
-    --mainfade: #00449ed4;
+    --mainfade: #07522Dd4;
     --font-color: #080809;
     --bgfade: #1b6ec2;
     --1A5AA5: #ffffff;
@@ -1368,7 +1368,6 @@ a.dashnav-links.active:hover span {
 .job-board {
     display: flex;
     height: calc(100vh - 120px);
-    font-family: sans-serif;
 }
 
 .job-list {
@@ -1377,16 +1376,20 @@ a.dashnav-links.active:hover span {
     overflow-y: auto;
     padding: 1rem;
     background-color: #f9f9f9;
+    margin-right: 10px;
+    border-radius: 10px;
 }
 
 .job-card {
     padding: 1rem;
     margin-bottom: 0.5rem;
     background: white;
-    border: 1px solid #ddd;
+    border: 2px solid transparent;
     border-radius: 6px;
     cursor: pointer;
     transition: background-color 0.2s ease;
+    box-shadow: 0px 4px 6px 0px rgba(0, 0, 0, 0.07), inset 1px 1px 3px 0px #FFFFFF;
+    box-sizing: border-box;
 }
 
 .job-card:hover {
@@ -1394,7 +1397,7 @@ a.dashnav-links.active:hover span {
 }
 
 .job-card.selected {
-    border: 2px solid #007bff;
+    border: 2px solid var(--maincolor);
     background-color: #e9f2ff;
 }
 
@@ -1402,6 +1405,51 @@ a.dashnav-links.active:hover span {
     width: 65%;
     padding: 2rem;
     overflow-y: auto;
+    background: rgb(255, 255, 255, .8);
+    box-shadow: 0px 4px 6px 0px rgba(0, 0, 0, 0.07), inset 1px 1px 3px 0px #FFFFFF;
+    border-radius: 10px;
+}
+
+.card-name {
+    color: var(--maincolor);
+    font-size: 1.3em;
+}
+
+.elips {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+p.muted {
+    color: var(--muted);
+    font-size: .8em;
+}
+
+p.card-date {
+    font-size: .8em;
+}
+
+p.card-description {
+    white-space: pre-line;
+}
+
+p.card-details-in {
+    margin-left: 10px;
+}
+
+p.card-details-in .card-span {
+    font-size: .9em;
+    margin-right: 5px;
+    color: var(--maincolor);
+}
+
+.details-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
 
 /* -------------- Job List ------------ */

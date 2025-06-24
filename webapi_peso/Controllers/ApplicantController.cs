@@ -32,17 +32,9 @@ namespace webapi_peso.Controllers
                 //var listofjobs = db.EmployerJobPost.Where(x => x.IsVacant == 0 && !x.IsDeleted).ToList();
                 var listofjobs = db.EmployerJobPost.Where(x => x.IsVacant == 0 && x.IsDeleted == false).ToList();
 
-
-
                 foreach (var i in listofjobs)
                 {
-                    if (!i.Expiry.HasValue)
-                    {
-                        i.Expiry = DateTime.Now.AddMonths(2);
-                        db.EmployerJobPost.Update(i);
-                        db.SaveChanges();
-                    }
-                    if (i.Expiry.Value.ToString("yyyy-MM-dd") == "0001-01-01")
+                    if (!i.Expiry.HasValue || i.Expiry.Value.ToString("yyyy-MM-dd") == "0001-01-01")
                     {
                         i.Expiry = DateTime.Now.AddMonths(2);
                         db.EmployerJobPost.Update(i);
@@ -51,6 +43,11 @@ namespace webapi_peso.Controllers
 
                     var model = new JobPostViewModel();
                     model.JobPost = i;
+
+                    // ✅ Add this line to include EmployerDetails
+                    model.EmpDetails = db.EmployerDetails.FirstOrDefault(e => e.Id == i.EmployerDetailsId);
+
+                    // ✅ Optional: attach first image
                     var dir = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\files\\employers\\{i.EmployerDetailsId}");
                     if (Directory.Exists(dir))
                     {
@@ -58,8 +55,10 @@ namespace webapi_peso.Controllers
                         if (files != null && files.Length > 0)
                             model.FirstImage = files[0];
                     }
+
                     list.Add(model);
                 }
+
                 cache.Set($"GetJobLists", list, TimeSpan.FromSeconds(30));
             }
             return Ok(list);

@@ -12,11 +12,11 @@ namespace webapi_peso.Model
     {
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
-        public string Id { get; set; }
-        public string Email { get; set; }
-        public string Message { get; set; }
-        public string JobPostId { get; set; }
-        public string ApplicantId { get; set; }
+        public string? Id { get; set; }
+        public string? Email { get; set; }
+        public string? Message { get; set; }
+        public string? JobPostId { get; set; }
+        public string? ApplicantId { get; set; }
         public DateTime DateCreated { get; set; }
     }
 }

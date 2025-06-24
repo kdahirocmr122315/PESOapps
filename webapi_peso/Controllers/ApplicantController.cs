@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq;
+using System.Net;
 using webapi_peso.Model;
 using webapi_peso.ViewModels;
 
@@ -178,6 +179,33 @@ namespace webapi_peso.Controllers
                 cache.Set($"GetEmployerDetails/{empId}", rs, TimeSpan.FromSeconds(30));
             }
             return Ok(rs);
+        }
+
+        [HttpGet("GetAllApplicationsByApplicant/{applicantId}")]
+        public async Task<IActionResult> GetAllApplicationsByApplicant(string applicantId)
+        {
+            using (var db = dbFactory.CreateDbContext()) 
+            {
+                var list = cache.Get<List<AppliedJobsViewModel>>($"GetAllApplicationsByApplicant/{applicantId}");
+                if (list == null)
+                {
+                    list = new List<AppliedJobsViewModel>();
+                    var jobPosts = db.JobApplicantion.Where(x => x.ApplicantId == applicantId).ToList();
+                    foreach (var jobPost in jobPosts)
+                    {
+                        var model = new AppliedJobsViewModel();
+                        var jobInfo = db.EmployerJobPost.Where(x => x.Id == jobPost.JobPostId).FirstOrDefault();
+                        model.Post = jobInfo;
+                        model.ApplicantId = applicantId;
+                        model.DateCreated = jobPost.DateCreated;
+                        model.JobPostId = jobPost.JobPostId;
+                        list.Add(model);
+                    }
+                    cache.Set($"GetAllApplicationsByApplicant/{applicantId}", list, TimeSpan.FromSeconds(30));
+                }
+                return Ok(list);
+
+            }
         }
     }
 }

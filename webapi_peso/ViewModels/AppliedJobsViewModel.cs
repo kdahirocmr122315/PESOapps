@@ -10,6 +10,7 @@ namespace webapi_peso.ViewModels
         public string ApplicantId { get; set; }
         public DateTime DateCreated { get; set; }
         public EmployerJobPost Post { get; set; }
+        public EmployerDetails EmployerDetails { get; set; }
 
     }
 }

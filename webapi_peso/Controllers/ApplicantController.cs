@@ -195,7 +195,9 @@ namespace webapi_peso.Controllers
                     {
                         var model = new AppliedJobsViewModel();
                         var jobInfo = db.EmployerJobPost.Where(x => x.Id == jobPost.JobPostId).FirstOrDefault();
+                        var employerDetails = db.EmployerDetails.Where( x => x.Id == jobInfo.EmployerDetailsId).FirstOrDefault();
                         model.Post = jobInfo;
+                        model.EmployerDetails = employerDetails;
                         model.ApplicantId = applicantId;
                         model.DateCreated = jobPost.DateCreated;
                         model.JobPostId = jobPost.JobPostId;

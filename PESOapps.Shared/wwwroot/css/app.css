@@ -188,7 +188,7 @@ h1:focus {
     z-index: -11;
     left: 10%;
     bottom: 10%;
-    animation: logos 20s;
+    animation: logos 2s;
 }
 
 .cover img {
@@ -1290,6 +1290,10 @@ a.dashnav-links.active:hover span {
 
 .profile-page {
     background: none;
+    overflow-y: auto;
+    display: flex;
+    height: calc(100vh - 110px);
+    flex-direction: column;
 }
 
 .main-container {
@@ -1320,6 +1324,7 @@ a.dashnav-links.active:hover span {
     max-width: 1080px;
     margin: 0 auto;
     width: 100%;
+    padding: 90px 0;
 }
 
 .prof-flex {
@@ -1363,7 +1368,101 @@ a.dashnav-links.active:hover span {
     transition: ease-out .2s;
 }
 
+.sbclose .sidebar-container .btn__indicator {
+    transform: translateX(2px);
+}
+
+.sbopen .sidebar-container .btn__indicator {
+    transform: translateX(190px);
+}
+
+.sidebar-container .btn__icon {
+    font-size: 2rem;
+    line-height: 1;
+}
+
+.sbclose .sidebar-container .btn__indicator i {
+    transform: rotate(180deg);
+}
+
 /* -------------- Sidebar Navigation ------------ */
+
+
+/* feed container (optional) start*/
+.feed-container {
+    max-width: 620px;
+    margin-inline: auto;
+}
+
+/* wrapper card */
+.feed-card {
+    background: #fff;
+    border: 1px solid #e4e6eb;
+    border-radius: .75rem;
+    padding: 1rem 1.25rem;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, .06);
+    flex: 1 1 350px;
+}
+
+.profile-feeds {
+    display: flex;
+    flex-wrap: wrap;
+    list-style: none;
+    gap: 15px;
+    max-width: 1080px;
+    width: 100%;
+    margin: 20px auto 0;
+}
+
+/* header */
+.feed-card__header {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .75rem;
+}
+
+.avatar {
+    width: 41px;
+    height: 41px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.meta {
+    flex: 1;
+}
+
+.name {
+    font-weight: 600;
+}
+
+.info {
+    font-size: .8rem;
+    color: #65676b;
+    display: flex;
+    gap: .25rem;
+}
+
+
+/* body */
+.feed-card__body h3 {
+    margin: 0 0 .25rem;
+    font-size: 1.15rem;
+}
+
+.feed-card__body p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+/* optional: privacy icon size tweak */
+.icon-privacy {
+    font-size: 1rem;
+}
+
+/* feed container (optional) End */
+
 /* -------------- Job List ------------ */
 
 .job-board {
@@ -1486,107 +1585,21 @@ p.card-details-in .card-span {
     color: var(--muted) !important;
 }
 
-/* -------------- MEDIA ------------ */
-@media only screen and (max-width: 1280px) {
-    .coverlog {
-        left: 0%;
-    }
-}
-
-@media only screen and (max-width: 1180px) {
-    .contact-us-map iframe {
-        width: 400px;
-        height: 345px;
-    }
-
-    .contact-us-cont {
-        justify-content: center;
-    }
-
-    .container-aboutus img {
-        width: 100%;
-    }
-}
-
-@media only screen and (max-width: 890px) {
-    .contact-us-cont {
-        flex-direction: column;
-        align-items: center;
-    }
-
-    .peso-menu {
-        justify-content: center;
-    }
-}
-
-@media only screen and (max-width: 768px) {
-
-    html,
-    body {
-        font-size: 13px;
-    }
-
-    span.peso-log {
-        font-size: 25px;
-    }
-
-    .header-title {
-        text-align: center;
-        font-size: 25px;
-        margin: 25px 0;
-    }
-
-    span.misvis-header {
-        font-size: 20px;
-    }
-
-    .org-content.misvis {
-        flex-direction: column;
-    }
-
-    .nav-item {
-        position: unset;
-    }
-
-    .aboutus-bub {
-        padding: 20px 20px;
-    }
-}
-
-@media only screen and (max-width: 600px) {
-    .nav-links img {
-        display: unset;
-    }
-
-    .nav-links span {
-        display: none;
-    }
-}
-
-@media only screen and (max-width: 600px) {
-    .contact-us-map iframe {
-        width: 300px;
-        height: 250px;
-    }
-
-}
-
-@media only screen and (max-width: 425px) {
-    .peso-logos.peso-logo-im img {
-        width: 100px;
-    }
-
-    .navbars {
-        padding: 15px 10px;
-    }
-
-    .footer {
-        font-size: 10px;
-    }
-}
 
 @keyframes logos {
     0% {
+        opacity: 0;
+    }
+
+    25% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 0;
+    }
+
+    75% {
         opacity: 0;
     }
 

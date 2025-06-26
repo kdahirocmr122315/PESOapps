@@ -7,7 +7,7 @@
 
 @if (!isUserLoggedIn)
 {
-    <p>Redirecting to login...</p>
+
 }
 else if (profile == null)
 {
@@ -74,12 +74,44 @@ else
                 </div>
             </div>
         </div>
+
+
+        <div class="profile-feeds">
+            @foreach (var post in applications)
+            {
+                <article class="feed-card">
+                    <!-- ── header ────────────────────────────────────────────── -->
+                    <header class="feed-card__header">
+                        <img src="https://pesoapi.misamisoriental.gov.ph/image/profile_placeholder.png"
+                             class="avatar" />
+
+                        <div class="meta">
+                            <div class="name">@profile.ApplicantInformation?.FirstName @profile.ApplicantInformation?.MiddleName @profile.ApplicantInformation?.SurName @profile.ApplicantInformation?.Suffix</div>
+                            <div class="info">
+                                <span>@post.DateCreated.ToString("MMMM dd, yyyy hh:mm tt")</span>
+                                <span class="fa fa-lock"></span>
+                            </div>
+                        </div>
+                    </header>
+
+                    <!-- ── body ──────────────────────────────────────────────── -->
+                    <section class="feed-card__body">
+                        <h3>@post.EmployerDetails?.ContactPosition</h3>
+                        <p>@post.EmployerDetails?.EstablishmentName</p>
+                    </section>
+                </article>
+            }
+        </div>
     </div>
 }
 
 @code {
     private bool isUserLoggedIn = false;
     private AccountAndInformationViewModel? profile;
+
+    // ⭐ NEW – holds the applications returned by the new endpoint
+    private List<AppliedJobsViewModel>? applications;
+
     private bool loaded = false;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -88,7 +120,7 @@ else
         {
             loaded = true;
 
-            // Safely call localStorage after JS runtime is ready
+            // 1️⃣ Get auth info from localStorage
             var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
             var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
             var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
@@ -97,31 +129,54 @@ else
             {
                 isUserLoggedIn = true;
 
-                // Add token to HTTP header
+                // 2️⃣ Attach JWT to every request
                 Http.DefaultRequestHeaders.Authorization =
                     new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 try
                 {
-                    var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
+                    /* ─────────────────────────────────────────
+                       A. Fetch applicant profile (your old call)
+                       ───────────────────────────────────────── */
+                    var profileResponse =
+                        await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
 
-                    if (response.IsSuccessStatusCode)
+                    if (profileResponse.IsSuccessStatusCode)
                     {
-                        var json = await response.Content.ReadAsStringAsync();
-                        profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json,
+                        var json = await profileResponse.Content.ReadAsStringAsync();
+                        profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(
+                            json,
                             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
                     }
                     else
                     {
-                        Console.WriteLine("Failed to fetch profile: " + response.StatusCode);
+                        Console.WriteLine($"Profile call failed: {profileResponse.StatusCode}");
+                    }
+
+                    /* ─────────────────────────────────────────
+                       B. Fetch ALL applications for this user
+                       ───────────────────────────────────────── */
+                    var appsResponse =
+                        await Http.GetAsync($"http://localhost:5167/api/Applicant/GetAllApplicationsByApplicant/{userId}");
+
+                    if (appsResponse.IsSuccessStatusCode)
+                    {
+                        var appsJson = await appsResponse.Content.ReadAsStringAsync();
+                        applications = JsonSerializer.Deserialize<List<AppliedJobsViewModel>>(
+                            appsJson,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Applications call failed: {appsResponse.StatusCode}");
                     }
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine("Error fetching profile: " + ex.Message);
+                    Console.WriteLine("Error fetching data: " + ex.Message);
                 }
 
-                StateHasChanged(); // Refresh the UI
+                StateHasChanged(); // Refresh the UI once we have data
             }
             else
             {
@@ -129,4 +184,9 @@ else
             }
         }
     }
+
+    /* ─────────────────────────────────────────────
+       Optional: expose a quick helper for the UI
+    ───────────────────────────────────────────── */
+    private int ApplicationCount => applications?.Count ?? 0;
 }

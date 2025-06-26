@@ -1,0 +1,97 @@
+﻿/* -------------- MEDIA ------------ */
+@media only screen and (max-width: 1280px) {
+    .coverlog {
+        left: 0%;
+    }
+}
+
+@media only screen and (max-width: 1180px) {
+    .contact-us-map iframe {
+        width: 400px;
+        height: 345px;
+    }
+
+    .contact-us-cont {
+        justify-content: center;
+    }
+
+    .container-aboutus img {
+        width: 100%;
+    }
+}
+
+@media only screen and (max-width: 890px) {
+    .contact-us-cont {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .peso-menu {
+        justify-content: center;
+    }
+}
+
+@media only screen and (max-width: 768px) {
+
+    html,
+    body {
+        font-size: 13px;
+    }
+
+    span.peso-log {
+        font-size: 25px;
+    }
+
+    .header-title {
+        text-align: center;
+        font-size: 25px;
+        margin: 25px 0;
+    }
+
+    span.misvis-header {
+        font-size: 20px;
+    }
+
+    .org-content.misvis {
+        flex-direction: column;
+    }
+
+    .nav-item {
+        position: unset;
+    }
+
+    .aboutus-bub {
+        padding: 20px 20px;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .nav-links img {
+        display: unset;
+    }
+
+    .nav-links span {
+        display: none;
+    }
+}
+
+@media only screen and (max-width: 600px) {
+    .contact-us-map iframe {
+        width: 300px;
+        height: 250px;
+    }
+}
+
+@media only screen and (max-width: 425px) {
+    .peso-logos.peso-logo-im img {
+        width: 100px;
+    }
+
+    .navbars {
+        padding: 15px 10px;
+    }
+
+    .footer {
+        font-size: 10px;
+    }
+}

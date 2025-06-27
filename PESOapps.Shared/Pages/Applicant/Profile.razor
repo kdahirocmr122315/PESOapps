@@ -77,16 +77,20 @@ else
 
 
         <div class="profile-feeds">
-            @foreach (var post in applications)
+            @foreach (var post in applications?.OrderByDescending(p => p.DateCreated) ?? Enumerable.Empty<AppliedJobsViewModel>())
             {
                 <article class="feed-card">
-                    <!-- ── header ────────────────────────────────────────────── -->
                     <header class="feed-card__header">
                         <img src="https://pesoapi.misamisoriental.gov.ph/image/profile_placeholder.png"
                              class="avatar" />
 
                         <div class="meta">
-                            <div class="name">@profile.ApplicantInformation?.FirstName @profile.ApplicantInformation?.MiddleName @profile.ApplicantInformation?.SurName @profile.ApplicantInformation?.Suffix</div>
+                            <div class="name">
+                                @profile.ApplicantInformation?.FirstName
+                                @profile.ApplicantInformation?.MiddleName
+                                @profile.ApplicantInformation?.SurName
+                                @profile.ApplicantInformation?.Suffix
+                            </div>
                             <div class="info">
                                 <span>@post.DateCreated.ToString("MMMM dd, yyyy hh:mm tt")</span>
                                 <span class="fa fa-lock"></span>
@@ -94,7 +98,6 @@ else
                         </div>
                     </header>
 
-                    <!-- ── body ──────────────────────────────────────────────── -->
                     <section class="feed-card__body">
                         <h3>@post.EmployerDetails?.ContactPosition</h3>
                         <p>@post.EmployerDetails?.EstablishmentName</p>

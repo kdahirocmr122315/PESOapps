@@ -71,11 +71,28 @@
                     await JS.InvokeVoidAsync("localStorage.setItem", "Token", user.Token);
                     await JS.InvokeVoidAsync("localStorage.setItem", "IsLoggedIn", "true");
 
-                    if (user.UserType == 1 || user.UserType == 2)
+                    // EMPLOYER
+                    if (user.UserType == 0)
+                    {
+                        Navigation.NavigateTo("/pesobeta/Profile/employer");
+                    }
+                    // PESO MANAGERS CAPITOL
+                    else if (user.UserType == 1)
                     {
                         Navigation.NavigateTo("/pesobeta/Profile/dash");
                     }
+                    // SUPER ADMIN
+                    else if (user.UserType == 2)
+                    {
+                        Navigation.NavigateTo("/pesobeta/Profile/dash");
+                    }
+                    // APPLICANT
                     else if (user.UserType == 3)
+                    {
+                        Navigation.NavigateTo("/pesobeta/Profile/dash");
+                    }
+                    // PESO MANAGERS BY MUNICIPALITY
+                    else if (user.UserType == 4)
                     {
                         Navigation.NavigateTo("/pesobeta/Profile/dash");
                     }

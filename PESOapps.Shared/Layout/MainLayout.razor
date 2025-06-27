@@ -10,10 +10,15 @@
         {
             <NavMenuDash />
         }
+        else if (Navigation.Uri.EndsWith("/employer", StringComparison.OrdinalIgnoreCase))
+        {
+            <NavMenuDashEmployer />
+        }
         else
         {
             <NavMenu />
         }
+
     </div>
     <div class="cover">
         @* <img class="bg-image" src="_content/PESOapps.Shared/images/banner_img.png"> *@
@@ -27,21 +32,29 @@
         </model-viewer>
     </div>
     @if (Navigation.Uri.EndsWith("/dash", StringComparison.OrdinalIgnoreCase))
-        {
+    {
         <main class="main-content">
             <article class="main-container">
                 @Body
             </article>
         </main>
-        }
-        else
-        {
+    }
+    else if(Navigation.Uri.EndsWith("/employer", StringComparison.OrdinalIgnoreCase))
+    {
+        <main class="main-content">
+            <article class="main-container">
+                @Body
+            </article>
+        </main>
+    }
+    else
+    {
         <main>
             <article class="main-container">
                 @Body
             </article>
         </main>
-        }
+    }
     <div id="themeButton" class="theme btn light-mode" @onclick="ToggleTheme">
         <div class="btn__indicator">
             <div class="btn__icon">

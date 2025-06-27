@@ -32,6 +32,8 @@ namespace webapi_peso.Controllers
                 list = new List<JobPostViewModel>();
                 //var listofjobs = db.EmployerJobPost.Where(x => x.IsVacant == 0 && !x.IsDeleted).ToList();
                 var listofjobs = db.EmployerJobPost.Where(x => x.IsVacant == 0 && x.IsDeleted == false).ToList();
+                if (listofjobs.Count == 0)
+                    return NotFound();
 
                 foreach (var i in listofjobs)
                 {
@@ -47,6 +49,8 @@ namespace webapi_peso.Controllers
 
                     // ✅ Add this line to include EmployerDetails
                     model.EmpDetails = db.EmployerDetails.FirstOrDefault(e => e.Id == i.EmployerDetailsId);
+                    if (model.EmpDetails == null)
+                        return NotFound();
 
                     // ✅ Optional: attach first image
                     var dir = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\files\\employers\\{i.EmployerDetailsId}");
@@ -191,6 +195,8 @@ namespace webapi_peso.Controllers
                 {
                     list = new List<AppliedJobsViewModel>();
                     var jobPosts = db.JobApplicantion.Where(x => x.ApplicantId == applicantId).ToList();
+                    if (jobPosts.Count == 0)
+                        return NotFound();
                     foreach (var jobPost in jobPosts)
                     {
                         var model = new AppliedJobsViewModel();

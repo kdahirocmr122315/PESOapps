@@ -62,8 +62,14 @@ else
 
         <NavLink class="sidebar-logo" href="Profile/employer">
             <img src="_content/PESOapps.Shared/svg/user-solid.svg" class="dash-icon"  />
-            <p>@profile.ApplicantInformation?.FirstName @profile.ApplicantInformation?.SurName</p>
+            <p>@profile.UserAccount?.GivenName</p>
         </NavLink>
+        <div class="sidebar-nav">
+            <NavLink class="dashnav-links" href="Joblist/employer">
+                <img src="_content/PESOapps.Shared/svg/briefcase-solid.svg" class="dash-icon" />
+                <span>My Portal</span>
+            </NavLink>
+        </div>
     </div>
 }
 
@@ -71,6 +77,7 @@ else
     private bool isUserLoggedIn = false;
     private AccountAndInformationViewModel? profile;
     private bool loaded = false;
+    private string initialBearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -89,7 +96,7 @@ else
                     isUserLoggedIn = true;
 
                     // Add token to the request headers
-                    Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", initialBearerToken);
 
                     var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
                     if (response.IsSuccessStatusCode)

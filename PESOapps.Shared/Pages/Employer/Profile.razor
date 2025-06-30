@@ -41,10 +41,6 @@ else
             <!-- Profile Summary Section -->
             <div class="row mt-4">
                 <div class="col-md-6 mb-3">
-                    <p class="mb-1 text-muted">Phone</p>
-                    <p>@profile.ContactMobileNo</p>
-                </div>
-                <div class="col-md-6 mb-3">
                     <p class="mb-1 text-muted">Acronym/Abbreviation</p>
                     <p>@profile.AcronymAbbreviation</p>
                 </div>
@@ -70,23 +66,25 @@ else
                     <p class="mb-1 text-muted">Address</p>
                     <p>@profile.Address</p>
                 </div>
-
+            </div>
+            <h1>Establishment Contact Details</h1>
+            <div class="row">
                 <div class="col-md-6 mb-3">
-                    <p class="mb-1 text-muted">Establishment Contact Details</p>
+                    <p class="mb-1 text-muted">Contact Person</p>
                     <p>@profile.ContactPrependName. @profile.ContactFullName</p>
                 </div>
 
                 <div class="col-md-6 mb-3">
-                    <p class="mb-1 text-muted">Contact Position</p>
+                    <p class="mb-1 text-muted">Position</p>
                     <p>@profile.ContactPosition</p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="mb-1 text-muted">Telephone No.</p>
                     <p>@profile.ContactTelephoneNo</p>
                 </div>
-                 <div class="col-md-6 mb-3">
+                <div class="col-md-6 mb-3">
                     <p class="mb-1 text-muted">Mobile No.</p>
-                    <p>@profile.ContactMobileNo</p>
+                    <p>@FormatMobile(profile.ContactMobileNo)</p>
                 </div>
                 <div class="col-md-6 mb-3">
                     <p class="mb-1 text-muted">Fax No.</p>
@@ -102,6 +100,7 @@ else
     private EmployerDetails? profile;
 
     private bool loaded = false;
+    private string initialBearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -120,7 +119,7 @@ else
 
                 // 2️⃣ Attach JWT to every request
                 Http.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", initialBearerToken);
 
                 try
                 {
@@ -157,4 +156,17 @@ else
         }
     }
 
+    private string FormatMobile(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw))
+            return "-";
+
+        var digits = new string(raw.Where(char.IsDigit).ToArray());
+
+        // Remove leading zero if present
+        if (digits.StartsWith("0"))
+            digits = digits[1..];
+
+        return $"+63 {digits}";
+    }
 }

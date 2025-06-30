@@ -1,0 +1,170 @@
+﻿@page "/Joblist/employer"
+@using System.Text.Json
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+
+@if (!isUserLoggedIn)
+{
+    <p>Redirecting to login...</p>
+}
+else if (profile == null)
+{
+    <p>Loading profile...</p>
+}
+else
+{
+    <div class="job-board">
+        <div class="job-list">
+            @if (jobList == null)
+            {
+                <p>Loading jobs...</p>
+            }
+            else if (!jobList.Any())
+            {
+                <p>No job postings available.</p>
+            }
+            else
+            {
+                @foreach (var job in jobList)
+                {
+                    <div class="job-card @(selectedJob?.EmployerDetails?.Id == job.EmployerDetails?.Id ? "selected" : "")"
+                         @onclick="@(() => SelectJob(job))">
+                        <div class="card-name elips">
+                            @job.EmployerDetails?.JobPosts?.FirstOrDefault()?.Description ?? "No Position Title"
+                        </div>
+                        <p class="muted">@job.EmployerDetails?.Address</p>
+                        <p class="card-date">
+                            <em>
+                                @((job.EmployerDetails?.DateCreated ?? DateTime.MinValue).ToString("MMMM dd, yyyy"))
+                            </em>
+                        </p>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="job-details">
+            @if (selectedJob != null)
+            {
+                var jobPost = selectedJob.EmployerDetails?.JobPosts?.FirstOrDefault();
+                if (jobPost != null)
+                {
+                    <div class="card-name">@jobPost.Description</div>
+                    <p>@selectedJob.EmployerDetails?.EstablishmentName</p>
+                    <p class="muted">@selectedJob.EmployerDetails?.Address</p>
+                    <p class="card-date">
+                        <em>@(jobPost.DatePosted.ToString("MMMM dd, yyyy"))</em>
+                    </p>
+                    <p class="card-details-sal">
+                        @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", jobPost.Salary ?? 0)
+                    </p>
+                    <hr />
+                    <div class="details-inner">
+                        <p><strong>Description:</strong> @jobPost.Description</p>
+                    </div>
+                }
+                else
+                {
+                    <p>No job post details found for this employer.</p>
+                }
+            }
+            else
+            {
+                <p>Select a job to see details.</p>
+            }
+        </div>
+    </div>
+}
+
+@code {
+    private AccountAndInformationViewModel? profile;
+    private bool isUserLoggedIn = false;
+    private bool loaded = false;
+
+    private List<EmployerRegistrationViewModel>? jobList;
+    private EmployerRegistrationViewModel? selectedJob;
+    private string initialBearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !loaded)
+        {
+            loaded = true;
+
+            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+            var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+
+            Console.WriteLine($"UserId: {userId}");
+            Console.WriteLine($"Token: {token}");
+            Console.WriteLine($"IsLoggedIn: {isLoggedIn}");
+
+            if (!string.IsNullOrWhiteSpace(userId) && isLoggedIn == "true" && !string.IsNullOrWhiteSpace(initialBearerToken))
+            {
+                isUserLoggedIn = true;
+
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", initialBearerToken);
+
+                try
+                {
+                    // Get Profile
+                    var profileResponse = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
+
+                    if (profileResponse.IsSuccessStatusCode)
+                    {
+                        var json = await profileResponse.Content.ReadAsStringAsync();
+                        profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        // Get Jobs
+                        var jobsResponse = await Http.GetAsync(
+                            $"http://localhost:5167/api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
+
+                        if (jobsResponse.IsSuccessStatusCode)
+                        {
+                            var jobsJson = await jobsResponse.Content.ReadAsStringAsync();
+                            jobList = JsonSerializer.Deserialize<List<EmployerRegistrationViewModel>>(jobsJson,
+                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                            Console.WriteLine($"Jobs loaded: {jobList?.Count}");
+                        }
+                        else
+                        {
+                            Console.WriteLine($"Failed to load job list: {jobsResponse.StatusCode}");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Failed to load profile: {profileResponse.StatusCode}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error fetching profile or job list: " + ex.Message);
+                }
+
+                StateHasChanged();
+            }
+            else
+            {
+                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            }
+        }
+    }
+
+    void SelectJob(EmployerRegistrationViewModel job)
+    {
+        selectedJob = job;
+    }
+
+    // Sample inner classes (make sure you are using the actual ones from your backend/shared project)
+    public class EmployerRegistrationViewModel
+    {
+        public EmployerDetails? EmployerDetails { get; set; }
+        public List<AttachementsViewModel>? ListOfAttachments { get; set; }
+    }
+}

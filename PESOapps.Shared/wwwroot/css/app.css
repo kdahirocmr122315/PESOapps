@@ -1165,6 +1165,10 @@ a:hover span {
 }
 
 /* feed container (optional) End */
+.prof-container h1 {
+    font-size: 1.8rem;
+    margin: 10px 0;
+}
 
 /* -------------- Job List ------------ */
 

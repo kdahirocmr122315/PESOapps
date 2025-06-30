@@ -40,11 +40,11 @@ namespace webapi_peso.Controllers
                         var model = new AppliedApplicantViewModel();
                         var empInfo = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantId).FirstOrDefault();
                         model.Applicant = empInfo;
-                        var dir = System.IO.Path.Combine(env.WebRootPath, "files", "applications", i.Id);
-                        var files = Directory.GetFiles(dir, "*.pdf");
-                        var fileName = WebUtility.HtmlEncode(files[0]);
-                        var fileInfo = new FileInfo(fileName);
-                        model.FilePath = $"{ProjectConfig.API_HOST}/files/applications/{i.Id}/{fileInfo.Name}";
+                        //var dir = System.IO.Path.Combine(env.WebRootPath, "files", "applications", i.Id);
+                        //var files = Directory.GetFiles(dir, "*.pdf");
+                        //var fileName = WebUtility.HtmlEncode(files[0]);
+                        //var fileInfo = new FileInfo(fileName);
+                        //model.FilePath = $"{ProjectConfig.API_HOST}/files/applications/{i.Id}/{fileInfo.Name}";
                         model.DateApplied = i.DateCreated;
                         model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == param.EmpId && x.ApplicantAccountId == i.ApplicantId);
                         model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == param.EmpId && x.ApplicantAccountId == i.ApplicantId);

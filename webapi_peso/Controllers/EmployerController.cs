@@ -25,39 +25,39 @@ namespace webapi_peso.Controllers
             env = _env;
         }
 
-        [HttpPost("GetApplicantsAppliedToJob")]
-        public IActionResult GetApplicantsAppliedToJob(RelatedJobViewModel param)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var list = cache.Get<List<AppliedApplicantViewModel>>($"GetApplicantsAppliedToJob/{param.EmpId}/{param.JobPostId}");
-                if (list == null)
-                {
-                    list = new List<AppliedApplicantViewModel>();
-                    var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == param.JobPostId).OrderByDescending(x => x.DateCreated).MyDistinctBy(x => x.ApplicantId).ToList();
-                    foreach (var i in jobPosts)
-                    {
-                        var model = new AppliedApplicantViewModel();
-                        var empInfo = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantId).FirstOrDefault();
-                        model.Applicant = empInfo;
-                        //var dir = System.IO.Path.Combine(env.WebRootPath, "files", "applications", i.Id);
-                        //var files = Directory.GetFiles(dir, "*.pdf");
-                        //var fileName = WebUtility.HtmlEncode(files[0]);
-                        //var fileInfo = new FileInfo(fileName);
-                        //model.FilePath = $"{ProjectConfig.API_HOST}/files/applications/{i.Id}/{fileInfo.Name}";
-                        model.DateApplied = i.DateCreated;
-                        model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == param.EmpId && x.ApplicantAccountId == i.ApplicantId);
-                        model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == param.EmpId && x.ApplicantAccountId == i.ApplicantId);
-                        list.Add(model);
-                    }
-                    cache.Set($"GetApplicantsAppliedToJob/{param.EmpId}/{param.JobPostId}", list, TimeSpan.FromSeconds(30));
-                }
-                return Ok(list);
-            }
-        }
+        //[HttpPost("GetApplicantsAppliedToJob")]
+        //public IActionResult GetApplicantsAppliedToJob(RelatedJobViewModel param)
+        //{
+        //    using (var db = dbFactory.CreateDbContext())
+        //    {
+        //        var list = cache.Get<List<AppliedApplicantViewModel>>($"GetApplicantsAppliedToJob/{param.EmpId}/{param.JobPostId}");
+        //        if (list == null)
+        //        {
+        //            list = new List<AppliedApplicantViewModel>();
+        //            var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == param.JobPostId).OrderByDescending(x => x.DateCreated).MyDistinctBy(x => x.ApplicantId).ToList();
+        //            foreach (var i in jobPosts)
+        //            {
+        //                var model = new AppliedApplicantViewModel();
+        //                var empInfo = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantId).FirstOrDefault();
+        //                model.Applicant = empInfo;
+        //                //var dir = System.IO.Path.Combine(env.WebRootPath, "files", "applications", i.Id);
+        //                //var files = Directory.GetFiles(dir, "*.pdf");
+        //                //var fileName = WebUtility.HtmlEncode(files[0]);
+        //                //var fileInfo = new FileInfo(fileName);
+        //                //model.FilePath = $"{ProjectConfig.API_HOST}/files/applications/{i.Id}/{fileInfo.Name}";
+        //                model.DateApplied = i.DateCreated;
+        //                model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == param.EmpId && x.ApplicantAccountId == i.ApplicantId);
+        //                model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == param.EmpId && x.ApplicantAccountId == i.ApplicantId);
+        //                list.Add(model);
+        //            }
+        //            cache.Set($"GetApplicantsAppliedToJob/{param.EmpId}/{param.JobPostId}", list, TimeSpan.FromSeconds(30));
+        //        }
+        //        return Ok(list);
+        //    }
+        //}
 
-        [HttpGet("GetApplicants/{jobPostId}")]
-        public IActionResult GetApplicants(string jobPostId)
+        [HttpGet("GetApplicantsByJobPost/{jobPostId}")]
+        public IActionResult GetApplicantsByJobPost(string jobPostId)
         {
             using (var db = dbFactory.CreateDbContext())
             {
@@ -78,6 +78,37 @@ namespace webapi_peso.Controllers
                         list.Add(model);
                     }
                     cache.Set($"GetApplicantsAppliedToJob/{jobPostId}", list, TimeSpan.FromSeconds(30));
+                }
+                return Ok(list);
+            }
+        }
+
+        [HttpGet("GetApplicantsByEmployer/{employerDetailsId}")]
+        public IActionResult GetApplicantsByEmployer(string employerDetailsId)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var list = cache.Get<List<AppliedApplicantViewModel>>($"GetApplicantsByEmployer/{employerDetailsId}");
+                if (list == null)
+                {
+                    list = new List<AppliedApplicantViewModel>();
+                    var jobPosts = db.EmployerJobPost.Where(x => x.EmployerDetailsId == employerDetailsId).OrderByDescending(x => x.DatePosted).ToList();
+                    foreach (var jobPost in jobPosts)
+                    {
+                        var model = new AppliedApplicantViewModel();
+                        var applicants = db.JobApplicantion.Where(x => x.JobPostId == jobPost.Id).OrderByDescending(x => x.DateCreated).ToList();
+                        foreach (var applicant in applicants)
+                        {
+                            var appInfo = db.ApplicantInformation.Where(x => x.AccountId == applicant.ApplicantId).FirstOrDefault();
+                            model.Applicant = appInfo;
+                            model.DateApplied = applicant.DateCreated;
+                            var empInfo = db.EmployerJobPost.Where(x => x.Id == applicant.JobPostId).FirstOrDefault();
+                            model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == applicant.ApplicantId);
+                            model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == applicant.ApplicantId);
+                            list.Add(model);
+                        }
+                    }
+                    cache.Set($"GetApplicantsByEmployer/{employerDetailsId}", list, TimeSpan.FromSeconds(30));
                 }
                 return Ok(list);
             }

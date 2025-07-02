@@ -213,7 +213,7 @@ else
         try
         {
             applicants = await Http.GetFromJsonAsync<List<AppliedApplicantViewModel>>
-                ($"http://localhost:5167/api/Employer/GetApplicants/{jobId}") ?? new();
+                ($"http://localhost:5167/api/Employer/GetApplicantsByJobPost/{jobId}") ?? new();
         }
         catch (Exception ex)
         {
@@ -225,8 +225,6 @@ else
             StateHasChanged();
         }
     }
-
- 
 
     public class EmployerRegistrationViewModel
     {

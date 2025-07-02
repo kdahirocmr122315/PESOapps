@@ -88,26 +88,48 @@ namespace webapi_peso.Controllers
         {
             using (var db = dbFactory.CreateDbContext())
             {
-                var list = cache.Get<List<AppliedApplicantViewModel>>($"GetApplicantsByEmployer/{employerDetailsId}");
+                var list = cache.Get<List<ApplicantsPerJobPostModel>>($"GetApplicantsByEmployer/{employerDetailsId}");
                 if (list == null)
                 {
-                    list = new List<AppliedApplicantViewModel>();
-                    var jobPosts = db.EmployerJobPost.Where(x => x.EmployerDetailsId == employerDetailsId).OrderByDescending(x => x.DatePosted).ToList();
-                    foreach (var jobPost in jobPosts)
+                    var employerDetails = db.EmployerDetails
+                        .FirstOrDefault(ed => ed.ContactEmailAddress == db.UserAccounts
+                            .Where(ua => ua.Id == employerDetailsId)
+                            .Select(ua => ua.Email)
+                            .FirstOrDefault());
+
+                    if (employerDetails == null)
                     {
-                        var model = new AppliedApplicantViewModel();
-                        var applicants = db.JobApplicantion.Where(x => x.JobPostId == jobPost.Id).OrderByDescending(x => x.DateCreated).ToList();
-                        foreach (var applicant in applicants)
-                        {
-                            var appInfo = db.ApplicantInformation.Where(x => x.AccountId == applicant.ApplicantId).FirstOrDefault();
-                            model.Applicant = appInfo;
-                            model.DateApplied = applicant.DateCreated;
-                            var empInfo = db.EmployerJobPost.Where(x => x.Id == applicant.JobPostId).FirstOrDefault();
-                            model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == applicant.ApplicantId);
-                            model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == applicant.ApplicantId);
-                            list.Add(model);
-                        }
+                        return NotFound("Employer details not found.");
                     }
+
+                    var jobPostIds = db.EmployerJobPost
+                        .Where(ejp => ejp.EmployerDetailsId == employerDetails.Id)
+                        .Select(ejp => ejp.Id)
+                        .ToList();
+
+                    list = jobPostIds.Select(jobPostId => new ApplicantsPerJobPostModel
+                    {
+                        Id = jobPostId,
+                        Description = db.EmployerJobPost
+                            .Where(ejp => ejp.Id == jobPostId)
+                            .Select(ejp => ejp.Description)
+                            .FirstOrDefault() ?? string.Empty,
+                        Applicants = db.JobApplicantion
+                            .Where(ja => ja.JobPostId == jobPostId)
+                            .OrderByDescending(ja => ja.DateCreated)
+                            .Select(applicant => new AppliedApplicantViewModel
+                            {
+                                Applicant = db.ApplicantInformation
+                                    .FirstOrDefault(ai => ai.AccountId == applicant.ApplicantId) ?? new ApplicantInformation(),
+                                DateApplied = applicant.DateCreated,
+                                IsInterviewed = db.EmployerInterviewedApplicants
+                                    .Any(eia => eia.EmployerId == employerDetails.Id && eia.ApplicantAccountId == applicant.ApplicantId),
+                                IsHired = db.EmployerHiredApplicants
+                                    .Any(eha => eha.EmployerId == employerDetails.Id && eha.ApplicantAccountId == applicant.ApplicantId)
+                            })
+                            .ToList()
+                    }).ToList();
+
                     cache.Set($"GetApplicantsByEmployer/{employerDetailsId}", list, TimeSpan.FromSeconds(30));
                 }
                 return Ok(list);

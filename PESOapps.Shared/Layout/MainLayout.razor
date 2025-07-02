@@ -1,9 +1,16 @@
-﻿@using PESOapps.Shared.Services
+﻿@using PESOapps.Shared.Pages.Shared
+@using PESOapps.Shared.Services
 @inherits LayoutComponentBase
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject UiStateService UiState
-
+        <Loading IsLoading="@isLoading" Message="Loading..." />
+        @if (isLoading)
+        {
+           
+        }
+        else
+        {
 <div class="main-container-layout @UiState.SidebarClass">
     <div class="navigation-section">
         @if (Navigation.Uri.EndsWith("/dash", StringComparison.OrdinalIgnoreCase))
@@ -70,6 +77,7 @@
         </div>
     </div>
 </div>
+}
 @code {
     private async Task ToggleTheme()
     {
@@ -85,4 +93,21 @@
     {
         UiState.OnChange -= StateHasChanged;
     }
+
+    private bool isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        isLoading = true;
+        await LoadDataAsync();
+        isLoading = false;
+    }
+
+    private async Task LoadDataAsync()
+    {
+        // Simulate data loading or fetch API
+        await Task.Delay(2000);
+    }
+
 }
+

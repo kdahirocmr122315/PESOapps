@@ -117,7 +117,7 @@ else
                         var json = await profileResponse.Content.ReadAsStringAsync();
                         profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json, new JsonSerializerOptions
                         {
-                            PropertyNameCaseInsensitive = true
+                            PropertyNameCaseInsensitive = true 
                         });
 
                         var jobResponse = await Http.GetAsync($"http://localhost:5167/api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");

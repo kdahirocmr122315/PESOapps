@@ -56,6 +56,33 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetApplicants/{jobPostId}")]
+        public IActionResult GetApplicants(string jobPostId)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var list = cache.Get<List<AppliedApplicantViewModel>>($"GetApplicantsAppliedToJob/{jobPostId}");
+                if (list == null)
+                {
+                    list = new List<AppliedApplicantViewModel>();
+                    var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == jobPostId).OrderByDescending(x => x.DateCreated).MyDistinctBy(x => x.ApplicantId).ToList();
+                    foreach (var i in jobPosts)
+                    {
+                        var model = new AppliedApplicantViewModel();
+                        var appInfo = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantId).FirstOrDefault();
+                        model.Applicant = appInfo;
+                        model.DateApplied = i.DateCreated;
+                        var empInfo = db.EmployerJobPost.Where(x => x.Id == jobPostId).FirstOrDefault();
+                        model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
+                        model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
+                        list.Add(model);
+                    }
+                    cache.Set($"GetApplicantsAppliedToJob/{jobPostId}", list, TimeSpan.FromSeconds(30));
+                }
+                return Ok(list);
+            }
+        }
+
         [HttpGet("GetJobDescription/{Id}")]
         public IActionResult GetJobDescription(string Id)
         {

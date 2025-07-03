@@ -62,7 +62,20 @@ else
 
         <NavLink class="sidebar-logo" href="Profile/employer">
             <img src="_content/PESOapps.Shared/svg/user-solid.svg" class="dash-icon"  />
-            <p>@profile.UserAccount?.GivenName</p>
+            <p>
+                @{
+                    var displayName = profile?.UserAccount?.GivenName;
+                    if (string.IsNullOrWhiteSpace(displayName))
+                    {
+                        displayName = GetFirstTwoWords(profile?.UserAccount?.Name);
+                        if (string.IsNullOrWhiteSpace(displayName))
+                        {
+                            displayName = "Profile";
+                        }
+                    }
+                }
+                @displayName
+            </p>
         </NavLink>
         <div class="sidebar-nav">
             <NavLink class="dashnav-links" href="Joblist/employer">
@@ -122,6 +135,20 @@ else
                 Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
             }
         }
+    }
+
+
+    private string GetFirstTwoWords(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return string.Empty;
+
+        var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length == 0)
+            return string.Empty;
+        if (words.Length == 1)
+            return words[0];
+        return $"{words[0]} {words[1]}";
     }
 
 }

@@ -6,7 +6,7 @@
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(240, 242, 245, 0.8);
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -14,10 +14,48 @@
     justify-content: center;
 }
 
+.image-overlay {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loading-by {
+    position: absolute;
+    bottom: 20px;
+    font-size: 14px;
+    color: #65676b;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-direction: column;
+}
+
 .loading-text {
     margin-top: 15px;
     font-weight: bold;
     color: #333;
+}
+
+.loading-div img {
+    width: 50px;
+}
+
+.loading-div {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.loading-by p {
+    font-size: 16px;
+    color: #65676b;
+}
+
+.loading-div p {
+    font-size: 30px;
+    color: #2A2D5B;
+    font-weight: 500;
 }
 
 @keyframes spin {

@@ -228,6 +228,76 @@ namespace webapi_peso.Controllers
             return rs;
         }
 
+        [HttpGet("GetNearbyApplicantsV2")]
+        public IActionResult GetNearbyApplicantsV2b([FromQuery] SearchApplicantsViewModel search)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                string Id = search.EmployerId;
+                string gender = search.Gender;
+                int count = search.Count;
+                int startIndex = search.StartIndex;
+
+                var emDetails = db.EmployerDetails.Find(Id);
+                var mainList = db.ApplicantInformation.Where(x =>
+                    !db.EmployerHiredApplicants.Any(b => b.EmployerId == Id && b.ApplicantAccountId == x.AccountId) &&
+                    !db.EmployerInterviewedApplicants.Any(b => b.EmployerId == Id && b.ApplicantAccountId == x.AccountId) &&
+                    !db.EmployerScheduledInterviews.Any(b => b.EmployerId == Id && b.ApplicantId == x.AccountId) &&
+                    db.ApplicantAccount.Any(a => a.Id == x.AccountId && a.IsReviewedReturned == 1 && a.IsRemoved == 0))
+                    .OrderByDescending(x => x.DateLastUpdate)
+                    .MyDistinctBy(x => x.Email)
+                    .OrderBy(x => x.SurName)
+                    .ToList();
+
+                if (!string.IsNullOrEmpty(search.BarangayCode))
+                {
+                    mainList = mainList.Where(x => x.PresentBarangay == search.BarangayCode).ToList();
+                }
+                if (!string.IsNullOrEmpty(search.CityCode))
+                {
+                    mainList = mainList.Where(x => x.PresentMunicipalityCity == search.CityCode).ToList();
+                }
+                if (!string.IsNullOrEmpty(search.ProvinceCode))
+                {
+                    mainList = mainList.Where(x => x.PresentProvince == search.ProvinceCode).ToList();
+                }
+                if (string.IsNullOrEmpty(search.BarangayCode) && string.IsNullOrEmpty(search.CityCode) && string.IsNullOrEmpty(search.ProvinceCode))
+                {
+                    mainList = mainList.Where(x =>
+                        x.PresentBarangay == emDetails.Barangay ||
+                        x.PresentMunicipalityCity == emDetails.CityMunicipality ||
+                        x.PresentProvince == emDetails.Province).ToList();
+                }
+
+                if (gender != "ANY")
+                {
+                    mainList = mainList.Where(x => x.Gender.ToUpper() == gender.ToUpper()).ToList();
+                }
+
+                var totalCount = mainList.Count();
+                var numCardDeets = Math.Min(count, totalCount - startIndex);
+
+                var list = mainList.Skip(startIndex).Take(numCardDeets).ToList();
+
+                var results = list.Count == 0
+                    ? db.ApplicantInformation.Where(x => db.ApplicantAccount.Any(a => a.IsReviewedReturned == 1 && a.IsRemoved == 0 && x.AccountId == a.Id))
+                        .OrderByDescending(x => x.DateLastUpdate)
+                        .MyDistinctBy(x => x.Email)
+                        .Skip(startIndex)
+                        .Take(numCardDeets)
+                        .ToList()
+                    : list.MyDistinctBy(x => x.Email).ToList();
+
+                var _myRs = new VirtualizedDatViewModel
+                {
+                    Items = results,
+                    TotalCount = totalCount
+                };
+
+                return Ok(_myRs);
+            }
+        }
+
         [HttpPost("GetNearbyApplicantsV2")]
         public IActionResult GetNearbyApplicantsV2(SearchApplicantsViewModel search)
         {

@@ -64,20 +64,39 @@ namespace webapi_peso.Controllers
                 var list = cache.Get<List<AppliedApplicantViewModel>>($"GetApplicantsAppliedToJob/{jobPostId}");
                 if (list == null)
                 {
+                    //list = new List<AppliedApplicantViewModel>();
+                    //var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == jobPostId).OrderByDescending(x => x.DateCreated).MyDistinctBy(x => x.ApplicantId).ToList();
+                    //foreach (var i in jobPosts)
+                    //{
+                    //    var model = new AppliedApplicantViewModel();
+                    //    var appInfo = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantId).FirstOrDefault();
+                    //    model.Applicant = appInfo;
+                    //    model.DateApplied = i.DateCreated;
+                    //    var empInfo = db.EmployerJobPost.Where(x => x.Id == jobPostId).FirstOrDefault();
+                    //    model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
+                    //    model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
+                    //    list.Add(model);
+                    //}
+                    //cache.Set($"GetApplicantsAppliedToJob/{jobPostId}", list, TimeSpan.FromSeconds(30));
+
+                    //---------------------------
                     list = new List<AppliedApplicantViewModel>();
-                    var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == jobPostId).OrderByDescending(x => x.DateCreated).MyDistinctBy(x => x.ApplicantId).ToList();
-                    foreach (var i in jobPosts)
+                    var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == jobPostId)
+                       .OrderByDescending(x => x.DateCreated)
+                       .MyDistinctBy(x => x.ApplicantId)
+                       .ToList();
+
+                    list.AddRange(jobPosts.Select(i => new AppliedApplicantViewModel
                     {
-                        var model = new AppliedApplicantViewModel();
-                        var appInfo = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantId).FirstOrDefault();
-                        model.Applicant = appInfo;
-                        model.DateApplied = i.DateCreated;
-                        var empInfo = db.EmployerJobPost.Where(x => x.Id == jobPostId).FirstOrDefault();
-                        model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
-                        model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
-                        list.Add(model);
-                    }
+                        Applicant = db.ApplicantInformation.FirstOrDefault(x => x.AccountId == i.ApplicantId),
+                        DateApplied = i.DateCreated,
+                        IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId),
+                        IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId)
+                    }));
+
                     cache.Set($"GetApplicantsAppliedToJob/{jobPostId}", list, TimeSpan.FromSeconds(30));
+                    //----------------------
+
                 }
                 return Ok(list);
             }
@@ -207,6 +226,76 @@ namespace webapi_peso.Controllers
                 cache.Set($"ApplicantDataViewModel/{accountId}", rs, TimeSpan.FromSeconds(30));
             }
             return rs;
+        }
+
+        [HttpGet("GetNearbyApplicantsV2")]
+        public IActionResult GetNearbyApplicantsV2b([FromQuery] SearchApplicantsViewModel search)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                string Id = search.EmployerId;
+                string gender = search.Gender;
+                int count = search.Count;
+                int startIndex = search.StartIndex;
+
+                var emDetails = db.EmployerDetails.Find(Id);
+                var mainList = db.ApplicantInformation.Where(x =>
+                    !db.EmployerHiredApplicants.Any(b => b.EmployerId == Id && b.ApplicantAccountId == x.AccountId) &&
+                    !db.EmployerInterviewedApplicants.Any(b => b.EmployerId == Id && b.ApplicantAccountId == x.AccountId) &&
+                    !db.EmployerScheduledInterviews.Any(b => b.EmployerId == Id && b.ApplicantId == x.AccountId) &&
+                    db.ApplicantAccount.Any(a => a.Id == x.AccountId && a.IsReviewedReturned == 1 && a.IsRemoved == 0))
+                    .OrderByDescending(x => x.DateLastUpdate)
+                    .MyDistinctBy(x => x.Email)
+                    .OrderBy(x => x.SurName)
+                    .ToList();
+
+                if (!string.IsNullOrEmpty(search.BarangayCode))
+                {
+                    mainList = mainList.Where(x => x.PresentBarangay == search.BarangayCode).ToList();
+                }
+                if (!string.IsNullOrEmpty(search.CityCode))
+                {
+                    mainList = mainList.Where(x => x.PresentMunicipalityCity == search.CityCode).ToList();
+                }
+                if (!string.IsNullOrEmpty(search.ProvinceCode))
+                {
+                    mainList = mainList.Where(x => x.PresentProvince == search.ProvinceCode).ToList();
+                }
+                if (string.IsNullOrEmpty(search.BarangayCode) && string.IsNullOrEmpty(search.CityCode) && string.IsNullOrEmpty(search.ProvinceCode))
+                {
+                    mainList = mainList.Where(x =>
+                        x.PresentBarangay == emDetails.Barangay ||
+                        x.PresentMunicipalityCity == emDetails.CityMunicipality ||
+                        x.PresentProvince == emDetails.Province).ToList();
+                }
+
+                if (gender != "ANY")
+                {
+                    mainList = mainList.Where(x => x.Gender.ToUpper() == gender.ToUpper()).ToList();
+                }
+
+                var totalCount = mainList.Count();
+                var numCardDeets = Math.Min(count, totalCount - startIndex);
+
+                var list = mainList.Skip(startIndex).Take(numCardDeets).ToList();
+
+                var results = list.Count == 0
+                    ? db.ApplicantInformation.Where(x => db.ApplicantAccount.Any(a => a.IsReviewedReturned == 1 && a.IsRemoved == 0 && x.AccountId == a.Id))
+                        .OrderByDescending(x => x.DateLastUpdate)
+                        .MyDistinctBy(x => x.Email)
+                        .Skip(startIndex)
+                        .Take(numCardDeets)
+                        .ToList()
+                    : list.MyDistinctBy(x => x.Email).ToList();
+
+                var _myRs = new VirtualizedDatViewModel
+                {
+                    Items = results,
+                    TotalCount = totalCount
+                };
+
+                return Ok(_myRs);
+            }
         }
 
         [HttpPost("GetNearbyApplicantsV2")]

@@ -1,0 +1,16 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "webapi_peso\\webapi_peso.csproj",
+        "Action": "Start",
+        "DebugTarget": "http"
+      },
+      {
+        "Path": "PESOapps.Web\\PESOapps.Web.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

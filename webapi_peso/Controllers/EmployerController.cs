@@ -64,20 +64,39 @@ namespace webapi_peso.Controllers
                 var list = cache.Get<List<AppliedApplicantViewModel>>($"GetApplicantsAppliedToJob/{jobPostId}");
                 if (list == null)
                 {
+                    //list = new List<AppliedApplicantViewModel>();
+                    //var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == jobPostId).OrderByDescending(x => x.DateCreated).MyDistinctBy(x => x.ApplicantId).ToList();
+                    //foreach (var i in jobPosts)
+                    //{
+                    //    var model = new AppliedApplicantViewModel();
+                    //    var appInfo = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantId).FirstOrDefault();
+                    //    model.Applicant = appInfo;
+                    //    model.DateApplied = i.DateCreated;
+                    //    var empInfo = db.EmployerJobPost.Where(x => x.Id == jobPostId).FirstOrDefault();
+                    //    model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
+                    //    model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
+                    //    list.Add(model);
+                    //}
+                    //cache.Set($"GetApplicantsAppliedToJob/{jobPostId}", list, TimeSpan.FromSeconds(30));
+
+                    //---------------------------
                     list = new List<AppliedApplicantViewModel>();
-                    var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == jobPostId).OrderByDescending(x => x.DateCreated).MyDistinctBy(x => x.ApplicantId).ToList();
-                    foreach (var i in jobPosts)
+                    var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == jobPostId)
+                       .OrderByDescending(x => x.DateCreated)
+                       .MyDistinctBy(x => x.ApplicantId)
+                       .ToList();
+
+                    list.AddRange(jobPosts.Select(i => new AppliedApplicantViewModel
                     {
-                        var model = new AppliedApplicantViewModel();
-                        var appInfo = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantId).FirstOrDefault();
-                        model.Applicant = appInfo;
-                        model.DateApplied = i.DateCreated;
-                        var empInfo = db.EmployerJobPost.Where(x => x.Id == jobPostId).FirstOrDefault();
-                        model.IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
-                        model.IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == empInfo.EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId);
-                        list.Add(model);
-                    }
+                        Applicant = db.ApplicantInformation.FirstOrDefault(x => x.AccountId == i.ApplicantId),
+                        DateApplied = i.DateCreated,
+                        IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId),
+                        IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId)
+                    }));
+
                     cache.Set($"GetApplicantsAppliedToJob/{jobPostId}", list, TimeSpan.FromSeconds(30));
+                    //----------------------
+
                 }
                 return Ok(list);
             }

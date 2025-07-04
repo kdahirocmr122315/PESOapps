@@ -403,6 +403,19 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetAllApplicants")]
+        public IActionResult GetAllApplicants()
+        {
+            using var db = dbFactory.CreateDbContext();
+            var applicants = cache.Get<List<ApplicantInformation>>("GetAllApplicants");
+            if (applicants == null)
+            {
+                applicants = db.ApplicantInformation.ToList();
+                cache.Set("GetAllApplicants", applicants, TimeSpan.FromSeconds(30));
+            }
+            return Ok(applicants);
+        }
+
         [HttpGet("GetEmployerDetailsByEmail/{AccountId}")]
         public IActionResult GetEmployerDetailsByEmail(string AccountId)
         {

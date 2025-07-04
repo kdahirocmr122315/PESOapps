@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Dapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -404,15 +405,48 @@ namespace webapi_peso.Controllers
         }
 
         [HttpGet("GetAllApplicants")]
+        //public IActionResult GetAllApplicants()
+        //{
+        //    using var db = dbFactory.CreateDbContext();
+        //    var applicants = cache.Get<List<ApplicantInformation>>("GetAllApplicantsWithoutHiredAndNotWilling");
+        //    if (applicants == null)
+        //    {
+        //        // Use a subquery so EF can translate it to SQL
+        //        var query = db.ApplicantInformation
+        //            .Where(a => !db.EmployerHiredApplicants
+        //                .Select(h => h.ApplicantAccountId)
+        //                .Contains(a.AccountId))
+        //            .Where(a => string.IsNullOrWhiteSpace(a.WillingToWorkNow) ||
+        //                        !a.WillingToWorkNow.Trim().Equals("no", StringComparison.OrdinalIgnoreCase));
+
+        //        applicants = query.ToList();
+
+        //        cache.Set("GetAllApplicantsWithoutHiredAndNotWilling", applicants, TimeSpan.FromSeconds(30));
+        //    }
+        //    return Ok(applicants);
+        //}
         public IActionResult GetAllApplicants()
         {
-            using var db = dbFactory.CreateDbContext();
-            var applicants = cache.Get<List<ApplicantInformation>>("GetAllApplicants");
+            using var connection = dbFactory.CreateDbContext().Database.GetDbConnection();
+            var cacheKey = "GetAllApplicantsWithoutHiredAndNotWilling";
+            var applicants = cache.Get<List<ApplicantInformation>>(cacheKey);
+
             if (applicants == null)
             {
-                applicants = db.ApplicantInformation.ToList();
-                cache.Set("GetAllApplicants", applicants, TimeSpan.FromSeconds(30));
+                var query = @"
+                    SELECT * 
+                    FROM ApplicantInformation a
+                    WHERE NOT EXISTS (
+                        SELECT 1 
+                        FROM EmployerHiredApplicants h 
+                        WHERE h.ApplicantAccountId = a.AccountId
+                    )
+                    AND (a.WillingToWorkNow IS NULL OR LTRIM(RTRIM(a.WillingToWorkNow)) != 'no')";
+
+                applicants = connection.Query<ApplicantInformation>(query).ToList();
+                cache.Set(cacheKey, applicants, TimeSpan.FromSeconds(30));
             }
+
             return Ok(applicants);
         }
 

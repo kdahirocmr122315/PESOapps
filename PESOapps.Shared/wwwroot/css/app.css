@@ -79,6 +79,10 @@ body {
     font-size: 14px;
 }
 
+.dboard {
+    font-size: 12px;
+}
+
 body {
     background: var(--bgcolor);
 }
@@ -677,9 +681,11 @@ a.form-link:after {
     width: 100%;
     transition: 0.5s ease-out
 }
-.nav-sub{
+
+.nav-sub {
     cursor: pointer;
 }
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -1038,7 +1044,7 @@ a:hover span {
 .btn__indicator {
     background-color: #fff;
     width: 2em;
-    height: 2em;
+/*    height: 2em;*/
     border-radius: 50%;
 
     position: absolute;
@@ -1092,7 +1098,9 @@ a:hover span {
 
 /* -------------- END ANIMATION ------------ */
 
-
+.main-container.menus {
+    padding: 0;
+}
 
 /* feed container (optional) start*/
 .feed-container {
@@ -1118,6 +1126,16 @@ a:hover span {
     max-width: 1080px;
     width: 100%;
     margin: 20px auto 0;
+}
+
+.emp-flex {
+    display: flex;
+    gap: 15px;
+}
+
+.profile-feeds.employer {
+    flex-direction: column;
+    gap: 0;
 }
 
 /* header */

@@ -40,7 +40,7 @@ else
             <div class="navbar-option has-submenu">
                 <div class="nav-item has-submenu">
                     <NavLink class="dashnav" href="Profile/employer">
-                        <img src="https://pesoapi.misamisoriental.gov.ph/image/profile_placeholder.png" alt="profile" class="img-thumbnail mb-3" style="border-radius:100%;height:30px;width:34px">
+                        <img src="_content/PESOapps.Shared/images/profile_placeholder.png" alt="profile" class="img-thumbnail" style="border-radius:100%;height:30px;width:34px">
                     </NavLink>
                     <div class="nav-sub">
                         <div class="nav-item" @onclick="AuthService.Logout">
@@ -81,6 +81,12 @@ else
             <NavLink class="dashnav-links" href="Joblist/employer">
                 <img src="_content/PESOapps.Shared/svg/briefcase-solid.svg" class="dash-icon" />
                 <span>My Portal</span>
+            </NavLink>
+        </div>
+        <div class="sidebar-nav">
+            <NavLink class="dashnav-links" href="list/employer">
+                <img src="_content/PESOapps.Shared/svg/person-circle-check-solid.svg" class="dash-icon" />
+                <span>Applicant</span>
             </NavLink>
         </div>
     </div>

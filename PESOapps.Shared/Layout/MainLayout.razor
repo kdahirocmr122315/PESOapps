@@ -11,22 +11,25 @@
         }
         else
         {
-<div class="main-container-layout @UiState.SidebarClass">
-    <div class="navigation-section">
+ <div class="main-container-layout @UiState.SidebarClass">
         @if (Navigation.Uri.EndsWith("/dash", StringComparison.OrdinalIgnoreCase))
         {
-            <NavMenuDash />
+            <div class="navigation-section dboard">
+                <NavMenuDash />
+            </div>
         }
         else if (Navigation.Uri.EndsWith("/employer", StringComparison.OrdinalIgnoreCase))
         {
-            <NavMenuDashEmployer />
+            <div class="navigation-section dboard">
+                <NavMenuDashEmployer />
+            </div>
         }
         else
         {
-            <NavMenu />
+            <div class="navigation-section">
+                <NavMenu />
+            </div>
         }
-
-    </div>
     <div class="cover">
         @* <img class="bg-image" src="_content/PESOapps.Shared/images/banner_img.png"> *@
         <img class="bg-image" src="_content/PESOapps.Shared/images/gov_Uy.png">
@@ -40,7 +43,7 @@
     </div>
     @if (Navigation.Uri.EndsWith("/dash", StringComparison.OrdinalIgnoreCase))
     {
-        <main class="main-content">
+        <main class="main-content dboard">
             <article class="main-container">
                 @Body
             </article>
@@ -48,7 +51,7 @@
     }
     else if(Navigation.Uri.EndsWith("/employer", StringComparison.OrdinalIgnoreCase))
     {
-        <main class="main-content">
+        <main class="main-content dboard">
             <article class="main-container">
                 @Body
             </article>
@@ -57,7 +60,7 @@
     else
     {
         <main>
-            <article class="main-container">
+            <article class="main-container menus">
                 @Body
             </article>
         </main>

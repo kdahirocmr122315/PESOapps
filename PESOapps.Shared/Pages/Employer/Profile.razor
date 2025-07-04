@@ -21,7 +21,7 @@ else
         <div class="prof-cover">
             <!-- Profile Picture -->
             <div class="profile-picture position-absolute" style="bottom: -60px; left: 30px;">
-                <img src="https://pesoapi.misamisoriental.gov.ph/image/profile_placeholder.png"
+                <img src="_content/PESOapps.Shared/images/profile_placeholder.png"
                      class="rounded-circle border border-white shadow"
                      style="width: 120px; height: 120px; object-fit: cover;" />
             </div>
@@ -92,12 +92,65 @@ else
                 </div>
             </div>
         </div>
+
+
+        <div class="profile-feeds">
+            <div class="profile-feeds employer">
+                @if (applications == null || !applications.Any(a => a.Applicants != null && a.Applicants.Any()))
+                {
+                    <div class="alert alert-info">No applicants found for your job posts.</div>
+                }
+                else
+                {
+                    <!-- This area displays all applicants for each job post so employers can see who applied for each position -->
+                    @foreach (var post in applications)
+                    {
+                        if (post.Applicants != null && post.Applicants.Any())
+                        {
+                            <div class="mb-4">
+                                <h5 class="fw-bold mb-2">@post.Description</h5>
+                                <div class="emp-flex">
+                                    @foreach (var applicant in post.Applicants)
+                                    {
+                                        <article class="feed-card mb-3">
+                                            <header class="feed-card__header d-flex align-items-center">
+                                                <img src="_content/PESOapps.Shared/images/profile_placeholder.png" class="avatar me-2" style="width:40px;height:40px;" />
+                                                <div class="meta">
+                                                    <div class="name fw-semibold">
+                                                        @($"{applicant.Applicant?.FirstName} {applicant.Applicant?.MiddleName} {applicant.Applicant?.SurName} {applicant.Applicant?.Suffix}".Trim())
+                                                    </div>
+                                                    <div class="info text-muted small">
+                                                        <span>@applicant.DateApplied.ToString("MMMM dd, yyyy hh:mm tt")</span>
+                                                        <span class="fa fa-lock ms-2"></span>
+                                                    </div>
+                                                </div>
+                                            </header>
+                                            <section class="feed-card__body mt-2">
+                                                <p>
+                                                    Applied for <span class="fw-semibold">@post.Description</span> position
+                                                </p>
+                                                @if (!string.IsNullOrWhiteSpace(applicant.FilePath))
+                                                {
+                                                    <a href="@applicant.FilePath" target="_blank" class="btn btn-sm btn-outline-primary">View Resume</a>
+                                                }
+                                            </section>
+                                        </article>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    }
+                }
+            </div>
+        </div>
     </div>
 }
 
 @code {
     private bool isUserLoggedIn = false;
     private EmployerDetails? profile;
+
+    private List<ApplicantsPerJobPostModel>? applications;
 
     private bool loaded = false;
     private string initialBearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
@@ -139,6 +192,20 @@ else
                     else
                     {
                         Console.WriteLine($"Profile call failed: {profileResponse.StatusCode}");
+                    }
+                    var appsResponse =
+                         await Http.GetAsync($"http://localhost:5167/api/Employer/GetApplicantsByEmployer/{userId}");
+
+                    if (appsResponse.IsSuccessStatusCode)
+                    {
+                        var appsJson = await appsResponse.Content.ReadAsStringAsync();
+                        applications = JsonSerializer.Deserialize<List<ApplicantsPerJobPostModel>>(
+                            appsJson,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Applications call failed: {appsResponse.StatusCode}");
                     }
 
                 }

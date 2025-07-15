@@ -405,26 +405,6 @@ namespace webapi_peso.Controllers
         }
 
         [HttpGet("GetAllApplicants")]
-        //public IActionResult GetAllApplicants()
-        //{
-        //    using var db = dbFactory.CreateDbContext();
-        //    var applicants = cache.Get<List<ApplicantInformation>>("GetAllApplicantsWithoutHiredAndNotWilling");
-        //    if (applicants == null)
-        //    {
-        //        // Use a subquery so EF can translate it to SQL
-        //        var query = db.ApplicantInformation
-        //            .Where(a => !db.EmployerHiredApplicants
-        //                .Select(h => h.ApplicantAccountId)
-        //                .Contains(a.AccountId))
-        //            .Where(a => string.IsNullOrWhiteSpace(a.WillingToWorkNow) ||
-        //                        !a.WillingToWorkNow.Trim().Equals("no", StringComparison.OrdinalIgnoreCase));
-
-        //        applicants = query.ToList();
-
-        //        cache.Set("GetAllApplicantsWithoutHiredAndNotWilling", applicants, TimeSpan.FromSeconds(30));
-        //    }
-        //    return Ok(applicants);
-        //}
         public IActionResult GetAllApplicants()
         {
             using var connection = dbFactory.CreateDbContext().Database.GetDbConnection();
@@ -433,7 +413,7 @@ namespace webapi_peso.Controllers
 
             if (applicants == null)
             {
-                var query = @"
+                var query = @"   
                     SELECT * 
                     FROM ApplicantInformation a
                     WHERE NOT EXISTS (

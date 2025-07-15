@@ -15,7 +15,7 @@ namespace webapi_peso.ViewModels
         public int Month { get; set; }
         public int NumberOfApplicants { get; set; }
 
-        public int Solicited { get; set; }
+        public int? Solicited { get; set; }
         public int SolicitedFemale { get; set; }
         public int Registered { get; set; }
         public int RegisteredFemale { get; set; }

@@ -1044,7 +1044,7 @@ a:hover span {
 .btn__indicator {
     background-color: #fff;
     width: 2em;
-/*    height: 2em;*/
+    /*    height: 2em;*/
     border-radius: 50%;
 
     position: absolute;
@@ -1317,6 +1317,23 @@ p.card-details-in .card-span {
 /* -------------- Job List ------------ */
 .text-muted {
     color: var(--muted) !important;
+}
+
+ul {
+    margin-top: 0;
+}
+
+.red {
+    color: red;
+    font-weight: bold;
+}
+
+.spans p {
+    display: inline-block;
+}
+
+.section {
+    margin-bottom: 25px;
 }
 
 

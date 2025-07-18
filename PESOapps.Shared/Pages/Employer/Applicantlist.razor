@@ -1,158 +1,406 @@
 ﻿@page "/list/employer"
-@using System.Text.Json
-@inject NavigationManager Navigation
+
 @inject HttpClient Http
 @inject IJSRuntime JS
+@using System.Text.Json.Serialization
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
-@if (!isUserLoggedIn)
-{
 
+<h3>Nearby Applicants</h3>
+
+<div class="mb-3">
+    <label>Region:</label>
+    <select @onchange="OnRegionChanged" bind="SelectedRegionCode">
+        <option value="">Select Region</option>
+        @foreach (var region in Regions)
+        {
+            <option value="@region.RegCode">@region.RegDesc</option>
+        }
+    </select>
+</div>
+<div class="mb-3">
+    <label>Province:</label>
+    <select @onchange="OnProvinceChanged" bind="SelectedProvinceCode" disabled="@(!FilteredProvinces.Any())" required>
+        <option value="">Select Province</option>
+        @foreach (var province in FilteredProvinces)
+        {
+            <option value="@province.ProvCode">@province.ProvDesc</option>
+        }
+    </select>
+</div>
+<div class="mb-3">
+    <label>City/Municipality:</label>
+    <select @onchange="OnCityChanged" bind="SelectedCityCode" disabled="@(!FilteredCities.Any())" required>
+        <option value="">Select City/Municipality</option>
+        @foreach (var city in FilteredCities)
+        {
+            <option value="@city.CityMunCode">@city.CityMunDesc</option>
+        }
+    </select>
+</div>
+<div class="mb-3">
+    <label>Barangay:</label>
+    <select class="form-select" @bind="SelectedBarangayCode" disabled="@(!FilteredBarangays.Any())">
+        <option value="">-- Select Barangay --</option>
+        @foreach (var barangay in FilteredBarangays)
+        {
+            <option value="@barangay.BrgyCode">@barangay.BrgyDesc</option>
+        }
+    </select>
+</div>
+<button class="btn btn-primary mb-3" @onclick="OnSearchClicked">Search</button>
+
+@if (IsError)
+{
+    <div class="alert alert-danger">
+        Unable to load applicants. The resource was not found (404).
+    </div>
 }
-else if (profile == null)
+else if (Applicants == null)
 {
     <p>Loading...</p>
 }
+else if (Applicants.Count == 0)
+{
+    <p>No applicants found.</p>
+}
 else
 {
-    <div class="applicant-board">
-        <div class="applicant-list">
-            @if (applicantList == null)
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Email</th>
+                <th>Name</th>
+                <th>Gender</th>
+                <th>Cellphone</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var applicant in Applicants)
             {
-                <p>Loading applicants...</p>
+                <tr>
+                    <td>@applicant.Email</td>
+                    <td>@($"{applicant.FirstName} {applicant.SurName}")</td>
+                    <td>@applicant.Gender</td>
+                    <td>@applicant.CellphoneNumber</td>
+                </tr>
             }
-            else
-            {
-                @foreach (var applicant in applicantList)
-                {
-                    <div class="applicant-card @(selectedApplicant?.ApplicantInformation?.Id == applicant.ApplicantInformation?.Id ? "selected" : "")" @onclick="@(() => SelectApplicant(applicant))">
-                        <div class="card-name elips">@GetApplicantFullName(applicant)</div>
-                        <p>@applicant.ApplicantInformation?.PresentMunicipalityCity, @applicant.ApplicantInformation?.PresentProvince</p>
-                        <p class="muted">@applicant.ApplicantInformation?.Email</p>
-                    </div>
-                }
-            }
-        </div>
+        </tbody>
+    </table>
+}
 
-        <div class="applicant-details">
-            @if (selectedApplicant != null)
-            {
-                <div class="card-name">@GetApplicantFullName(selectedApplicant)</div>
-                <p>@selectedApplicant.ApplicantInformation?.PresentMunicipalityCity, @selectedApplicant.ApplicantInformation?.PresentProvince</p>
-                <p class="muted">@selectedApplicant.ApplicantInformation?.Email</p>
-                <hr />
-                <div class="details-inner">
-                    <div class="details-divider">
-                        <p class="card-details">Other Details</p>
-                        <p class="card-details-in">
-                            <span class="card-span">Gender: </span>
-                            @selectedApplicant.ApplicantInformation?.Gender
-                        </p>
-                        <p class="card-details-in">
-                            <span class="card-span">Date of Birth: </span>
-                            @if (selectedApplicant.ApplicantInformation?.DateOfBirth > 0)
-                            {
-                                @DateTimeOffset.FromUnixTimeMilliseconds(selectedApplicant.ApplicantInformation.DateOfBirth).DateTime.ToString("MMMM dd, yyyy")
-                            }
-                        </p>
-                        <p class="card-details-in">
-                            <span class="card-span">Civil Status: </span>
-                            @selectedApplicant.ApplicantInformation?.CivilStatus
-                        </p>
-                        <p class="card-details-in">
-                            <span class="card-span">Cellphone: </span>
-                            @selectedApplicant.ApplicantInformation?.CellphoneNumber
-                        </p>
-                        <p class="card-details-in">
-                            <span class="card-span">Religion: </span>
-                            @selectedApplicant.ApplicantInformation?.Religion
-                        </p>
-                    </div>
-                </div>
-            }
-            else
-            {
-
-            }
-        </div>
+@if (!string.IsNullOrEmpty(DebugMessage))
+{
+    <div class="alert alert-info">
+        <strong>Debug:</strong> @DebugMessage
     </div>
 }
+
 @code {
-    private AccountAndInformationViewModel? profile;
-    private bool isUserLoggedIn = false;
-    private bool loaded = false;
-
-    private List<NearbyApplicantViewModel>? applicantList;
-    private NearbyApplicantViewModel? selectedApplicant;
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    public class VirtualizedDatViewModel
     {
-        if (firstRender && !loaded)
+        public List<ApplicantInformation> Items { get; set; } = new();
+        public int TotalCount { get; set; }
+    }
+
+    public class Region
+    {
+        [JsonPropertyName("regCode")]
+        public string RegCode { get; set; } = "";
+        public int Id { get; set; }
+        public string RegDesc { get; set; } = "";
+        public string PsgcCode { get; set; } = "";
+    }
+    public class Province
+    {
+        public int Id { get; set; }
+        public string ProvCode { get; set; } = "";
+        public string ProvDesc { get; set; } = "";
+        public string RegCode { get; set; } = "";
+        public string PsgcCode { get; set; } = "";
+    }
+    public class City
+    {
+        public int Id { get; set; }
+        public string CityMunCode { get; set; } = "";
+        public string CityMunDesc { get; set; } = "";
+        public string ProvCode { get; set; } = "";
+        public string PsgcCode { get; set; } = "";
+    }
+    public class Barangay
+    {
+        public int Id { get; set; }
+        public string BrgyCode { get; set; } = "";
+        public string BrgyDesc { get; set; } = "";
+        public string RegCode { get; set; } = "";
+        public string ProvCode { get; set; } = "";
+        public string CityMunCode { get; set; } = "";
+    }
+
+    private List<ApplicantInformation> Applicants { get; set; } = new();
+    private bool IsError { get; set; } = false;
+
+    private List<Region> Regions = new();
+    private List<Province> Provinces = new();
+    private List<City> Cities = new();
+    private List<Barangay> Barangays = new();
+
+    private string DebugMessage { get; set; } = "";
+
+    // Filter state
+    private string SelectedRegionCode { get; set; } = "";
+    private string SelectedProvinceCode { get; set; } = "";
+    private string SelectedCityCode { get; set; } = "";
+    private string SelectedBarangayCode { get; set; } = "";
+
+    private List<Province> FilteredProvinces => Provinces.Where(p => p.RegCode == SelectedRegionCode).ToList();
+    private List<City> FilteredCities => Cities.Where(c => c.ProvCode == SelectedProvinceCode).ToList();
+    private List<Barangay> FilteredBarangays => Barangays.Where(b => b.CityMunCode == SelectedCityCode).ToList();
+
+    private EmployerDetailsViewModel? EmployerDetails { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        DebugMessage = "Initializing component...";
+        await LoadLocationJsonsAsync();
+        await LoadEmployerDetailsAndSetDefaults();
+        await FetchAllApplicants();
+    }
+
+    private async Task LoadLocationJsonsAsync()
+    {
+        DebugMessage = "Loading location JSONs...";
+        Regions = await Http.GetFromJsonAsync<List<Region>>("https://localhost:7283/pesobeta/_content/PESOapps.Shared/json/refregion.json") ?? new();
+        Provinces = await Http.GetFromJsonAsync<List<Province>>("https://localhost:7283/pesobeta/_content/PESOapps.Shared/json/refprovince.json") ?? new();
+        Cities = await Http.GetFromJsonAsync<List<City>>("https://localhost:7283/pesobeta/_content/PESOapps.Shared/json/refcitymun.json") ?? new();
+        Barangays = await Http.GetFromJsonAsync<List<Barangay>>("https://localhost:7283/pesobeta/_content/PESOapps.Shared/json/refbrgy.json") ?? new();
+    }
+
+    private async Task LoadEmployerDetailsAndSetDefaults()
+    {
+        DebugMessage = "Fetching UserId from localStorage for defaults...";
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+        if (string.IsNullOrEmpty(userId))
         {
-            loaded = true;
+            DebugMessage = "UserId is missing for defaults.";
+            return;
+        }
 
-            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
-            var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
-            var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+        var employerDetailsResponse = await Http.GetAsync($"http://localhost:5167/api/Employer/GetEmployerDetailsByEmail/{userId}");
+        if (!employerDetailsResponse.IsSuccessStatusCode)
+        {
+            DebugMessage = $"Error fetching employer details for defaults: {employerDetailsResponse.StatusCode}";
+            return;
+        }
 
-            if (!string.IsNullOrWhiteSpace(userId) && isLoggedIn == "true")
-            {
-                isUserLoggedIn = true;
-                Http.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-                try
-                {
-                    var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
-
-                    if (response.IsSuccessStatusCode)
-                    {
-                        var json = await response.Content.ReadAsStringAsync();
-                        profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json,
-                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-
-                        // Use POST to fetch applicant list
-                        var postResponse = await Http.PostAsync("http://localhost:5167/api/Employer/GetNearbyApplicantsV2", null);
-                        if (postResponse.IsSuccessStatusCode)
-                        {
-                            var applicantsJson = await postResponse.Content.ReadAsStringAsync();
-                            applicantList = JsonSerializer.Deserialize<List<NearbyApplicantViewModel>>(applicantsJson,
-                                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
-                }
-
-                StateHasChanged(); // Refresh the UI
-            }
-            else
-            {
-                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
-            }
+        EmployerDetails = await employerDetailsResponse.Content.ReadFromJsonAsync<EmployerDetailsViewModel>();
+        if (EmployerDetails?.EmployerDetails != null)
+        {
+            SelectedRegionCode = EmployerDetails.EmployerDetails.Region ?? "";
+            SelectedProvinceCode = EmployerDetails.EmployerDetails.Province ?? "";
+            SelectedCityCode = EmployerDetails.EmployerDetails.CityMunicipality ?? "";
+            SelectedBarangayCode = EmployerDetails.EmployerDetails.Barangay ?? "";
         }
     }
 
-    void SelectApplicant(NearbyApplicantViewModel applicant)
+    private async Task FetchAllApplicants()
     {
-        selectedApplicant = applicant;
+        DebugMessage = "Fetching UserId from localStorage...";
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+        if (string.IsNullOrEmpty(userId))
+        {
+            DebugMessage = "UserId is missing.";
+            Console.WriteLine("UserId is missing.");
+            IsError = true;
+            return;
+        }
+
+        DebugMessage = $"UserId found: {userId}. Fetching employer details...";
+        var employerDetailsResponse = await Http.GetAsync($"http://localhost:5167/api/Employer/GetEmployerDetailsByEmail/{userId}");
+        if (!employerDetailsResponse.IsSuccessStatusCode)
+        {
+            DebugMessage = $"Error fetching employer details: {employerDetailsResponse.StatusCode}";
+            Console.WriteLine($"Error fetching employer details: {employerDetailsResponse.StatusCode}");
+            IsError = employerDetailsResponse.StatusCode == System.Net.HttpStatusCode.NotFound;
+            return;
+        }
+
+        var employerDetails = await employerDetailsResponse.Content.ReadFromJsonAsync<EmployerDetailsViewModel>();
+        if (employerDetails == null || employerDetails.EmployerDetails == null)
+        {
+            DebugMessage = "Employer details not found.";
+            Console.WriteLine("Employer details not found.");
+            IsError = true;
+            return;
+        }
+
+        DebugMessage = "Requesting all applicants (no location filter)...";
+        var request = new
+        {
+            employerId = userId,
+            txtSearch = "",
+            skills = new List<string>(),
+            listOfAppInformation = new List<object>(),
+            regionCode = "",
+            regionDesc = "",
+            provinceCode = "",
+            provinceDesc = "",
+            cityCode = "",
+            cityDesc = "",
+            barangayCode = "",
+            barangayDesc = "",
+            dateFrom = DateTime.Now,
+            dateTo = DateTime.Now,
+            selectedExportDate = DateTime.Now,
+            isExport = false,
+            startIndex = 0,
+            count = 100, // Show more by default
+            gender = ""
+        };
+
+        var response = await Http.PostAsJsonAsync("http://localhost:5167/api/Employer/GetNearbyApplicantsV2", request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<VirtualizedDatViewModel>();
+            if (result?.Items != null)
+            {
+                Applicants = result.Items;
+                DebugMessage = $"Fetched {Applicants.Count} applicants.";
+            }
+            else
+            {
+                DebugMessage = "No applicants found in response.";
+            }
+        }
+        else
+        {
+            DebugMessage = $"Error fetching applicants: {response.StatusCode}";
+            Console.WriteLine($"Error fetching applicants: {response.StatusCode}");
+            IsError = response.StatusCode == System.Net.HttpStatusCode.NotFound;
+        }
     }
 
-    private string GetApplicantFullName(NearbyApplicantViewModel applicant)
+    private async Task FetchNearbyApplicants(string? regionCode = null, string? provinceCode = null, string? cityCode = null, string? barangayCode = null)
     {
-        var info = applicant.ApplicantInformation;
-        if (info == null) return "Unknown Applicant";
-        var fullName = $"{info.FirstName} {info.MiddleName} {info.SurName}".Replace("  ", " ").Trim();
-        return string.IsNullOrWhiteSpace(fullName) ? "Unknown Applicant" : fullName;
+        DebugMessage = "Fetching UserId from localStorage...";
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+        if (string.IsNullOrEmpty(userId))
+        {
+            DebugMessage = "UserId is missing.";
+            Console.WriteLine("UserId is missing.");
+            IsError = true;
+            return;
+        }
+
+        DebugMessage = $"UserId found: {userId}. Fetching employer details...";
+        var employerDetailsResponse = await Http.GetAsync($"http://localhost:5167/api/Employer/GetEmployerDetailsByEmail/{userId}");
+        if (!employerDetailsResponse.IsSuccessStatusCode)
+        {
+            DebugMessage = $"Error fetching employer details: {employerDetailsResponse.StatusCode}";
+            Console.WriteLine($"Error fetching employer details: {employerDetailsResponse.StatusCode}");
+            IsError = employerDetailsResponse.StatusCode == System.Net.HttpStatusCode.NotFound;
+            return;
+        }
+
+        var employerDetails = await employerDetailsResponse.Content.ReadFromJsonAsync<EmployerDetailsViewModel>();
+        if (employerDetails == null || employerDetails.EmployerDetails == null)
+        {
+            DebugMessage = "Employer details not found.";
+            Console.WriteLine("Employer details not found.");
+            IsError = true;
+            return;
+        }
+
+        // Use filter if provided, else use employer's location
+        var regionCodeToUse = regionCode ?? employerDetails.EmployerDetails.Region ?? "";
+        var provinceCodeToUse = provinceCode ?? employerDetails.EmployerDetails.Province ?? "";
+        var cityCodeToUse = cityCode ?? employerDetails.EmployerDetails.CityMunicipality ?? "";
+        var barangayCodeToUse = barangayCode ?? employerDetails.EmployerDetails.Barangay ?? "";
+
+        var regionDesc = Regions.FirstOrDefault(r => r.RegCode == regionCodeToUse)?.RegDesc ?? "";
+        var provinceDesc = Provinces.FirstOrDefault(p => p.ProvCode == provinceCodeToUse)?.ProvDesc ?? "";
+        var cityDesc = Cities.FirstOrDefault(c => c.CityMunCode == cityCodeToUse)?.CityMunDesc ?? "";
+        var barangayDesc = Barangays.FirstOrDefault(b => b.BrgyCode == barangayCodeToUse)?.BrgyDesc ?? "";
+
+        DebugMessage = $"Location: Region={regionDesc}, Province={provinceDesc}, City={cityDesc}, Barangay={barangayDesc}. Fetching nearby applicants...";
+
+        DebugMessage = $"Requesting applicants with: regionCode={regionCodeToUse}, provinceCode={provinceCodeToUse}, cityCode={cityCodeToUse}, barangayCode={barangayCodeToUse}";
+
+        var request = new
+        {
+            employerId = userId,
+            txtSearch = "",
+            skills = new List<string>(),
+            listOfAppInformation = new List<object>(),
+            regionCode = regionCodeToUse,
+            regionDesc = regionDesc,
+            provinceCode = provinceCodeToUse,
+            provinceDesc = provinceDesc,
+            cityCode = cityCodeToUse,
+            cityDesc = cityDesc,
+            barangayCode = barangayCodeToUse,
+            barangayDesc = barangayDesc,
+            dateFrom = DateTime.Now,
+            dateTo = DateTime.Now,
+            selectedExportDate = DateTime.Now,
+            isExport = false,
+            startIndex = 0,
+            count = 10,
+            gender = ""
+        };
+
+        var response = await Http.PostAsJsonAsync("http://localhost:5167/api/Employer/GetNearbyApplicantsV2", request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var result = await response.Content.ReadFromJsonAsync<VirtualizedDatViewModel>();
+            if (result?.Items != null)
+            {
+                Applicants = result.Items;
+                DebugMessage = $"Fetched {Applicants.Count} applicants.";
+            }
+            else
+            {
+                DebugMessage = "No applicants found in response.";
+            }
+        }
+        else
+        {
+            DebugMessage = $"Error fetching applicants: {response.StatusCode}";
+            Console.WriteLine($"Error fetching applicants: {response.StatusCode}");
+            IsError = response.StatusCode == System.Net.HttpStatusCode.NotFound;
+        }
     }
 
-    // You may need to define this ViewModel if not already present in your shared models
-    public class NearbyApplicantViewModel
+    private async Task OnSearchClicked()
     {
-        public ApplicantInformation? ApplicantInformation { get; set; }
-        public ApplicantAccount? ApplicantAccount { get; set; }
-        public UserAccount? UserAccount { get; set; }
+        await FetchNearbyApplicants(
+            string.IsNullOrEmpty(SelectedRegionCode) ? null : SelectedRegionCode,
+            string.IsNullOrEmpty(SelectedProvinceCode) ? null : SelectedProvinceCode,
+            string.IsNullOrEmpty(SelectedCityCode) ? null : SelectedCityCode,
+            string.IsNullOrEmpty(SelectedBarangayCode) ? null : SelectedBarangayCode
+        );
+    }
+
+    private void OnRegionChanged(ChangeEventArgs e)
+    {
+        SelectedRegionCode = e.Value?.ToString() ?? "";
+        SelectedProvinceCode = "";
+        SelectedCityCode = "";
+        SelectedBarangayCode = "";
+    }
+
+    private void OnProvinceChanged(ChangeEventArgs e)
+    {
+        SelectedProvinceCode = e.Value?.ToString() ?? "";
+        SelectedCityCode = "";
+        SelectedBarangayCode = "";
+    }
+
+    private void OnCityChanged(ChangeEventArgs e)
+    {
+        SelectedCityCode = e.Value?.ToString() ?? "";
+        SelectedBarangayCode = "";
     }
 }

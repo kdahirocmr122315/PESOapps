@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Dapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -401,6 +402,32 @@ namespace webapi_peso.Controllers
                 }
                 return Ok(rs);
             }
+        }
+
+        [HttpGet("GetAllApplicants")]
+        public IActionResult GetAllApplicants()
+        {
+            using var connection = dbFactory.CreateDbContext().Database.GetDbConnection();
+            var cacheKey = "GetAllApplicantsWithoutHiredAndNotWilling";
+            var applicants = cache.Get<List<ApplicantInformation>>(cacheKey);
+
+            if (applicants == null)
+            {
+                var query = @"   
+                    SELECT * 
+                    FROM ApplicantInformation a
+                    WHERE NOT EXISTS (
+                        SELECT 1 
+                        FROM EmployerHiredApplicants h 
+                        WHERE h.ApplicantAccountId = a.AccountId
+                    )
+                    AND (a.WillingToWorkNow IS NULL OR LTRIM(RTRIM(a.WillingToWorkNow)) != 'no')";
+
+                applicants = connection.Query<ApplicantInformation>(query).ToList();
+                cache.Set(cacheKey, applicants, TimeSpan.FromSeconds(30));
+            }
+
+            return Ok(applicants);
         }
 
         [HttpGet("GetEmployerDetailsByEmail/{AccountId}")]

@@ -1,9 +1,12 @@
 ﻿
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using webapi_peso;
 using webapi_peso.Model;
 
 
@@ -16,19 +19,15 @@ namespace authpro.Controllers
     {
 
         private readonly IConfiguration  _configuration;
-
-
-      
+        private readonly IDbContextFactory<ApplicationDbContext> dbFactory;
+        private readonly IMemoryCache cache;
         private readonly string? _connectionString;
-        public AdminController(IConfiguration configuration)
+        public AdminController(IConfiguration configuration, IDbContextFactory<ApplicationDbContext> _dbFactory, IMemoryCache _cache)
         {
             _configuration = configuration;
-
-           
+            dbFactory = _dbFactory;
+            cache = _cache;
         }
-
-
-
 
         [HttpPost]
         public IActionResult Login(AdminAuth adminAuth)
@@ -71,8 +70,69 @@ namespace authpro.Controllers
             return Unauthorized();
         }
 
-        
-      
+        [HttpGet("GetUser/{userId}")]
+        public async Task<IActionResult> GetUser(string userId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var user = await db.UserAccounts.FindAsync(userId);
+            return Ok(user);
+        }
+
+        [HttpGet("GetUserAccounts")]
+        public async Task<List<UserAccount>> GetUserAccounts()
+        {
+            using var db = dbFactory.CreateDbContext();
+            var rs = cache.Get<List<UserAccount>>($"GetUserAccounts");
+            if (rs == null)
+            {
+                rs = await db.UserAccounts.Where(x => x.Email.ToLower().Trim() != "superadmin").OrderByDescending(x => x.DateCreated).ToListAsync();
+                cache.Set($"GetUserAccounts", rs, TimeSpan.FromSeconds(60));
+            }
+            return rs;
+        }
+
+        [HttpPost("CreateEditUserAccount")]
+        public IActionResult CreateEditUserAccount(UserAccount data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            if (string.IsNullOrEmpty(data.Id))
+            {
+                db.UserAccounts.Add(data);
+                db.SaveChanges();
+                return Ok(data);
+            }
+            else
+            {
+                db.UserAccounts.Update(data);
+                db.SaveChanges();
+                return Ok(data);
+            }
+        }
+
+        [HttpGet("GetSuggestions")]
+        public IActionResult GetSuggestions()
+        {
+            using var db = dbFactory.CreateDbContext();
+            var rs = db.UserSuggestions.OrderByDescending(x => x.DateCreated).ToList();
+            return Ok(rs);
+        }
+        [HttpPost("SaveSuggestions")]
+        public IActionResult SaveSuggestions(UserSuggestion data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            db.UserSuggestions.Add(data);
+            db.SaveChanges();
+            return Ok(1);
+        }
+        [HttpPost("UpdateSuggestion")]
+        public IActionResult UpdateSuggestion(UserSuggestion data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            data.IsOk = data.IsOk == 1 ? 0 : 1;
+            db.UserSuggestions.Update(data);
+            db.SaveChanges();
+            return Ok(1);
+        }
 
     }
 }

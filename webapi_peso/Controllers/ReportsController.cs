@@ -12,115 +12,17 @@ namespace webapi_peso.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class MunManagerController : ControllerBase
+    public class ReportsController : ControllerBase
     {
         private readonly IDbContextFactory<ApplicationDbContext> dbFactory;
         private readonly IMemoryCache cache;
         private readonly IWebHostEnvironment env;
 
-        public MunManagerController(IDbContextFactory<ApplicationDbContext> _dbFactory, IMemoryCache _cache, IWebHostEnvironment _env)
+        public ReportsController(IDbContextFactory<ApplicationDbContext> _dbFactory, IMemoryCache _cache, IWebHostEnvironment _env)
         {
             dbFactory = _dbFactory;
             cache = _cache;
             env = _env;
-        }
-
-        [HttpGet("GetUser/{userId}")]
-        public async Task<IActionResult> GetUser(string userId)
-        {
-            using var db = dbFactory.CreateDbContext();
-            var user = await db.UserAccounts.FindAsync(userId);
-            return Ok(user);
-        }
-
-        [HttpGet("GetPESOManagerAccount/{accountId}")]
-        public IActionResult GetPESOManagerAccount(string accountId)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var rs = new PESOManagerAccountViewModel();
-                var account = db.UserAccounts.Where(x => x.Id == accountId).FirstOrDefault();
-                rs.UserAccount = account;
-                var information = db.PesoManagerInformation.Where(x => x.AccountId == accountId).FirstOrDefault();
-                if (information != null)
-                {
-                    rs.UserInformation = information;
-                }
-                else
-                {
-                    information = new PesoManagerInformation();
-                    information.AccountId = accountId;
-                    db.PesoManagerInformation.Add(information);
-                    db.SaveChanges();
-                    rs.UserInformation = information;
-                }
-                return Ok(rs);
-            }
-        }
-
-        [HttpGet("GetNumberOfEmplyerAndApplicant/{provCode}/{cityCode}")]
-        public IActionResult GetNumberOfEmplyerAndApplicant(string provCode, string cityCode)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var rs = new PESOManagerAccountViewModel();
-                var listofapplicants = db.ApplicantAccount.Where(x => x.IsReviewedReturned == 1 && x.IsRemoved == 0).ToList();
-                foreach (var i in listofapplicants)
-                {
-                    var appInfo = db.ApplicantInformation.Where(x => x.AccountId == i.Id && x.PresentProvince == provCode && x.PresentMunicipalityCity == cityCode).MyDistinctBy(x => x.Email);
-                    if (appInfo != null)
-                        rs.NumberOfApplicants += appInfo.Count();
-                }
-                //rs.NumberOfApplicants = db.ApplicantInformation.Where(x => x.PresentProvince == provCode && x.PresentMunicipalityCity == cityCode).Count();
-                rs.NumberOfEmployers = db.EmployerDetails.Where(x => x.Province == provCode && x.CityMunicipality == cityCode).Count();
-
-                return Ok(rs);
-            }
-        }
-
-        [HttpGet("GetRegion")]
-        public List<RefRegion> GetRegion()
-        {
-            var data = cache.Get<List<RefRegion>>("region");
-            if (data == null)
-            {
-                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refregion.json"}");
-                var json = System.IO.File.ReadAllText(file);
-                data = JsonConvert.DeserializeObject<List<RefRegion>>(json);
-                cache.Set("region", data);
-            }
-            return data;
-        }
-
-        [HttpGet("GetProvince")]
-        public List<RefProvince> GetProvince()
-        {
-            var data = cache.Get<List<RefProvince>>("province");
-            if (data == null)
-            {
-                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refprovince.json"}");
-                var json = System.IO.File.ReadAllText(file);
-                data = JsonConvert.DeserializeObject<List<RefProvince>>(json);
-                cache.Set("province", data);
-            }
-            return data;
-        }
-
-        [HttpGet("GetCity")]
-        public List<RefCityMun> GetCity()
-        {
-            var data = cache.Get<List<RefCityMun>>("city");
-            if (data == null)
-            {
-                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
-                var json = System.IO.File.ReadAllText(file);
-                data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
-
-                var a = new RefCityMun() { citymunCode = "PESO", citymunDesc = "PESO Province", provCode = "1043" };
-                data.Add(a);
-                cache.Set("city", data);
-            }
-            return data;
         }
 
         [HttpGet("GetRegisteredReferredReports/{month}/{year}")]
@@ -245,6 +147,65 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetRecordedJobTitle")]
+        public IActionResult GetRecordedJobTitle()
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var result = db.JobApplicantsPlaced.MyDistinctBy(x => x.JobTitle).Select(x => x.JobTitle).ToList();
+                var list2 = db.JobVacancySolicited.MyDistinctBy(x => x.JobTitle).Select(x => x.JobTitle).ToList();
+                result.AddRange(list2);
+                result.ForEach(x => x.ToUpper());
+                return Ok(result.MyDistinctBy(x => x).ToList());
+            }
+        }
+
+        [HttpGet("CompanyList")]
+        public IActionResult CompanyList()
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = cache.Get<List<string>>("CompanyList");
+                if (rs == null)
+                {
+                    rs = new List<string>();
+                    rs = db.EmployerDetails.Where(x => x.Status == ProjectConfig.ACCOUNT_STATUS.APPROVED).Select(x => x.EstablishmentName.ToUpper()).MyDistinctBy(x => x).ToList();
+                    cache.Set("CompanyList", rs, TimeSpan.FromSeconds(30));
+                }
+                return Ok(rs);
+            }
+        }
+        [HttpGet("CompanyList/{strSearch}")]
+        public IActionResult CompanyList(string strSearch)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = cache.Get<List<string>>($"CompanyList/{strSearch}");
+                if (rs == null)
+                {
+                    rs = new List<string>();
+                    var list = db.EmployerDetails.Where(x => x.Status == ProjectConfig.ACCOUNT_STATUS.APPROVED).Select(x => x.EstablishmentName.ToUpper()).MyDistinctBy(x => x).ToList();
+                    rs = list.Where(x => x.Contains(strSearch, StringComparison.InvariantCultureIgnoreCase)).ToList();
+                    cache.Set($"CompanyList/{strSearch}", rs, TimeSpan.FromSeconds(30));
+                }
+                return Ok(rs);
+            }
+        }
+
+        [HttpPost("SaveSolicitedVacancies")]
+        public IActionResult SaveSolicitedVacancies(List<JobVacancySolicited> data)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                data.ForEach(x => x.DateCreated = DateTime.Now);
+                db.JobVacancySolicited.AddRange(data);
+                db.SaveChanges();
+                if (data != null && data.Count > 0)
+                    cache.Remove($"GetReports/JobVacancies/{data.FirstOrDefault().Month}/{data.FirstOrDefault().Year}/{data.FirstOrDefault().CityMunCode}");
+                return Ok();
+            }
+        }
+
         [HttpGet("GetReferralReport/{year}/{isExport}")]
         public async Task<IActionResult> GetReferralReport(int year, bool isExport)
         {
@@ -326,17 +287,6 @@ namespace webapi_peso.Controllers
             }
         }
 
-        [HttpGet("FindCity/{code}")]
-        public RefCityMun FindCity(string code)
-        {
-            if (code == "PESO")
-            {
-                return new RefCityMun() { citymunCode = code, citymunDesc = "PESO Province", provCode = "1043" };
-            }
-            var rs = GetCity().Where(x => x.citymunCode == code).FirstOrDefault();
-            return rs;
-        }
-
         [HttpGet("GetHiredApplicantsList/{month}/{year}/{cityCode}/{isExport}")]
         public async Task<IActionResult> GetHiredApplicantsList(int month, int year, string cityCode, bool isExport)
         {
@@ -411,17 +361,6 @@ namespace webapi_peso.Controllers
             }
         }
 
-        [HttpGet("GetSolicitedReportChart/{startMonth}/{endMonth}/{year}")]
-        public IActionResult GetSolicitedReportChart(int startMonth, int endMonth, int year)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var solicited = db.JobVacancySolicited.Where(x => x.DateCreated.Month >= startMonth && x.DateCreated.Month <= endMonth && x.DateCreated.Year == year).ToList();
-
-                return Ok(solicited);
-            }
-        }
-
         [HttpGet("GetPreRegListChart")]
         public IActionResult GetPreRegListChart()
         {
@@ -435,24 +374,112 @@ namespace webapi_peso.Controllers
             }
         }
 
-        [HttpGet("GetReferredApplicantChart/{startMonth}/{endMonth}/{year}")]
-        public IActionResult GetReferredApplicantChart(int startMonth, int endMonth, int year)
+        [HttpGet("GetReportByGender/{month}/{year}/{isExport}")]
+        public async Task<IActionResult> GetReportByGender(int month, int year, bool isExport)
         {
             using (var db = dbFactory.CreateDbContext())
             {
-                var rs = new List<ReferralViewModel>();
-                var list = db.JobApplicantsReferred.Where(x => x.DateReferred.Month >= startMonth && x.DateReferred.Month <= endMonth && x.DateReferred.Year == year).ToList();
+                var listOfMunicipality = GetCity().Where(x => x.provCode == "1043").ToList();
+                var list = new List<ConsolidatedReportViewModel>();
 
-                return Ok(list);
-            }
-        }
+                int noRow = 0;
+                foreach (var city in listOfMunicipality)
+                {
+                    noRow += 1;
+                    var registered = 0;
+                    var registeredFemale = 0;
+                    var listOfRegistered = db.ApplicantInformation.Where(x => x.PresentMunicipalityCity == city.citymunCode);
+                    foreach (var i in listOfRegistered)
+                    {
+                        var d = Helper.toDateTime(i.DateLastUpdate);
+                        if (d.Year == year && d.Month == month)
+                        {
+                            registered += 1;
+                            if (i.Gender.ToLower() == "female")
+                                registeredFemale += 1;
+                        }
+                    }
 
-        [HttpGet("GetHiredApplicantsListChart/{startMonth}/{endMonth}/{year}")]
-        public IActionResult GetHiredApplicantsListChart(int startMonth, int endMonth, int year)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var list = db.JobApplicantsPlaced.Where(x => x.DateHired.Month >= startMonth && x.DateHired.Month <= endMonth && x.DateHired.Year == year).ToList();
+                    var solicited = db.JobVacancySolicited.Where(x => x.CityMunCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.NumberOfVacancy);
+                    var solicitedFemale = db.JobVacancySolicited.Where(x => x.Gender.ToLower() == "female" && x.CityMunCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.NumberOfVacancy);
+                    var referred = db.JobApplicantsReferred.Where(x => x.ApplicantCityMunCode == city.citymunCode && x.DateReferred.Year == year && x.DateReferred.Month == month).Count();
+                    var referredFemale = db.JobApplicantsReferred.Where(x => x.Gender.ToLower() == "female" && x.ApplicantCityMunCode == city.citymunCode && x.DateReferred.Year == year && x.DateReferred.Month == month).Count();
+                    var placed = db.JobApplicantsPlaced.Where(x => x.CityMunCode == city.citymunCode && x.DateHired.Year == year && x.Month == month).Count();
+                    var placedFemale = db.JobApplicantsPlaced.Where(x => x.Gender.ToLower() == "female" && x.CityMunCode == city.citymunCode && x.DateHired.Year == year && x.Month == month).Count();
+
+                    var otherRegistered = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.Registered);
+                    var otherRegisteredFemale = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.RegisteredFemale);
+                    var otherSolicited = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.Solicited);
+                    var otherSolicitedFemale = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.SolicitedFemale);
+                    var otherReferred = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.Referred);
+                    var otherReferredFemale = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.ReferredFemale);
+                    var otherPlaced = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.Placed);
+                    var otherPlacedFemale = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year && x.Month == month).Sum(x => x.PlacedFemale);
+
+                    var rs = new ConsolidatedReportViewModel();
+                    rs.RowNumber = noRow;
+                    rs.MunicipalityName = city.citymunDesc;
+                    rs.Solicited = solicited + otherSolicited;
+                    rs.SolicitedFemale = solicitedFemale + otherSolicitedFemale;
+                    rs.Registered = registered + otherRegistered;
+                    rs.RegisteredFemale = registeredFemale + otherRegisteredFemale;
+                    rs.Referred = referred + otherReferred;
+                    rs.ReferredFemale = referredFemale + otherReferredFemale;
+                    rs.Placed = placed + otherPlaced;
+                    rs.PlacedFemale = placedFemale + otherPlacedFemale;
+                    list.Add(rs);
+                }
+                list.AddRange(AddPESOProvinceData(db, noRow, year));
+
+                if (isExport)
+                {
+                    var csv = new StringBuilder();
+                    csv.AppendLine($"Generated Date:,{DateTime.Now.ToString("MM-dd-yyyy")},{DateTime.Now.ToString("hh:mmtt").ToUpper()}");
+                    csv.AppendLine($"CONSOLIDATED LMI MONTHLY REPORT BY MUNICIPALITY/CITY");
+                    csv.AppendLine($"FOR THE MONTH OF {Helper.ToMonthName(month).ToUpper()} {year}");
+                    csv.AppendLine("NO.,MUNICIPALITY,JOB VACANCIES SOLICITED, FEMALE, JOB APPLICANTS REGISTERED, FEMALE, JOB APPLICANTS REFERRED, FEMALE, JOB APPLICANTS PLACED,  FEMALE");
+                    if (list.Count > 0)
+                    {
+                        foreach (var i in list.OrderBy(x => x.RowNumber))
+                        {
+                            var newLine = $"{i.RowNumber}, {i.MunicipalityName}, {i.Solicited}, {i.SolicitedFemale}, {i.Registered}, {i.RegisteredFemale}, {i.Referred},{i.ReferredFemale}, {i.Placed}, {i.PlacedFemale}";
+                            csv.AppendLine(newLine);
+                        }
+                        var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Solicited)},{list.Sum(x => x.SolicitedFemale)}, {list.Sum(x => x.Registered)},{list.Sum(x => x.RegisteredFemale)}, {list.Sum(x => x.Referred)},{list.Sum(x => x.ReferredFemale)}, {list.Sum(x => x.Placed)}, {list.Sum(x => x.PlacedFemale)}";
+                        csv.AppendLine(newLineTotal);
+                    }
+                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    try
+                    {
+                        foreach (var item in Directory.GetFiles(dir))
+                        {
+                            if (System.IO.File.Exists(item))
+                                System.IO.File.Delete(item);
+                        }
+                    }
+                    catch (Exception) { }
+                    var fileName = System.IO.Path.Combine(dir, $"export_consolidated_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
+                    using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
+                    {
+                        await sw.WriteAsync(csv.ToString());
+                    }
+                    var url = $"{ProjectConfig.API_HOST}/files/csv/{System.IO.Path.GetFileName(fileName)}";
+                    using (Stream stream = System.IO.File.OpenRead(fileName))
+                    {
+                        var data = new System.IO.MemoryStream();
+                        stream.CopyTo(data);
+                        data.Seek(0, SeekOrigin.Begin);
+                        var buf = new byte[data.Length];
+                        data.Read(buf, 0, buf.Length);
+
+                        var f = File(fileContents: buf,
+                            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            fileDownloadName: System.IO.Path.GetFileName(fileName));
+                        return Ok(url);
+                    }
+
+                }
 
                 return Ok(list);
             }
@@ -600,6 +627,115 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetMonthlyReport1/{year}/{isExport}")]
+        public async Task<IActionResult> GetMonthlyReport1(int year, bool isExport)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var listOfMunicipality = cache.Get<List<RefCityMun>>("list_city");
+                if (listOfMunicipality == null)
+                {
+                    listOfMunicipality = GetCity().Where(x => x.provCode == "1043").ToList();
+                    cache.Set("list_city", listOfMunicipality);
+                }
+
+                string key = $"GetMonthlyReport1/{year}/{isExport}";
+                var list = cache.Get<List<ConsolidatedReportViewModel>>(key);
+                if (list == null)
+                {
+                    list = new();
+                    int noRow = 0;
+                    foreach (var city in listOfMunicipality)
+                    {
+                        noRow += 1;
+                        var registered = 0;
+                        var listOfRegistered = db.ApplicantInformation.Where(x => x.PresentMunicipalityCity == city.citymunCode);
+                        foreach (var i in listOfRegistered)
+                        {
+                            var d = Helper.toDateTime(i.DateLastUpdate);
+                            if (d.Year == year)
+                            {
+                                registered += 1;
+                            }
+                        }
+
+                        var solicited = db.JobVacancySolicited.Where(x => x.CityMunCode == city.citymunCode && x.Year == year).Sum(x => x.NumberOfVacancy);
+                        var referred = db.JobApplicantsReferred.Where(x => x.ApplicantCityMunCode == city.citymunCode && x.DateReferred.Year == year).Count();
+                        var placed = db.JobApplicantsPlaced.Where(x => x.CityMunCode == city.citymunCode && x.DateHired.Year == year).Count();
+
+                        var otherRegistered = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year).Sum(x => x.Registered);
+                        var otherSolicited = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year).Sum(x => x.Solicited);
+                        var otherReferred = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year).Sum(x => x.Referred);
+                        var otherPlaced = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year).Sum(x => x.Placed);
+
+
+                        var rs = new ConsolidatedReportViewModel();
+                        rs.RowNumber = noRow;
+                        rs.MunicipalityName = city.citymunDesc;
+                        rs.Solicited = solicited + otherSolicited;
+                        rs.Registered = registered + otherRegistered;
+                        rs.Referred = referred + otherReferred;
+                        rs.Placed = placed + otherPlaced;
+                        list.Add(rs);
+                    }
+                    list.AddRange(AddPESOProvinceData(db, noRow, year));
+                    cache.Set(key, list, TimeSpan.FromMinutes(5));
+                }
+
+                if (isExport)
+                {
+                    var csv = new StringBuilder();
+                    csv.AppendLine($"Generated Date:,{DateTime.Now.ToString("MM-dd-yyyy")},{DateTime.Now.ToString("hh:mmtt").ToUpper()}");
+                    csv.AppendLine($"CONSOLIDATED ANNUAL REPORT BY MUNICIPALITY/CITY");
+                    csv.AppendLine($"FOR THE YEAR {year}");
+                    csv.AppendLine("NO.,MUNICIPALITY,JOB VACANCIES SOLICITED, JOB APPLICANTS REGISTERED, JOB APPLICANTS REFERRED, JOB APPLICANTS PLACED");
+                    if (list.Count > 0)
+                    {
+                        foreach (var i in list.OrderBy(x => x.RowNumber))
+                        {
+                            var newLine = $"{i.RowNumber}, {i.MunicipalityName}, {i.Solicited}, {i.Registered}, {i.Referred}, {i.Placed}";
+                            csv.AppendLine(newLine);
+                        }
+                        var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Solicited)}, {list.Sum(x => x.Registered)}, {list.Sum(x => x.Referred)}, {list.Sum(x => x.Placed)}";
+                        csv.AppendLine(newLineTotal);
+                    }
+                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    try
+                    {
+                        foreach (var item in Directory.GetFiles(dir))
+                        {
+                            if (System.IO.File.Exists(item))
+                                System.IO.File.Delete(item);
+                        }
+                    }
+                    catch (Exception) { }
+                    var fileName = System.IO.Path.Combine(dir, $"export_consolidated_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
+                    using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
+                    {
+                        await sw.WriteAsync(csv.ToString());
+                    }
+                    var url = $"{ProjectConfig.API_HOST}/files/csv/{System.IO.Path.GetFileName(fileName)}";
+                    using (Stream stream = System.IO.File.OpenRead(fileName))
+                    {
+                        var data = new System.IO.MemoryStream();
+                        stream.CopyTo(data);
+                        data.Seek(0, SeekOrigin.Begin);
+                        var buf = new byte[data.Length];
+                        data.Read(buf, 0, buf.Length);
+
+                        var f = File(fileContents: buf,
+                            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            fileDownloadName: System.IO.Path.GetFileName(fileName));
+                        return Ok(url);
+                    }
+
+                }
+
+                return Ok(list);
+            }
+        }
+
         [HttpGet("GetSolicitedReport1/{year}/{isExport}")]
         public async Task<IActionResult> GetSolicitedReport1(int year, bool isExport)
         {
@@ -663,6 +799,104 @@ namespace webapi_peso.Controllers
                     }
                     catch (Exception) { }
                     var fileName = System.IO.Path.Combine(dir, $"export_solicited_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
+                    using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
+                    {
+                        await sw.WriteAsync(csv.ToString());
+                    }
+                    var url = $"{ProjectConfig.API_HOST}/files/csv/{System.IO.Path.GetFileName(fileName)}";
+                    using (Stream stream = System.IO.File.OpenRead(fileName))
+                    {
+                        var data = new System.IO.MemoryStream();
+                        stream.CopyTo(data);
+                        data.Seek(0, SeekOrigin.Begin);
+                        var buf = new byte[data.Length];
+                        data.Read(buf, 0, buf.Length);
+
+                        var f = File(fileContents: buf,
+                            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            fileDownloadName: System.IO.Path.GetFileName(fileName));
+                        return Ok(url);
+                    }
+
+                }
+
+                return Ok(list);
+            }
+        }
+
+        [HttpGet("GetRegisteredReport1/{year}/{isExport}")]
+        public async Task<IActionResult> GetRegisteredReport1(int year, bool isExport)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var listOfMunicipality = cache.Get<List<RefCityMun>>("list_city");
+                if (listOfMunicipality == null)
+                {
+                    listOfMunicipality = GetCity().Where(x => x.provCode == "1043").ToList();
+                    cache.Set("list_city", listOfMunicipality);
+                }
+                string key = $"GetRegisteredReport1/{year}/{isExport}";
+                var list = cache.Get<List<ConsolidatedReportViewModel>>(key);
+                if (list == null)
+                {
+                    list = new();
+                    int noRow = 0;
+                    foreach (var city in listOfMunicipality)
+                    {
+                        var rs = new ConsolidatedReportViewModel();
+                        noRow += 1;
+                        var registered = 0;
+                        var listOfRegistered = db.ApplicantInformation.Where(x => x.PresentMunicipalityCity == city.citymunCode);
+                        foreach (var i in listOfRegistered)
+                        {
+                            var d = Helper.toDateTime(i.DateLastUpdate);
+                            if (d.Year == year)
+                            {
+                                registered += 1;
+                            }
+                        }
+                        var pesoReport = db.PESOManualReport.Where(x => x.Year == year && x.MunicipalityCode == city.citymunCode).Sum(x => x.Registered);
+
+                        rs.Registered = registered + pesoReport;
+                        rs.RowNumber = noRow;
+                        rs.MunicipalityName = city.citymunDesc;
+                        list.Add(rs);
+                    }
+                    cache.Set(key, list, TimeSpan.FromMinutes(5));
+                }
+
+                //list.AddRange(AddPESOProvinceData(db, noRow, year));
+
+                if (isExport)
+                {
+                    var csv = new StringBuilder();
+                    csv.AppendLine($"Generated Date:,{DateTime.Now.ToString("MM-dd-yyyy")},{DateTime.Now.ToString("hh:mmtt").ToUpper()}");
+                    csv.AppendLine($"CONSOLIDATED ANNUAL REPORT BY MUNICIPALITY/CITY");
+                    csv.AppendLine($"JANUARY - DECEMBER {year}");
+                    csv.AppendLine($"JOB APPLICANTS REGISTERED");
+                    csv.AppendLine("NO.,MUNICIPALITY, JOB APPLICANTS REGISTERED");
+                    if (list.Count > 0)
+                    {
+                        foreach (var i in list.OrderBy(x => x.RowNumber))
+                        {
+                            var newLine = $"{i.RowNumber}, {i.MunicipalityName}, {i.Registered}";
+                            csv.AppendLine(newLine);
+                        }
+                        var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Registered)}";
+                        csv.AppendLine(newLineTotal);
+                    }
+                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    try
+                    {
+                        foreach (var item in Directory.GetFiles(dir))
+                        {
+                            if (System.IO.File.Exists(item))
+                                System.IO.File.Delete(item);
+                        }
+                    }
+                    catch (Exception) { }
+                    var fileName = System.IO.Path.Combine(dir, $"export_consolidated_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
                     using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
                     {
                         await sw.WriteAsync(csv.ToString());
@@ -868,279 +1102,6 @@ namespace webapi_peso.Controllers
             }
         }
 
-        [HttpGet("GetRegisteredReport1/{year}/{isExport}")]
-        public async Task<IActionResult> GetRegisteredReport1(int year, bool isExport)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var listOfMunicipality = cache.Get<List<RefCityMun>>("list_city");
-                if (listOfMunicipality == null)
-                {
-                    listOfMunicipality = GetCity().Where(x => x.provCode == "1043").ToList();
-                    cache.Set("list_city", listOfMunicipality);
-                }
-                string key = $"GetRegisteredReport1/{year}/{isExport}";
-                var list = cache.Get<List<ConsolidatedReportViewModel>>(key);
-                if (list == null)
-                {
-                    list = new();
-                    int noRow = 0;
-                    foreach (var city in listOfMunicipality)
-                    {
-                        var rs = new ConsolidatedReportViewModel();
-                        noRow += 1;
-                        var registered = 0;
-                        var listOfRegistered = db.ApplicantInformation.Where(x => x.PresentMunicipalityCity == city.citymunCode);
-                        foreach (var i in listOfRegistered)
-                        {
-                            var d = Helper.toDateTime(i.DateLastUpdate);
-                            if (d.Year == year)
-                            {
-                                registered += 1;
-                            }
-                        }
-                        var pesoReport = db.PESOManualReport.Where(x => x.Year == year && x.MunicipalityCode == city.citymunCode).Sum(x => x.Registered);
-
-                        rs.Registered = registered + pesoReport;
-                        rs.RowNumber = noRow;
-                        rs.MunicipalityName = city.citymunDesc;
-                        list.Add(rs);
-                    }
-                    cache.Set(key, list, TimeSpan.FromMinutes(5));
-                }
-
-                //list.AddRange(AddPESOProvinceData(db, noRow, year));
-
-                if (isExport)
-                {
-                    var csv = new StringBuilder();
-                    csv.AppendLine($"Generated Date:,{DateTime.Now.ToString("MM-dd-yyyy")},{DateTime.Now.ToString("hh:mmtt").ToUpper()}");
-                    csv.AppendLine($"CONSOLIDATED ANNUAL REPORT BY MUNICIPALITY/CITY");
-                    csv.AppendLine($"JANUARY - DECEMBER {year}");
-                    csv.AppendLine($"JOB APPLICANTS REGISTERED");
-                    csv.AppendLine("NO.,MUNICIPALITY, JOB APPLICANTS REGISTERED");
-                    if (list.Count > 0)
-                    {
-                        foreach (var i in list.OrderBy(x => x.RowNumber))
-                        {
-                            var newLine = $"{i.RowNumber}, {i.MunicipalityName}, {i.Registered}";
-                            csv.AppendLine(newLine);
-                        }
-                        var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Registered)}";
-                        csv.AppendLine(newLineTotal);
-                    }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
-                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                    try
-                    {
-                        foreach (var item in Directory.GetFiles(dir))
-                        {
-                            if (System.IO.File.Exists(item))
-                                System.IO.File.Delete(item);
-                        }
-                    }
-                    catch (Exception) { }
-                    var fileName = System.IO.Path.Combine(dir, $"export_consolidated_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
-                    using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
-                    {
-                        await sw.WriteAsync(csv.ToString());
-                    }
-                    var url = $"{ProjectConfig.API_HOST}/files/csv/{System.IO.Path.GetFileName(fileName)}";
-                    using (Stream stream = System.IO.File.OpenRead(fileName))
-                    {
-                        var data = new System.IO.MemoryStream();
-                        stream.CopyTo(data);
-                        data.Seek(0, SeekOrigin.Begin);
-                        var buf = new byte[data.Length];
-                        data.Read(buf, 0, buf.Length);
-
-                        var f = File(fileContents: buf,
-                            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            fileDownloadName: System.IO.Path.GetFileName(fileName));
-                        return Ok(url);
-                    }
-
-                }
-
-                return Ok(list);
-            }
-        }
-
-        [HttpGet("GetMonthlyReport1/{year}/{isExport}")]
-        public async Task<IActionResult> GetMonthlyReport1(int year, bool isExport)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var listOfMunicipality = cache.Get<List<RefCityMun>>("list_city");
-                if (listOfMunicipality == null)
-                {
-                    listOfMunicipality = GetCity().Where(x => x.provCode == "1043").ToList();
-                    cache.Set("list_city", listOfMunicipality);
-                }
-
-                string key = $"GetMonthlyReport1/{year}/{isExport}";
-                var list = cache.Get<List<ConsolidatedReportViewModel>>(key);
-                if (list == null)
-                {
-                    list = new();
-                    int noRow = 0;
-                    foreach (var city in listOfMunicipality)
-                    {
-                        noRow += 1;
-                        var registered = 0;
-                        var listOfRegistered = db.ApplicantInformation.Where(x => x.PresentMunicipalityCity == city.citymunCode);
-                        foreach (var i in listOfRegistered)
-                        {
-                            var d = Helper.toDateTime(i.DateLastUpdate);
-                            if (d.Year == year)
-                            {
-                                registered += 1;
-                            }
-                        }
-
-                        var solicited = db.JobVacancySolicited.Where(x => x.CityMunCode == city.citymunCode && x.Year == year).Sum(x => x.NumberOfVacancy);
-                        var referred = db.JobApplicantsReferred.Where(x => x.ApplicantCityMunCode == city.citymunCode && x.DateReferred.Year == year).Count();
-                        var placed = db.JobApplicantsPlaced.Where(x => x.CityMunCode == city.citymunCode && x.DateHired.Year == year).Count();
-
-                        var otherRegistered = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year).Sum(x => x.Registered);
-                        var otherSolicited = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year).Sum(x => x.Solicited);
-                        var otherReferred = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year).Sum(x => x.Referred);
-                        var otherPlaced = db.PESOManualReport.Where(x => x.MunicipalityCode == city.citymunCode && x.Year == year).Sum(x => x.Placed);
-
-
-                        var rs = new ConsolidatedReportViewModel();
-                        rs.RowNumber = noRow;
-                        rs.MunicipalityName = city.citymunDesc;
-                        rs.Solicited = solicited + otherSolicited;
-                        rs.Registered = registered + otherRegistered;
-                        rs.Referred = referred + otherReferred;
-                        rs.Placed = placed + otherPlaced;
-                        list.Add(rs);
-                    }
-                    list.AddRange(AddPESOProvinceData(db, noRow, year));
-                    cache.Set(key, list, TimeSpan.FromMinutes(5));
-                }
-
-                if (isExport)
-                {
-                    var csv = new StringBuilder();
-                    csv.AppendLine($"Generated Date:,{DateTime.Now.ToString("MM-dd-yyyy")},{DateTime.Now.ToString("hh:mmtt").ToUpper()}");
-                    csv.AppendLine($"CONSOLIDATED ANNUAL REPORT BY MUNICIPALITY/CITY");
-                    csv.AppendLine($"FOR THE YEAR {year}");
-                    csv.AppendLine("NO.,MUNICIPALITY,JOB VACANCIES SOLICITED, JOB APPLICANTS REGISTERED, JOB APPLICANTS REFERRED, JOB APPLICANTS PLACED");
-                    if (list.Count > 0)
-                    {
-                        foreach (var i in list.OrderBy(x => x.RowNumber))
-                        {
-                            var newLine = $"{i.RowNumber}, {i.MunicipalityName}, {i.Solicited}, {i.Registered}, {i.Referred}, {i.Placed}";
-                            csv.AppendLine(newLine);
-                        }
-                        var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Solicited)}, {list.Sum(x => x.Registered)}, {list.Sum(x => x.Referred)}, {list.Sum(x => x.Placed)}";
-                        csv.AppendLine(newLineTotal);
-                    }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
-                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
-                    try
-                    {
-                        foreach (var item in Directory.GetFiles(dir))
-                        {
-                            if (System.IO.File.Exists(item))
-                                System.IO.File.Delete(item);
-                        }
-                    }
-                    catch (Exception) { }
-                    var fileName = System.IO.Path.Combine(dir, $"export_consolidated_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
-                    using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
-                    {
-                        await sw.WriteAsync(csv.ToString());
-                    }
-                    var url = $"{ProjectConfig.API_HOST}/files/csv/{System.IO.Path.GetFileName(fileName)}";
-                    using (Stream stream = System.IO.File.OpenRead(fileName))
-                    {
-                        var data = new System.IO.MemoryStream();
-                        stream.CopyTo(data);
-                        data.Seek(0, SeekOrigin.Begin);
-                        var buf = new byte[data.Length];
-                        data.Read(buf, 0, buf.Length);
-
-                        var f = File(fileContents: buf,
-                            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            fileDownloadName: System.IO.Path.GetFileName(fileName));
-                        return Ok(url);
-                    }
-
-                }
-
-                return Ok(list);
-            }
-        }
-
-        [HttpPost("GetPreRegList")]
-        public IActionResult GetPreRegList(SearchApplicantsViewModel searchData)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var rs = new List<ApplicantInformation>();
-                //var list = db.ApplicantInformation.Where(x => !string.IsNullOrEmpty(x.JobFairReferenceCode)).ToList();
-                long dateFrom = Helper.toUnixTime(searchData.DateFrom.Value);
-                long dateTo = 0;
-                try
-                {
-                    dateTo = Helper.toUnixTime(searchData.DateTo.Value);
-                }
-                catch (Exception) { }
-
-                var list = db.ApplicantInformation.Join(db.ApplicantAccount, appInfo => appInfo.Email, appAccount => appAccount.Email, (appInfo, appAccount) => new AccountAndInformationViewModel() { ApplicantInformation = appInfo, ApplicantAccount = appAccount })
-                    .Where(x => x.ApplicantInformation.Email == x.ApplicantAccount.Email && x.ApplicantAccount.DateRegistered >= dateFrom && x.ApplicantAccount.DateRegistered <= dateTo).OrderBy(x => x.ApplicantInformation.SurName).ToList();
-                /*foreach (var i in list)
-                {
-                    
-                    var appAccount = db.ApplicantAccount.Where(x =>
-                        x.Email == i.Email &&
-                        x.DateRegistered >= dateFrom &&
-                        x.DateRegistered <= dateTo).FirstOrDefault();
-                    if (appAccount != null)
-                        rs.Add(i);
-                }*/
-                rs = list.Select(x => x.ApplicantInformation).ToList();
-                if (searchData != null && !string.IsNullOrEmpty(searchData.ProvinceCode))
-                {
-
-                    rs = db.ApplicantInformation.Where(x =>
-                        x.ProvincialProvince == searchData.ProvinceCode
-                        && !string.IsNullOrEmpty(x.JobFairReferenceCode)).ToList();
-
-                    if (!string.IsNullOrEmpty(searchData.CityCode))
-                        rs = rs.Where(x =>
-                        x.ProvincialMunicipalityCity == searchData.CityCode
-                        && !string.IsNullOrEmpty(x.JobFairReferenceCode)).ToList();
-                    if (!string.IsNullOrEmpty(searchData.BarangayCode))
-                        rs = rs.Where(x =>
-                        x.ProvincialBarangay == searchData.BarangayCode
-                        && !string.IsNullOrEmpty(x.JobFairReferenceCode)).ToList();
-                }
-
-                return Ok(rs);
-            }
-        }
-
-        [HttpGet("ValidateReferenceNumber/{refNumber}")]
-        public IActionResult ValidateReferenceNumber(string refNumber)
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var rs = cache.Get<ApplicantInformation>($"ValidateReferenceNumber/{refNumber}");
-                if (rs == null)
-                {
-                    rs = db.ApplicantInformation.Where(x => x.JobFairReferenceCode == refNumber).FirstOrDefault();
-                    cache.Set($"ValidateReferenceNumber/{refNumber}", rs, TimeSpan.FromMinutes(1));
-                }
-                if (rs == null)
-                    return NotFound();
-                return Ok(rs);
-            }
-        }
-
         List<ConsolidatedReportViewModel> AddPESOProvinceData(ApplicationDbContext db, int noRow, int year, int month = 0)
         {
             var rs = new List<ConsolidatedReportViewModel>();
@@ -1184,6 +1145,222 @@ namespace webapi_peso.Controllers
             }
 
             return rs;
+        }
+
+        [HttpGet("GetPESOManualReport/{year}/{cityCode}")]
+        public IActionResult GetPESOManualReport(int year, string cityCode)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = new ManualReportViewModel();
+                var listOfMunicipality = GetCity().Where(x => x.provCode == "1043").ToList();
+                //listOfMunicipality.Add(new RefCityMun() { citymunCode = "PESO", citymunDesc = "PESO Province" });
+
+                var list = db.PESOManualReport.Where(x => x.Year == year && x.Month > 0 && x.MunicipalityCode == cityCode).OrderByDescending(x => x.Year).ToList();
+
+                rs.ListOfMunicipality = listOfMunicipality;
+                rs.ListOfReports = list;
+                return Ok(rs);
+            }
+        }
+
+        [HttpGet("GetSinglePESOManualReport/{year}/{month}/{cityCode}")]
+        public async Task<IActionResult> GetSinglePESOManualReport(int year, int month, string cityCode)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                if (cityCode == "PESO")
+                {
+                    var list = db.PESOManualReport.Where(x => string.IsNullOrEmpty(x.MunicipalityCode));
+                    await list.ForEachAsync(x => x.MunicipalityCode = "PESO");
+                    db.PESOManualReport.UpdateRange(list);
+                    db.SaveChanges();
+                }
+                var listOfMunicipality = GetCity().Where(x => x.provCode == "1043").ToList();
+                listOfMunicipality.Add(new RefCityMun() { citymunCode = "PESO", citymunDesc = "PESO Province" });
+                var data = db.PESOManualReport.Where(x => x.Year == year && x.Month == month && x.MunicipalityCode == cityCode).FirstOrDefault();
+                var rs = new ManualReportViewModel();
+                if (data != null)
+                {
+                    rs.Report = data;
+                    rs.ListOfMunicipality = listOfMunicipality;
+                    return Ok(rs);
+                }
+                return Ok(new ManualReportViewModel() { ListOfMunicipality = listOfMunicipality, Report = new PESOManualReport() });
+            }
+        }
+
+        //Get Address ------------------
+
+        [HttpGet("FindRegion/{code}")]
+        public RefRegion FindRegion(string code)
+        {
+            var data = cache.Get<List<RefRegion>>("region");
+            if (data == null)
+            {
+                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refregion.json"}");
+                var json = System.IO.File.ReadAllText(file);
+                data = JsonConvert.DeserializeObject<List<RefRegion>>(json);
+                cache.Set("region", data);
+            }
+            return data.Where(x => x.regCode == code).FirstOrDefault();
+        }
+        [HttpGet("GetRegion")]
+        [AllowAnonymous]
+        public List<RefRegion> GetRegion()
+        {
+            var data = cache.Get<List<RefRegion>>("region");
+            if (data == null)
+            {
+                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refregion.json"}");
+                var json = System.IO.File.ReadAllText(file);
+                data = JsonConvert.DeserializeObject<List<RefRegion>>(json);
+                cache.Set("region", data);
+            }
+            return data;
+        }
+        [HttpGet("GetProvince")]
+        [AllowAnonymous]
+        public List<RefProvince> GetProvince()
+        {
+            var data = cache.Get<List<RefProvince>>("province");
+            if (data == null)
+            {
+                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refprovince.json"}");
+                var json = System.IO.File.ReadAllText(file);
+                data = JsonConvert.DeserializeObject<List<RefProvince>>(json);
+                cache.Set("province", data);
+            }
+            return data;
+        }
+        [HttpGet("GetProvince/{limit}")]
+        [AllowAnonymous]
+        public List<RefProvince> GetProvince(int limit)
+        {
+            var data = cache.Get<List<RefProvince>>($"GetProvince/{limit}");
+            if (data == null)
+            {
+                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refprovince.json"}");
+                var json = System.IO.File.ReadAllText(file);
+                data = JsonConvert.DeserializeObject<List<RefProvince>>(json);
+                cache.Set($"GetProvince/{limit}", data.Take(limit).ToList());
+            }
+            return data.Take(limit).ToList();
+        }
+        [HttpGet("FindProvince/{code}")]
+        [AllowAnonymous]
+        public RefProvince FindProvince(string code)
+        {
+            return GetProvince().Where(x => x.provCode == code).FirstOrDefault();
+        }
+        [HttpGet("GetCity")]
+        [AllowAnonymous]
+        public List<RefCityMun> GetCity()
+        {
+            var data = cache.Get<List<RefCityMun>>("city");
+            if (data == null)
+            {
+                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
+                var json = System.IO.File.ReadAllText(file);
+                data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
+
+                var a = new RefCityMun() { citymunCode = "PESO", citymunDesc = "PESO Province", provCode = "1043" };
+                data.Add(a);
+                cache.Set("city", data);
+            }
+            return data;
+        }
+        [HttpGet("GetCity/{limit}")]
+        [AllowAnonymous]
+        public List<RefCityMun> GetCity(int limit)
+        {
+            var data = cache.Get<List<RefCityMun>>($"city/{limit}");
+            if (data == null)
+            {
+                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
+                var json = System.IO.File.ReadAllText(file);
+                data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
+                cache.Set($"city/{limit}", data.Take(limit).ToList());
+            }
+            return data.Take(limit).ToList();
+        }
+        [HttpGet("GetCity/{limit}/{provCode}")]
+        [AllowAnonymous]
+        public List<RefCityMun> GetCity(int limit, string provCode)
+        {
+            var data = cache.Get<List<RefCityMun>>($"city/{limit}/{provCode}");
+            if (data == null)
+            {
+                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
+                var json = System.IO.File.ReadAllText(file);
+                data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
+                cache.Set($"city/{limit}/{provCode}", data.Where(x => x.provCode == provCode).Take(limit).ToList());
+            }
+            return data.Where(x => x.provCode == provCode).Take(limit).ToList();
+        }
+        [HttpGet("FindCity/{code}")]
+        [AllowAnonymous]
+        public RefCityMun FindCity(string code)
+        {
+            if (code == "PESO")
+            {
+                return new RefCityMun() { citymunCode = code, citymunDesc = "PESO Province", provCode = "1043" };
+            }
+            var rs = GetCity().Where(x => x.citymunCode == code).FirstOrDefault();
+            return rs;
+        }
+        [HttpGet("SearchCity/{str}")]
+        [AllowAnonymous]
+        public List<RefCityMun> SearchCity(string str)
+        {
+            return GetCity().Where(x => x.citymunDesc.Contains(str, StringComparison.OrdinalIgnoreCase) || x.citymunDesc.StartsWith(str, StringComparison.OrdinalIgnoreCase)).Take(5).ToList();
+        }
+        [HttpGet("SearchCity/{str}/{provCode}")]
+        [AllowAnonymous]
+        public List<RefCityMun> SearchCity(string str, string provCode)
+        {
+            return GetCity().Where(x => x.provCode == provCode && x.citymunDesc.Contains(str, StringComparison.OrdinalIgnoreCase)).Take(5).ToList();
+        }
+        [HttpGet("SearchProvince/{str}")]
+        [AllowAnonymous]
+        public List<RefProvince> SearchProvince(string str)
+        {
+            return GetProvince().Where(x => x.provDesc.Contains(str, StringComparison.OrdinalIgnoreCase) || x.provDesc.StartsWith(str, StringComparison.OrdinalIgnoreCase)).Take(5).ToList();
+        }
+        [HttpGet("GetBarangay/{citycode}")]
+        [AllowAnonymous]
+        public async Task<List<RefBrgy>> GetBarangay(string citycode)
+        {
+            var rs = (await GetAllBarangay()).Where(x => x.citymunCode == citycode).ToList();
+            return rs.ToList();
+        }
+        [HttpGet("GetBarangay/{citycode}/{value}")]
+        [AllowAnonymous]
+        public async Task<List<RefBrgy>> GetBarangay(string citycode, string value)
+        {
+            var rs = (await GetAllBarangay()).Where(x => x.citymunCode == citycode).ToList();
+            return rs.Where(x => x.brgyDesc.Contains(value, StringComparison.InvariantCultureIgnoreCase)).Take(10).ToList();
+        }
+        [HttpGet("GetSpecificBarangay/{brgyCode}")]
+        [AllowAnonymous]
+        public async Task<RefBrgy> GetSpecificBarangay(string brgyCode)
+        {
+            var rs = (await GetAllBarangay()).Where(x => x.brgyCode == brgyCode).FirstOrDefault();
+            return rs;
+        }
+        [HttpGet("GetAllBarangay")]
+        [AllowAnonymous]
+        public async Task<List<RefBrgy>> GetAllBarangay()
+        {
+            var data = cache.Get<List<RefBrgy>>("barangay");
+            if (data == null)
+            {
+                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refbrgy.json"}");
+                var json = await System.IO.File.ReadAllTextAsync(file);
+                data = JsonConvert.DeserializeObject<List<RefBrgy>>(json);
+                cache.Set("barangay", data);
+            }
+            return data;
         }
     }
 }

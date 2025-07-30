@@ -19,7 +19,7 @@ namespace webapi_peso.Model
         public int? IsReviewedReturned { get; set; }
         public string? Remarks { get; set; }
         public int? IsRemoved { get; set; }
-        public long? DateRegistered { get; set; }
+        public long DateRegistered { get; set; }
         public long? DateLastUpdate { get; set; }
         public ApplicantAccount()
         {

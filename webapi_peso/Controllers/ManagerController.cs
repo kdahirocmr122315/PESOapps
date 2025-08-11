@@ -3,15 +3,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.VisualBasic;
 using Newtonsoft.Json;
 using SendGrid;
 using SendGrid.Helpers.Mail;
-using System.Net.Mail;
 using System.Net;
+using System.Net.Http.Headers;
+using System.Net.Mail;
 using System.Text;
 using webapi_peso.Model;
 using webapi_peso.ViewModels;
-using System.Net.Http.Headers;
 
 namespace webapi_peso.Controllers
 {
@@ -87,15 +88,20 @@ namespace webapi_peso.Controllers
             using (var db = dbFactory.CreateDbContext())
             {
                 var rs = new PESOManagerAccountViewModel();
-                var listofapplicants = db.ApplicantAccount.Where(x => x.IsReviewedReturned == 1 && x.IsRemoved == 0).ToList();
-                foreach (var i in listofapplicants)
+                var listofapplicants = db.ApplicantAccount.ToList();
+                var appInfo = db.ApplicantInformation.ToList();
+                //var listofapplicants = db.ApplicantAccount.Where(x => x.IsReviewedReturned == 1 && x.IsRemoved == 0).ToList();
+                var filteredList = listofapplicants.Where(x => x.IsReviewedReturned == 1 && x.IsRemoved == 0).ToList();
+                foreach (var i in filteredList)
                 {
-                    var appInfo = db.ApplicantInformation.Where(x => x.AccountId == i.Id && x.PresentProvince == provCode && x.PresentMunicipalityCity == cityCode).MyDistinctBy(x => x.Email);
-                    if (appInfo != null)
-                        rs.NumberOfApplicants += appInfo.Count();
+                    //var appInfo = db.ApplicantInformation.Where(x => x.AccountId == i.Id && x.PresentProvince == provCode && x.PresentMunicipalityCity == cityCode).MyDistinctBy(x => x.Email);
+                    var filteredAppInfo = appInfo.Where(x => x.AccountId == i.Id && x.PresentProvince == provCode && x.PresentMunicipalityCity == cityCode).MyDistinctBy(x => x.Email);
+                    if (filteredAppInfo != null)
+                        rs.NumberOfApplicants += filteredAppInfo.Count();
                 }
                 //rs.NumberOfApplicants = db.ApplicantInformation.Where(x => x.PresentProvince == provCode && x.PresentMunicipalityCity == cityCode).Count();
-                rs.NumberOfEmployers = db.EmployerDetails.Where(x => x.Province == provCode && x.CityMunicipality == cityCode).Count();
+                var employerList = db.EmployerDetails.ToList();
+                rs.NumberOfEmployers = employerList.Where(x => x.Province == provCode && x.CityMunicipality == cityCode).Count();
 
                 return Ok(rs);
             }

@@ -268,6 +268,24 @@ namespace webapi_peso.Controllers
             return Ok(list);
         }
 
+        [HttpGet("GetPreRegList1/{provCode}/{cityCode}")]
+        public IActionResult GetPreRegList1(string provCode, string cityCode)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var listApp = db.ApplicantInformation
+                    .Where(x => x.PresentMunicipalityCity == cityCode && x.ProvincialProvince == provCode)
+                    .ToList();
+
+                if (listApp == null || !listApp.Any())
+                {
+                    return NotFound("No applicants found for the specified province and city.");
+                }
+
+                return Ok(listApp);
+            }
+        }
+
         [HttpGet("GetReferralStatus")]
         public IActionResult GetReferralStatus()
         {

@@ -65,6 +65,19 @@ namespace webapi_peso.Controllers
                     db.SaveChanges();
                     rs.UserInformation = information;
                 }
+
+                var listofapplicants = db.ApplicantAccount.ToList();
+                var appInfo = db.ApplicantInformation.ToList();
+                var filteredList = listofapplicants.Where(x => x.IsReviewedReturned == 1 && x.IsRemoved == 0).ToList();
+                foreach (var i in filteredList)
+                {
+                    var filteredAppInfo = appInfo.Where(x => x.AccountId == i.Id && x.PresentProvince == information.ProvCode && x.PresentMunicipalityCity == information.CityCode).MyDistinctBy(x => x.Email);
+                    if (filteredAppInfo != null)
+                        rs.NumberOfApplicants += filteredAppInfo.Count();
+                }
+                var employerList = db.EmployerDetails.ToList();
+                rs.NumberOfEmployers = employerList.Where(x => x.Province == information.ProvCode && x.CityMunicipality == information.CityCode).Count();
+
                 return Ok(rs);
             }
         }
@@ -253,6 +266,24 @@ namespace webapi_peso.Controllers
 
 
             return Ok(list);
+        }
+
+        [HttpGet("GetPreRegList1/{provCode}/{cityCode}")]
+        public IActionResult GetPreRegList1(string provCode, string cityCode)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var listApp = db.ApplicantInformation
+                    .Where(x => x.PresentMunicipalityCity == cityCode && x.ProvincialProvince == provCode)
+                    .ToList();
+
+                if (listApp == null || !listApp.Any())
+                {
+                    return NotFound("No applicants found for the specified province and city.");
+                }
+
+                return Ok(listApp);
+            }
         }
 
         [HttpGet("GetReferralStatus")]

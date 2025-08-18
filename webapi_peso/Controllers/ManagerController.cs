@@ -120,6 +120,30 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetListOfEmployers/{provCode}/{cityCode}")]
+        public IActionResult GetListOfEmployers(string provCode, string cityCode)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = new List<EmployerDetails>();
+                var listOfEmployers = db.EmployerDetails.ToList();
+                rs = listOfEmployers.Where(x => x.Province == provCode && x.CityMunicipality == cityCode).ToList();
+                return Ok(rs);
+            }
+        }
+
+        [HttpGet("GetListOfApplicants/{provCode}/{cityCode}")]
+        public IActionResult GetListOfApplicants(string provCode, string cityCode)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = new List<ApplicantInformation>();
+                var listOfEmployers = db.ApplicantInformation.ToList();
+                rs = listOfEmployers.Where(x => x.PresentProvince == provCode && x.PresentMunicipalityCity == cityCode).ToList();
+                return Ok(rs);
+            }
+        }
+
         [HttpGet]
         [Route("GetNSRP/pending")]
         public List<AccountAndInformationViewModel> GetNSRP()
@@ -602,7 +626,7 @@ namespace webapi_peso.Controllers
             return Ok();
         }
 
-        [HttpGet("SendEmailToEmployer")]
+        [HttpGet("SendEmailToEmployer")] //need validation
         public async Task<IActionResult> SendEmailToEmployer()
         {
             if (!EnableEmailAndText)

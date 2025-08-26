@@ -263,6 +263,15 @@ namespace webapi_peso.Controllers
             return Ok();
         }
 
+        [HttpGet("CheckEmailExist/{email}")]
+        public IActionResult CheckEmailExist(string email)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var param = new ParameterViewModel();
+            param.Result = db.UserAccounts.Any(x => x.Email == email);
+            return Ok(param);
+        }
+
         [HttpPost("SaveNSRP")]
         public IActionResult SaveNSRP(ApplicantDataViewModel data)
         {

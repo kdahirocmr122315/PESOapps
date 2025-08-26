@@ -1142,7 +1142,16 @@ namespace webapi_peso.Controllers
         public IActionResult GenerateId()
         {
             string base64Guid = Guid.NewGuid().ToString();
-            return Ok(base64Guid);
+            using var db = dbFactory.CreateDbContext();
+            var IsExist = db.UserAccounts.Any(x => x.Id == base64Guid);
+            if (!IsExist)
+            {
+                return Ok(base64Guid);
+            }
+            else
+            {
+                return BadRequest("Error: Account with the generated ID already exists.");
+            }
         }
 
 

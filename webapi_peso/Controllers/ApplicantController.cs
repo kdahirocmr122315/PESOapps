@@ -898,14 +898,22 @@ namespace webapi_peso.Controllers
             if (userAccount == null)
             {
                 string base64Guid = Guid.NewGuid().ToString();
-                userAccount = new UserAccount();
-                userAccount.Id = base64Guid;
-                userAccount.Email = account.Email;
-                userAccount.Password = Helper.RandomString(6).ToLower();
-                userAccount.DateCreated = DateTime.Now;
-                userAccount.UserType = ProjectConfig.USER_TYPE.APPLICANT;
-                db.UserAccounts.Add(userAccount);
-                db.SaveChanges();
+                var IsExistId = db.UserAccounts.Any(x => x.Id == base64Guid);
+                if (!IsExistId)
+                {
+                    userAccount = new UserAccount();
+                    userAccount.Id = base64Guid;
+                    userAccount.Email = account.Email;
+                    userAccount.Password = Helper.RandomString(6).ToLower();
+                    userAccount.DateCreated = DateTime.Now;
+                    userAccount.UserType = ProjectConfig.USER_TYPE.APPLICANT;
+                    db.UserAccounts.Add(userAccount);
+                    db.SaveChanges();
+                }
+                //else
+                //{
+                //    return BadRequest("Error: Account with the generated ID already exists.");
+                //}
             }
 
             var IsExist = db.ApplicantAccount.Any(x => x.Email.ToLower() == account.Email.ToLower());

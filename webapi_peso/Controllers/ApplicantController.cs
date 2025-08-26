@@ -1136,5 +1136,15 @@ namespace webapi_peso.Controllers
             db.SaveChanges();
             return Ok(data);
         }
+
+        [HttpPost]
+        [Route("GenerateId")]
+        public IActionResult GenerateId()
+        {
+            string base64Guid = Guid.NewGuid().ToString();
+            return Ok(base64Guid);
+        }
+
+
     }
 }

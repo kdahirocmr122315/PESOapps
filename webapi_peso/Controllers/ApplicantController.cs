@@ -897,23 +897,23 @@ namespace webapi_peso.Controllers
             var userAccount = db.UserAccounts.Where(x => x.Email == account.Email).FirstOrDefault();
             if (userAccount == null)
             {
-                string base64Guid = Guid.NewGuid().ToString();
-                var IsExistId = db.UserAccounts.Any(x => x.Id == base64Guid);
-                if (!IsExistId)
+                string base64Guid;
+                do
                 {
-                    userAccount = new UserAccount();
-                    userAccount.Id = base64Guid;
-                    userAccount.Email = account.Email;
-                    userAccount.Password = Helper.RandomString(6).ToLower();
-                    userAccount.DateCreated = DateTime.Now;
-                    userAccount.UserType = ProjectConfig.USER_TYPE.APPLICANT;
-                    db.UserAccounts.Add(userAccount);
-                    db.SaveChanges();
-                }
-                //else
-                //{
-                //    return BadRequest("Error: Account with the generated ID already exists.");
-                //}
+                    base64Guid = Guid.NewGuid().ToString();
+                } while (db.UserAccounts.Any(x => x.Id == base64Guid));
+
+                userAccount = new UserAccount
+                {
+                    Id = base64Guid,
+                    Email = account.Email,
+                    Password = Helper.RandomString(6).ToLower(),
+                    DateCreated = DateTime.Now,
+                    UserType = ProjectConfig.USER_TYPE.APPLICANT
+                };
+
+                db.UserAccounts.Add(userAccount);
+                db.SaveChanges();  
             }
 
             var IsExist = db.ApplicantAccount.Any(x => x.Email.ToLower() == account.Email.ToLower());
@@ -1158,17 +1158,14 @@ namespace webapi_peso.Controllers
         [Route("GenerateId")]
         public IActionResult GenerateId()
         {
-            string base64Guid = Guid.NewGuid().ToString();
             using var db = dbFactory.CreateDbContext();
-            var IsExist = db.UserAccounts.Any(x => x.Id == base64Guid);
-            if (!IsExist)
+            string base64Guid;
+            do
             {
-                return Ok(base64Guid);
-            }
-            else
-            {
-                return BadRequest("Error: Account with the generated ID already exists.");
-            }
+                base64Guid = Guid.NewGuid().ToString();
+            } while (db.UserAccounts.Any(x => x.Id == base64Guid));
+
+            return Ok(base64Guid);
         }
 
 

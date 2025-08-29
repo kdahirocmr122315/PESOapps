@@ -39,7 +39,7 @@ else
             </div>
             <div class="navbar-option has-submenu">
                 <div class="nav-item has-submenu">
-                    <NavLink class="dashnav" href="Profile/dash">
+                    <NavLink class="dashnav" href="Profile/municipality">
                         <img src="_content/PESOapps.Shared/images/profile_placeholder.png" alt="profile" class="img-thumbnail" style="border-radius:100%;height:30px;width:34px">
                     </NavLink>
                     <div class="nav-sub">
@@ -60,31 +60,42 @@ else
             </div>
         </div>
 
-        <NavLink class="sidebar-logo" href="Profile/dash">
+        <NavLink class="sidebar-logo" href="Profile/municipality">
             <img src="_content/PESOapps.Shared/svg/user-solid.svg" class="dash-icon"  />
-            <p>@profile.ApplicantInformation?.FirstName @profile.ApplicantInformation?.SurName</p>
+            <p>
+                @{
+                    var displayName = profile?.UserAccount?.GivenName;
+                    if (string.IsNullOrWhiteSpace(displayName))
+                    {
+                        displayName = GetFirstTwoWords(profile?.UserAccount?.Name);
+                        if (string.IsNullOrWhiteSpace(displayName))
+                        {
+                            displayName = "Profile";
+                        }
+                    }
+                }
+                @displayName
+            </p>
         </NavLink>
-
         <div class="sidebar-nav">
-            <NavLink class="dashnav-links" href="UpdateNSRP/dash">
+            <NavLink class="dashnav-links" href="Jobfair/municipality">
                 <img src="_content/PESOapps.Shared/svg/briefcase-solid.svg" class="dash-icon" />
-                <span>Update Profile</span>
+                <span>Job Fair</span>
             </NavLink>
         </div>
-
         <div class="sidebar-nav">
-            <NavLink class="dashnav-links" href="Joblist/dash">
-                <img src="_content/PESOapps.Shared/svg/briefcase-solid.svg" class="dash-icon" />
-                <span>Job List</span>
+            <NavLink class="dashnav-links" href="dashboard/municipality">
+                <img src="_content/PESOapps.Shared/svg/person-circle-check-solid.svg" class="dash-icon" />
+                <span>Tupad</span>
             </NavLink>
         </div>
     </div>
 }
-
 @code {
     private bool isUserLoggedIn = false;
     private AccountAndInformationViewModel? profile;
     private bool loaded = false;
+    private string initialBearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -103,7 +114,7 @@ else
                     isUserLoggedIn = true;
 
                     // Add token to the request headers
-                    Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+                    Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", initialBearerToken);
 
                     var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
                     if (response.IsSuccessStatusCode)
@@ -132,5 +143,18 @@ else
         }
     }
 
+
+    private string GetFirstTwoWords(string? name)
+    {
+        if (string.IsNullOrWhiteSpace(name))
+            return string.Empty;
+
+        var words = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (words.Length == 0)
+            return string.Empty;
+        if (words.Length == 1)
+            return words[0];
+        return $"{words[0]} {words[1]}";
+    }
 
 }

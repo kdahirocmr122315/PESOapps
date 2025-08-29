@@ -1,0 +1,179 @@
+﻿@page "/Profile/municipality"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using webapi_peso.ViewModels
+@using System.Text.Json
+@using PESOapps.Shared.Pages.Shared
+@if (!isUserLoggedIn)
+{
+<Loading IsLoading="@isLoading" Message="Loading..." />
+}
+else
+{
+    <div class="municipality-profile">
+            <div class="banner">
+                <div class="banner-content">
+                    <div>
+                        <h1>Hi @profile?.UserAccount?.Name!</h1>
+                        <p>Welcome to PESO Misamis Oriental Website.</p>
+                        <span>If you have any questions or suggestions, feel free to contact our PESO Personnel.</span>
+                    </div>
+                </div>
+            </div>
+                <div class="card-grid">
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-briefcase"></i></div>
+                        <h3>@numberOfEmployers</h3>
+                        <p>Registered Employers in your area</p>
+                        <NavLink href="/pesobeta/Employers/municipality" class="btn-open">Open</NavLink>
+                    </div>
+
+                    <div class="info-card">
+                        <div class="card-icon"><i class="fas fa-users"></i></div>
+                        <h3>@numberOfApplicants</h3>
+                        <p>Registered Job Seekers in your area</p>
+                        <NavLink href="/pesobeta/Applicants/municipality" class="btn-open">Open</NavLink>
+                    </div>
+                </div>
+    </div>
+}
+
+@code {
+    private bool isUserLoggedIn;
+    private bool isLoading = true;
+    private PESOManagerAccountViewModel? profile;
+    private int numberOfEmployers;
+    private int numberOfApplicants;
+    private bool loaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !loaded)
+        {
+            loaded = true;
+            await InitializeProfileAsync();
+        }
+    }
+
+    private async Task InitializeProfileAsync()
+    {
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+        var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+
+        if (string.IsNullOrWhiteSpace(userId) || isLoggedIn != "true" || string.IsNullOrWhiteSpace(token))
+        {
+            Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            return;
+        }
+
+        isUserLoggedIn = true;
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        try
+        {
+            await LoadProfileAsync(userId);
+            if (!string.IsNullOrWhiteSpace(profile?.UserInformation?.ProvCode) &&
+                !string.IsNullOrWhiteSpace(profile?.UserInformation?.CityCode))
+            {
+                await LoadStatsAsync(profile.UserInformation.ProvCode, profile.UserInformation.CityCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadProfileAsync(string userId)
+    {
+        // ✅ Try cache first
+        var cachedProfile = await JS.InvokeAsync<string>("localStorage.getItem", "PESOProfile");
+        if (!string.IsNullOrEmpty(cachedProfile))
+        {
+            profile = JsonSerializer.Deserialize<PESOManagerAccountViewModel>(cachedProfile,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return;
+        }
+
+        // ✅ Fetch from API if not cached
+        var response = await Http.GetAsync($"http://localhost:5167/api/Manager/GetPESOManagerAccount/{userId}");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            return;
+        }
+
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            profile = JsonSerializer.Deserialize<PESOManagerAccountViewModel>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            // ✅ Save to cache
+            await JS.InvokeVoidAsync("localStorage.setItem", "PESOProfile", json);
+        }
+    }
+
+    private async Task LoadStatsAsync(string provCode, string cityCode)
+    {
+        try
+        {
+            isLoading = true;
+            StateHasChanged(); // notify UI
+
+            var cachedEmployers = await JS.InvokeAsync<string>("localStorage.getItem", "numberOfEmployers");
+            var cachedApplicants = await JS.InvokeAsync<string>("localStorage.getItem", "numberOfApplicants");
+
+            if (!string.IsNullOrEmpty(cachedEmployers) && !string.IsNullOrEmpty(cachedApplicants))
+            {
+                numberOfEmployers = int.Parse(cachedEmployers);
+                numberOfApplicants = int.Parse(cachedApplicants);
+                return;
+            }
+
+            var statsResponse = await Http.GetAsync(
+                $"http://localhost:5167/api/Manager/GetNumberOfEmplyerAndApplicant/{provCode}/{cityCode}");
+
+            if (statsResponse.IsSuccessStatusCode)
+            {
+                var statsJson = await statsResponse.Content.ReadAsStringAsync();
+                var stats = JsonSerializer.Deserialize<EmployerApplicantStats>(
+                    statsJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (stats != null)
+                {
+                    numberOfEmployers = stats.NumberOfEmployers ?? 0;
+                    numberOfApplicants = stats.NumberOfApplicants ?? 0;
+
+                    await JS.InvokeVoidAsync("localStorage.setItem", "numberOfEmployers", numberOfEmployers.ToString());
+                    await JS.InvokeVoidAsync("localStorage.setItem", "numberOfApplicants", numberOfApplicants.ToString());
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading stats: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged(); // refresh UI when done
+        }
+    }
+
+    public class EmployerApplicantStats
+    {
+        public int? NumberOfEmployers { get; set; }
+        public int? NumberOfApplicants { get; set; }
+    }
+}

@@ -7,38 +7,38 @@
 }
 
 .login-cards {
-    background: #FFFFFF;
     padding: 20px;
-    box-shadow: 0px 1px 5px var(--box-shadow);
     text-align: center;
     width: 350px;
     border-radius: 20px;
+    box-shadow: var(--box-shadow-log);
+    background: var(--bgcolor);
 }
 
-    .login-cards h2 {
-        margin-bottom: 1rem;
-        color: #333;
-    }
+.login-cards h2 {
+    margin-bottom: 1rem;
+    color: var(--font-color);
+}
 
 .input-groups {
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
     text-align: left;
 }
 
-    .input-groups label {
-        display: block;
-        font-weight: bold;
-        margin-bottom: 5px;
-        color: #000000;
-    }
+.input-groups label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--font-color);
+}
 
-    .input-groups input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        font-size: 1rem;
-    }
+.input-groups input {
+    width: 100%;
+    padding: 10px;
+    border: 0px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
+    box-shadow: inset 3px 3px 6px #bebebe, inset -3px -3px 6px #ffffff;
+}
 
 .login-containers button {
     width: 100%;
@@ -52,20 +52,22 @@
     transition: background 0.3s;
 }
 
-    .login-containers button:hover {
-        background-color: #07522D;
-    }
+.login-containers button:hover {
+    background-color: #07522D;
+}
 
 .login-containers .error-message {
     background: #ff7979;
     color: white;
     padding: 10px;
     border-radius: 5px;
-    margin-bottom: 1rem;
+    margin-bottom: 2rem;
 }
 
 .dashb {
     font-size: .7em;
 }
+
+
 
 /********************** LOGIN ************************/

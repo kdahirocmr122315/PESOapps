@@ -1,4 +1,4 @@
-﻿@page "/dashboard"
+﻿@page "/dashboard/municipality"
 @using Microsoft.AspNetCore.Components.ProtectedBrowserStorage
 @inject NavigationManager Navigation
 @inject ProtectedSessionStorage SessionStorage
@@ -237,6 +237,7 @@ else
 @using iTextSharp.text;
 @using iTextSharp.text.pdf;
 @using Microsoft.JSInterop;
+@using webapi_peso.ViewModels
 
 @code {
     private string _searchTerm = "";
@@ -264,23 +265,62 @@ else
     private List<TupadModel> FilteredUnverified => UnverifiedList.Where(MatchesSearch).ToList();
 
 
-
-    private bool isUserLoggedIn = false;
+    @inject AuthService AuthService
+    private bool isUserLoggedIn;
+    private bool loaded = false;
+    private AccountAndInformationViewModel? profile;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (firstRender)
+        if (firstRender && !loaded)
         {
-            var sessionResult = await SessionStorage.GetAsync<bool>("IsLoggedIn");
+            loaded = true;
 
-            if (!sessionResult.Success || !sessionResult.Value)
+            try
             {
-                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+                // Get values from localStorage
+                var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+                var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+                var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+
+                if (!string.IsNullOrWhiteSpace(userId) &&
+                    isLoggedIn == "true" &&
+                    !string.IsNullOrWhiteSpace(token))
+                {
+                    isUserLoggedIn = true;
+
+                    // Attach token to every request
+                    Http.DefaultRequestHeaders.Authorization =
+                        new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                    // Fetch applicant profile
+                    var response = await Http.GetAsync(
+                        $"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        profile = System.Text.Json.JsonSerializer.Deserialize<AccountAndInformationViewModel>(
+                            json,
+                            new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        StateHasChanged(); // Refresh UI
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Failed to load profile: {response.StatusCode}");
+                        await AuthService.Logout();
+                    }
+                }
+                else
+                {
+                    Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+                }
             }
-            else
+            catch (Exception ex)
             {
-                isUserLoggedIn = true;
-                StateHasChanged(); // Ensures UI updates after session check
+                Console.WriteLine($"Error: {ex.Message}");
+                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
             }
         }
     }
@@ -296,7 +336,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/verified");
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5167/Api/Tupad/verified");
         requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
 
         var response = await Http.SendAsync(requestMessage);
@@ -317,7 +357,7 @@ else
     {
         try
         {
-            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/verified");
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5167/Api/Tupad/verified");
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
             var response = await Http.SendAsync(requestMessage);
             if (response.IsSuccessStatusCode)
@@ -325,7 +365,7 @@ else
                 VerifiedList = await response.Content.ReadFromJsonAsync<List<TupadModel>>();
             }
 
-            requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/unverified");
+            requestMessage = new HttpRequestMessage(HttpMethod.Get, "http://localhost:5167/Api/Tupad/unverified");
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
             response = await Http.SendAsync(requestMessage);
             if (response.IsSuccessStatusCode)
@@ -344,7 +384,7 @@ else
         try
         {
             var updateData = new { Verification = isVerified ? "Yes" : "No" };
-            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/{id}")
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"http://localhost:5167/Api/Tupad/{id}")
                 {
                     Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(updateData), System.Text.Encoding.UTF8, "application/json")
                 };
@@ -421,7 +461,7 @@ else
                 DeletedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") // Add the current timestamp
             };
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/{id}")
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"http://localhost:5167/Api/Tupad/{id}")
                 {
                     Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(deleteupdate), System.Text.Encoding.UTF8, "application/json")
                 };

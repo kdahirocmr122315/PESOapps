@@ -1,0 +1,239 @@
+﻿@page "/Employers/municipality"
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+
+<PageTitle>Employers</PageTitle>
+
+<div class="jf-container-list">
+
+    <!-- ===== Header Section ===== -->
+    <div class="jf-card jf-header-card d-flex justify-content-between align-items-center">
+        <h2>🏢 Registered Employers in your area</h2>
+        <div class="d-flex gap-2">
+            <NavLink href="/pesobeta/Profile/municipality" class="jf-btn-secondary">
+                ⬅ Back
+            </NavLink>
+        </div>
+    </div>
+
+    <!-- ===== Loading / Error ===== -->
+    @if (loading)
+    {
+        <div class="jf-loader-container">
+            <div class="jf-spinner"></div>
+            <p>Loading...</p>
+        </div>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="jf-text-error">@errorMessage</p>
+    }
+    else
+    {
+        <!-- ===== Search & Count Section ===== -->
+        <div class="jf-card jf-filter-card d-flex justify-content-between align-items-center mb-3">
+            <input type="text" class="jf-input"
+                   placeholder="🔍 Search employers..."
+                   value="@searchQuery"
+                   @oninput="OnSearchChanged" />
+
+            <span class="jf-text-muted">
+                Showing @PaginatedEmployers.Count() of @FilteredEmployers.Count employers
+            </span>
+        </div>
+
+        <!-- ===== Table Section ===== -->
+        <div class="jf-card jf-list-card">
+            <table class="jf-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Company Name</th>
+                        <th>Abbreviation</th>
+                        <th>Address</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (FilteredEmployers == null || FilteredEmployers.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="4" class="jf-text-muted text-center">
+                                No employers found.
+                            </td>
+                        </tr>
+                    }
+                    else if (!PaginatedEmployers.Any())
+                    {
+                        <tr>
+                            <td colspan="4" class="jf-text-muted text-center">
+                                No employers match your search.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        int index = ((_currentPage - 1) * _pageSize) + 1;
+                        foreach (var employer in PaginatedEmployers)
+                        {
+                            <tr>
+                                <td>@index</td>
+                                <td>@employer.EstablishmentName</td>
+                                <td>@employer.AcronymAbbreviation</td>
+                                <td>@employer.Address</td>
+                            </tr>
+                            index++;
+                        }
+                    }
+                </tbody>
+            </table>
+
+            <!-- ===== Pagination Section ===== -->
+            @if (_totalPages > 1)
+            {
+                <div class="jf-pagination">
+                    <button class="jf-btn-secondary" @onclick="PreviousPage" disabled="@(_currentPage == 1)">⬅ Previous</button>
+                    <span>Page @_currentPage of @_totalPages</span>
+                    <button class="jf-btn-secondary" @onclick="NextPage" disabled="@(_currentPage == _totalPages)">Next ➡</button>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    private bool loading = true;
+    private string? errorMessage;
+    private string searchQuery = string.Empty;
+    private string? currentUserId;
+
+    private string baseUrl = "http://localhost:5167/api/Manager";
+
+    private int _currentPage = 1;
+    private int _pageSize = 10;
+    private int _totalPages => FilteredEmployers == null ? 1 : (int)Math.Ceiling(FilteredEmployers.Count / (double)_pageSize);
+
+    private List<EmployerDetails> FilteredEmployers = new();
+
+    private IEnumerable<EmployerDetails> PaginatedEmployers =>
+        FilteredEmployers.Skip((_currentPage - 1) * _pageSize).Take(_pageSize);
+
+    private void NextPage()
+    {
+        if (_currentPage < _totalPages)
+            _currentPage++;
+    }
+
+    private void PreviousPage()
+    {
+        if (_currentPage > 1)
+            _currentPage--;
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            currentUserId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+
+            if (string.IsNullOrEmpty(currentUserId))
+            {
+                errorMessage = "UserId not found. Please log in again.";
+                loading = false;
+                return;
+            }
+
+            // ✅ Check cache for this user
+            if (EmployersCache.UserEmployers.TryGetValue(currentUserId, out var cachedEmployers))
+            {
+                FilteredEmployers = ApplySearch(cachedEmployers);
+                loading = false;
+                return;
+            }
+
+            // ===== Fetch Manager Profile =====
+            var managerUrl = $"{baseUrl}/GetPESOManagerAccount/{currentUserId}";
+            var managerRequest = new HttpRequestMessage(HttpMethod.Get, managerUrl);
+            managerRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var managerResponse = await Http.SendAsync(managerRequest);
+            if (!managerResponse.IsSuccessStatusCode)
+            {
+                errorMessage = $"Failed to fetch manager profile ({managerResponse.StatusCode})";
+                loading = false;
+                return;
+            }
+
+            var managerJson = await managerResponse.Content.ReadAsStringAsync();
+            var manager = System.Text.Json.JsonSerializer.Deserialize<PESOManagerAccountViewModel>(managerJson,
+                new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (manager == null || string.IsNullOrEmpty(manager.UserInformation.ProvCode) || string.IsNullOrEmpty(manager.UserInformation.CityCode))
+            {
+                errorMessage = "Invalid manager profile (no ProvCode/CityCode).";
+                loading = false;
+                return;
+            }
+
+            // ===== Fetch Employers =====
+            var employersUrl = $"{baseUrl}/GetListOfEmployers/{manager.UserInformation.ProvCode}/{manager.UserInformation.CityCode}";
+            var employersRequest = new HttpRequestMessage(HttpMethod.Get, employersUrl);
+            employersRequest.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+            var employersResponse = await Http.SendAsync(employersRequest);
+
+            if (employersResponse.IsSuccessStatusCode)
+            {
+                var json = await employersResponse.Content.ReadAsStringAsync();
+                var employers = System.Text.Json.JsonSerializer.Deserialize<List<EmployerDetails>>(json,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new List<EmployerDetails>();
+
+                // ✅ Cache this user's employers
+                EmployersCache.UserEmployers[currentUserId] = employers;
+
+                FilteredEmployers = ApplySearch(employers);
+            }
+            else
+            {
+                errorMessage = $"Failed to fetch employers ({employersResponse.StatusCode})";
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    private void OnSearchChanged(ChangeEventArgs e)
+    {
+        searchQuery = e.Value?.ToString() ?? string.Empty;
+
+        if (!string.IsNullOrEmpty(currentUserId) &&
+            EmployersCache.UserEmployers.TryGetValue(currentUserId, out var cachedEmployers))
+        {
+            FilteredEmployers = ApplySearch(cachedEmployers);
+            _currentPage = 1; // reset to first page when searching
+        }
+    }
+
+    private List<EmployerDetails> ApplySearch(List<EmployerDetails> employers) =>
+        employers
+            .Where(e => string.IsNullOrEmpty(searchQuery) ||
+                        (e.EstablishmentName ?? "").Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                        (e.AcronymAbbreviation ?? "").Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                        (e.Address ?? "").Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+    public static class EmployersCache
+    {
+        // ✅ Cache employers per user
+        public static Dictionary<string, List<EmployerDetails>> UserEmployers { get; set; } = new();
+    }
+}

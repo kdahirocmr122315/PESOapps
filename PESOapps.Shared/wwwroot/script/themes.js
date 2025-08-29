@@ -15,6 +15,7 @@
         root.style.setProperty('--0AA9F9', '#0AA9F9');
         root.style.setProperty('--hsla', 'hsla(0, 0%, 100%, .1)');
         root.style.setProperty('--muted', '#080809');
+        root.style.setProperty('--box-shadow-log', 'inset 0px 0px 15px -4px var(--box-shadow)');
         button.classList.add("dark-mode");
         button.classList.remove("light-mode");
         icon.classList.remove('fa-sun');
@@ -35,6 +36,7 @@
         root.style.setProperty('--0AA9F9', '#e1e1e1');
         root.style.setProperty('--hsla', 'rgb(255, 255, 255,.8)');
         root.style.setProperty('--muted', '#6c757d');
+        root.style.setProperty('--box-shadow-log', '9px 9px 16px #bebebe, -9px -9px 16px #ffffff');
         button.classList.add("light-mode");
         button.classList.remove("dark-mode");
         icon.classList.add('fa-sun');

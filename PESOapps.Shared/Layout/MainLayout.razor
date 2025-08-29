@@ -4,14 +4,13 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject UiStateService UiState
-        <Loading IsLoading="@isLoading" Message="Loading..." />
         @if (isLoading)
         {
-           
+        <Loading IsLoading="@isLoading" Message="Loading..." />
         }
         else
         {
- <div class="main-container-layout @UiState.SidebarClass">
+       <div class="main-container-layout @UiState.SidebarClass">
         @if (Navigation.Uri.EndsWith("/dash", StringComparison.OrdinalIgnoreCase))
         {
             <div class="navigation-section dboard">
@@ -24,15 +23,22 @@
                 <NavMenuDashEmployer />
             </div>
         }
+        else if (Navigation.Uri.EndsWith("/municipality", StringComparison.OrdinalIgnoreCase))
+        {
+            <div class="navigation-section dboard">
+                <NavMenuDashMunicipality />
+            </div>
+        }
         else
         {
             <div class="navigation-section">
                 <NavMenu />
             </div>
         }
+
     <div class="cover">
         @* <img class="bg-image" src="_content/PESOapps.Shared/images/banner_img.png"> *@
-        <img class="bg-image" src="_content/PESOapps.Shared/images/gov_Uy.png">
+        <img class="bg-image" src="_content/PESOapps.Shared/images/gov_Uy.png"> 
     </div>
     <div class="coverlog">
         <model-viewer src="_content/PESOapps.Shared/glb/pgmlogo.glb"
@@ -50,6 +56,14 @@
         </main>
     }
     else if(Navigation.Uri.EndsWith("/employer", StringComparison.OrdinalIgnoreCase))
+    {
+        <main class="main-content dboard">
+            <article class="main-container">
+                @Body
+            </article>
+        </main>
+    }
+    else if (Navigation.Uri.EndsWith("/municipality", StringComparison.OrdinalIgnoreCase))
     {
         <main class="main-content dboard">
             <article class="main-container">

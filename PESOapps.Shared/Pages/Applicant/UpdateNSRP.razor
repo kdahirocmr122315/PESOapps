@@ -1,0 +1,579 @@
+﻿@page "/UpdateNSRP/dash"
+@using PESOapps.Shared.Address
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject AddressService AddressService
+
+<PageTitle>Update NSRP</PageTitle>
+
+@if (!isUserLoggedIn)
+{
+    <p>User not logged in.</p>
+}
+else if (applicant == null || !loaded)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="nsrp-container">
+        <div class="nsrp-header">
+            <h2>Update NSRP</h2>
+            <button type="button" class="nsrp-toggle" @onclick="ToggleEdit">
+                @(isEditing ? "Disable Update" : "Enable Update")
+            </button>
+        </div>
+
+        <form @onsubmit="HandleValidSubmit">
+            <!-- Tab Navigation -->
+            <ul class="nsrp-tabs">
+                <li>
+                    <button type="button" class="@(activeTab == "personal" ? "nsrp-tab active" : "nsrp-tab")"
+                            @onclick="@(() => ChangeTab("personal"))">
+                        Personal Info
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="@(activeTab == "jobpref" ? "nsrp-tab active" : "nsrp-tab")"
+                            @onclick="@(() => ChangeTab("jobpref"))">
+                        Job Preference
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="@(activeTab == "language" ? "nsrp-tab active" : "nsrp-tab")"
+                            @onclick="@(() => ChangeTab("language"))">
+                        Language
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="@(activeTab == "education" ? "nsrp-tab active" : "nsrp-tab")"
+                            @onclick="@(() => ChangeTab("education"))">
+                        Education
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="@(activeTab == "technical" ? "nsrp-tab active" : "nsrp-tab")"
+                            @onclick="@(() => ChangeTab("technical"))">
+                        Technical/Vocational
+                    </button>
+                </li>
+            </ul>
+
+            <!-- Tab Content -->
+            <div class="nsrp-content">
+                @if (activeTab == "personal")
+                {
+                    <div class="nsrp-section">
+                        <h4>Personal Information</h4>
+                        <div class="nsrp-grid">
+                            <div>
+                                <label>Email</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.Email" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>First Name</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.FirstName" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>Middle Name</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.MiddleName" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>Last Name</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.SurName" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>Suffix</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.Suffix" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>Sex</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.Gender" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label>Religion</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.Religion" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>Birthday</label>
+                                <input type="date" class="nsrp-input" @bind="DateOfBirthValue" @bind:format="yyyy-MM-dd" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>Place of Birth</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.PlaceOfBirth" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>Civil Status</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.CivilStatus" disabled="@(!isEditing)">
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                    <option value="Widowed">Widowed</option>
+                                    <option value="Separated">Separated</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <h4>Present Address</h4>
+                        <div class="nsrp-grid">
+                            <div>
+                                <label>Region</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.PresentRegion" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    @foreach (var r in Regions)
+                                    {
+                                        <option value="@r.RegCode">@r.RegDesc</option>
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>Province</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.PresentProvince" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    @foreach (var p in FilteredProvincesPresent)
+                                    {
+                                        <option value="@p.provCode">@p.provDesc</option>
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>City/Municipality</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.PresentMunicipalityCity" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    @foreach (var c in FilteredCitiesPresent)
+                                    {
+                                        <option value="@c.citymunCode">@c.citymunDesc</option>
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>Barangay</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.PresentBarangay" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    @foreach (var b in FilteredBarangaysPresent)
+                                    {
+                                        <option value="@b.brgyCode">@b.brgyDesc</option>
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>Street</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.PresentHouseNoOrStreetVillage" disabled="@(!isEditing)" />
+                            </div>
+                        </div>
+
+                        <h4>Permanent Address</h4>
+                        <div class="nsrp-grid">
+                            <div>
+                                <label>Region</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialRegion" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    @foreach (var r in Regions)
+                                    {
+                                        <option value="@r.RegCode">@r.RegDesc</option>
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>Province</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialProvince" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    @foreach (var p in FilteredProvincesPermanent)
+                                    {
+                                        <option value="@p.provCode">@p.provDesc</option>
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>City/Municipality</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialMunicipalityCity" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    @foreach (var c in FilteredCitiesPermanent)
+                                    {
+                                        <option value="@c.citymunCode">@c.citymunDesc</option>
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>Barangay</label>
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialBarangay" disabled="@(!isEditing)">
+                                    <option value="">Select</option>
+                                    @foreach (var b in FilteredBarangaysPermanent)
+                                    {
+                                        <option value="@b.brgyCode">@b.brgyDesc</option>
+                                    }
+                                </select>
+                            </div>
+                            <div>
+                                <label>Street</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialHouseNoOrStreetVillage" disabled="@(!isEditing)" />
+                            </div>
+                        </div>
+
+                        <h4>Permanent Address</h4>
+
+                        <div class="nsrp-grid">
+                            <!-- ===== Other Info ===== -->
+                            <div class="form-group">
+                                <label>Disability</label>
+                                <input class="nsrp-input"
+                                       @bind="applicant.ApplicantInformation.Disability"
+                                       disabled="@(!isEditing)" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Employment Status</label>
+                                <select class="nsrp-input"
+                                        @bind="applicant.ApplicantInformation.EmpStatus"
+                                        disabled="@(!isEditing)">
+                                    <option value="Employed">Employed</option>
+                                    <option value="Unemployed">Unemployed</option>
+                                </select>
+
+                                <select class="nsrp-input"
+                                        @bind="applicant.ApplicantInformation.EmpStatusChild"
+                                        disabled="@(!isEditing)">
+                                    <option value="Wage Employed">Wage Employed</option>
+                                    <option value="Self Employed">Self Employed</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Height</label>
+                                <input class="nsrp-input"
+                                       @bind="applicant.ApplicantInformation.Height"
+                                       disabled="@(!isEditing)" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Cellphone Number</label>
+                                <div class="nsrp-phone">
+                                    <span class="nsrp-phone-prefix">+63</span>
+                                    <input @bind="applicant.ApplicantInformation.CellphoneNumber"
+                                           disabled="@(!isEditing)" />
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Landline Number</label>
+                                <input class="nsrp-input"
+                                       @bind="applicant.ApplicantInformation.LandlineNumber"
+                                       disabled="@(!isEditing)" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>TIN</label>
+                                <input class="nsrp-input"
+                                       @bind="applicant.ApplicantInformation.TIN"
+                                       disabled="@(!isEditing)" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>GSIS/SSS Number</label>
+                                <input class="nsrp-input"
+                                       @bind="applicant.ApplicantInformation.GSISORSSS"
+                                       disabled="@(!isEditing)" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Philhealth Number</label>
+                                <input class="nsrp-input"
+                                       @bind="applicant.ApplicantInformation.PHILHEALTH"
+                                       disabled="@(!isEditing)" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>PAGIBIG Number</label>
+                                <input class="nsrp-input"
+                                       @bind="applicant.ApplicantInformation.PAGIBIG"
+                                       disabled="@(!isEditing)" />
+                            </div>
+
+                            <div class="form-group">
+                                <label>Are you actively looking for work?</label>
+                                <select class="nsrp-input"
+                                        @bind="applicant.ApplicantInformation.ActivelyLookingForWork"
+                                        disabled="@(!isEditing)">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Willing to work immediately?</label>
+                                <select class="nsrp-input"
+                                        @bind="applicant.ApplicantInformation.WillingToWorkNow"
+                                        disabled="@(!isEditing)">
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+
+                    </div>
+                }
+                else if (activeTab == "jobpref")
+                {
+                    <div class="nsrp-section">
+                        <h4>Job Preferences</h4>
+
+                        <!-- ===== Occupations ===== -->
+                        <div class="nsrp-subsection">
+                            <h5>Preferred Occupations</h5>
+                            <div class="nsrp-input-group">
+                                <input class="nsrp-input" placeholder="Enter occupation"
+                                       @bind="newOccupationName" disabled="@(!isEditing)" />
+                                <button type="button" class="nsrp-btn" @onclick="AddOccupation" disabled="@(!isEditing)">
+                                    Add
+                                </button>
+                            </div>
+
+                            <ul class="nsrp-list">
+                                @foreach (var occ in applicant.ApplicantJobPrefOccupation.Where(o => o.IsRemoved == 0))
+                                {
+                                    <li class="nsrp-list-item">
+                                        <span>@occ.OccupationName</span>
+                                        <button type="button" class="nsrp-btn-remove"
+                                                @onclick="@(() => RemoveOccupation(occ))"
+                                                disabled="@(!isEditing)">
+                                            Remove
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+
+                        <!-- ===== Work Locations ===== -->
+                        <div class="nsrp-subsection">
+                            <h5>Preferred Work Locations</h5>
+                            <div class="nsrp-input-group">
+                                <input class="nsrp-input" placeholder="Enter location"
+                                       @bind="newWorkLocationName" disabled="@(!isEditing)" />
+                                <select class="nsrp-select" @bind="newWorkLocationType" disabled="@(!isEditing)">
+                                    <option value="Local">Local</option>
+                                    <option value="Abroad">Abroad</option>
+                                </select>
+                                <button type="button" class="nsrp-btn" @onclick="AddWorkLocation" disabled="@(!isEditing)">
+                                    Add
+                                </button>
+                            </div>
+
+                            <ul class="nsrp-list">
+                                @foreach (var loc in applicant.ApplicantJobPrefWorkLocation.Where(l => l.IsRemoved == 0))
+                                {
+                                    <li class="nsrp-list-item">
+                                        <span>@loc.WorkLocationName (@loc.WorkLocationType)</span>
+                                        <button type="button" class="nsrp-btn-remove"
+                                                @onclick="@(() => RemoveWorkLocation(loc))"
+                                                disabled="@(!isEditing)">
+                                            Remove
+                                        </button>
+                                    </li>
+                                }
+                            </ul>
+                        </div>
+                    </div>
+
+                }
+                else if (activeTab == "language")
+                {
+                    <div class="nsrp-section">
+                        <h4>Language Proficiency</h4>
+                        <p>TODO: Map ApplicantLanguage model here</p>
+                    </div>
+                }
+                else if (activeTab == "education")
+                {
+                    <div class="nsrp-section">
+                        <h4>Educational Background</h4>
+                        <p>TODO: Map ApplicantEducation model here</p>
+                    </div>
+                }
+                else if (activeTab == "technical")
+                {
+                    <div class="nsrp-section">
+                        <h4>Technical / Vocational</h4>
+                        <p>TODO: Map ApplicantTechVoc model here</p>
+                    </div>
+                }
+            </div>
+
+            <div class="nsrp-footer">
+                <button type="submit" class="nsrp-submit" disabled="@(!isEditing)">Update</button>
+            </div>
+        </form>
+    </div>
+}
+
+@code {
+    private bool isUserLoggedIn = false;
+    private ApplicantDataViewModel applicant = new();
+    private bool isEditing = false;
+    private bool loaded = false;
+
+    private List<Region> Regions = new();
+    private List<Province> AllProvinces = new();
+    private List<CityMunicipality> AllCities = new();
+    private List<Barangay> AllBarangays = new();
+
+    private string? accountId;
+
+    // Filtering Present Address
+    private IEnumerable<Province> FilteredProvincesPresent =>
+        AllProvinces.Where(p => p.regCode == applicant.ApplicantInformation.PresentRegion);
+
+    private IEnumerable<CityMunicipality> FilteredCitiesPresent =>
+        AllCities.Where(c => c.provCode == applicant.ApplicantInformation.PresentProvince);
+
+    private IEnumerable<Barangay> FilteredBarangaysPresent =>
+        AllBarangays.Where(b => b.citymunCode == applicant.ApplicantInformation.PresentMunicipalityCity);
+
+    // Filtering Permanent Address
+    private IEnumerable<Province> FilteredProvincesPermanent =>
+        AllProvinces.Where(p => p.regCode == applicant.ApplicantInformation.ProvincialRegion);
+
+    private IEnumerable<CityMunicipality> FilteredCitiesPermanent =>
+        AllCities.Where(c => c.provCode == applicant.ApplicantInformation.ProvincialProvince);
+
+    private IEnumerable<Barangay> FilteredBarangaysPermanent =>
+        AllBarangays.Where(b => b.citymunCode == applicant.ApplicantInformation.ProvincialMunicipalityCity);
+
+    private async Task HandleValidSubmit()
+    {
+        try
+        {
+            var response = await Http.PutAsJsonAsync("api/applicants/update", applicant);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "Applicant updated successfully!");
+                Navigation.NavigateTo("/Applicants");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to update applicant.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
+    private void ToggleEdit() => isEditing = !isEditing;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !loaded)
+        {
+            try
+            {
+                accountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+                if (string.IsNullOrEmpty(accountId))
+                {
+                    await JS.InvokeVoidAsync("alert", "No UserId found in local storage!");
+                    return;
+                }
+
+                isUserLoggedIn = true;
+
+                Regions = await AddressService.GetRegionsAsync();
+                AllProvinces = await AddressService.GetProvincesAsync();
+                AllCities = await AddressService.GetCitiesAsync();
+                AllBarangays = await AddressService.GetBarangaysAsync();
+
+                applicant = await Http.GetFromJsonAsync<ApplicantDataViewModel>(
+                    $"http://localhost:5167/api/Employer/ApplicantDataViewModel/{accountId}"
+                ) ?? new ApplicantDataViewModel();
+
+                loaded = true;
+
+                StateHasChanged(); // refresh UI after load
+            }
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error loading applicant: {ex.Message}");
+            }
+        }
+    }
+
+    // Converts between long timestamp <-> DateTime for binding
+    private DateTime? DateOfBirthValue
+    {
+        get
+        {
+            if (applicant.ApplicantInformation.DateOfBirth == 0)
+                return null;
+
+            return DateTimeOffset.FromUnixTimeMilliseconds(applicant.ApplicantInformation.DateOfBirth).DateTime;
+        }
+        set
+        {
+            if (value.HasValue)
+            {
+                applicant.ApplicantInformation.DateOfBirth =
+                    new DateTimeOffset(value.Value).ToUnixTimeMilliseconds();
+            }
+            else
+            {
+                applicant.ApplicantInformation.DateOfBirth = 0;
+            }
+        }
+    }
+
+    private string newOccupationName = string.Empty;
+    private string newWorkLocationName = string.Empty;
+    private string newWorkLocationType = "Local";
+
+    private void AddOccupation()
+    {
+        if (!string.IsNullOrWhiteSpace(newOccupationName))
+        {
+            applicant.ApplicantJobPrefOccupation.Add(new ApplicantJobPrefOccupation
+            {
+                Id = Guid.NewGuid().ToString(),
+                OccupationName = newOccupationName,
+                IsRemoved = 0
+            });
+            newOccupationName = string.Empty;
+        }
+    }
+
+    private void RemoveOccupation(ApplicantJobPrefOccupation occ)
+    {
+        occ.IsRemoved = 1;
+    }
+
+    private void AddWorkLocation()
+    {
+        if (!string.IsNullOrWhiteSpace(newWorkLocationName))
+        {
+            applicant.ApplicantJobPrefWorkLocation.Add(new ApplicantJobPrefWorkLocation
+            {
+                Id = Guid.NewGuid().ToString(),
+                WorkLocationName = newWorkLocationName,
+                WorkLocationType = newWorkLocationType,
+                IsRemoved = 0
+            });
+            newWorkLocationName = string.Empty;
+        }
+    }
+
+    private void RemoveWorkLocation(ApplicantJobPrefWorkLocation loc)
+    {
+        loc.IsRemoved = 1;
+    }
+
+    private string activeTab = "personal";
+
+    private void ChangeTab(string tab)
+    {
+        activeTab = tab;
+    }
+}

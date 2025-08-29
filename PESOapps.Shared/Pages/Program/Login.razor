@@ -8,21 +8,24 @@
 
 <div class="login-containers">
     <div class="login-cards">
-        <h2>Login</h2>
+        <h2>Hello!</h2>
 
         @if (!string.IsNullOrEmpty(Message))
         {
             <div class="error-message">@Message</div>
         }
 
-        <div class="input-groups">
+        <div class="input-groups logs">
+            <input class="loginput" type="text" @bind="username" placeholder="" />
             <label>Email</label>
-            <input type="text" @bind="username" placeholder="Enter your Email" />
         </div>
 
-        <div class="input-groups">
+        <div class="input-groups logs" style="position: relative;">
+            <input class="loginput" type="@passwordInputType" @bind="password" placeholder="" style="padding-right: 35px;" />
+            <button type="button" class="showpass" @onclick="TogglePasswordVisibility">
+                @(passwordInputType == "password" ? "👁" : "🙈")
+            </button>
             <label>Password</label>
-            <input type="password" @bind="password" placeholder="Enter your password" />
         </div>
 
         <button @onclick="LoginUser">Login</button>
@@ -36,13 +39,23 @@
 
     private string apiUrl = "http://localhost:5167/Log/User";
 
-    // ✅ This is the token required by the API to allow login (admin key or pre-auth token)
+    // ✅ Initial token required by your API
     private string initialBearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
+
+    private string passwordInputType = "password";
+
+    private void TogglePasswordVisibility()
+    {
+        passwordInputType = passwordInputType == "password" ? "text" : "password";
+    }
 
     private async Task LoginUser()
     {
         try
         {
+            // 🔎 Debug log of credentials (to confirm before sending)
+            Console.WriteLine($"📤 Sending Login Request -> Email: {username}, Password: {password}");
+
             var request = new HttpRequestMessage(HttpMethod.Post, apiUrl)
             {
                 Content = new StringContent(
@@ -51,7 +64,7 @@
                     "application/json")
             };
 
-            // ✅ Add the required Bearer token to authenticate the login call itself
+            // Add required Bearer token for login endpoint
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", initialBearerToken);
 
             var response = await Http.SendAsync(request);
@@ -65,40 +78,29 @@
 
                 if (user != null)
                 {
-                    // ✅ Store values in localStorage for later use (including new Token returned by API)
+                    // ✅ Store login data in localStorage
                     await JS.InvokeVoidAsync("localStorage.setItem", "UserId", user.Id);
                     await JS.InvokeVoidAsync("localStorage.setItem", "UserType", user.UserType.ToString());
                     await JS.InvokeVoidAsync("localStorage.setItem", "Token", user.Token);
                     await JS.InvokeVoidAsync("localStorage.setItem", "IsLoggedIn", "true");
 
-                    // EMPLOYER
-                    if (user.UserType == 0)
+                    // Redirect based on UserType
+                    switch (user.UserType)
                     {
-                        Navigation.NavigateTo("/pesobeta/Profile/employer");
-                    }
-                    // PESO MANAGERS CAPITOL
-                    else if (user.UserType == 1)
-                    {
-                        Navigation.NavigateTo("/pesobeta/Profile/dash");
-                    }
-                    // SUPER ADMIN
-                    else if (user.UserType == 2)
-                    {
-                        Navigation.NavigateTo("/pesobeta/Profile/dash");
-                    }
-                    // APPLICANT
-                    else if (user.UserType == 3)
-                    {
-                        Navigation.NavigateTo("/pesobeta/Profile/dash");
-                    }
-                    // PESO MANAGERS BY MUNICIPALITY
-                    else if (user.UserType == 4)
-                    {
-                        Navigation.NavigateTo("/pesobeta/Profile/dash");
-                    }
-                    else
-                    {
-                        Message = "Unknown user type.";
+                        case 0: // Employer
+                            Navigation.NavigateTo("/pesobeta/Profile/employer");
+                            break;
+                        case 1: // PESO Managers Capitol
+                        case 2: // Super Admin
+                        case 3: // Applicant
+                            Navigation.NavigateTo("/pesobeta/Profile/dash");
+                            break;
+                        case 4: // PESO Managers Municipality
+                            Navigation.NavigateTo("/pesobeta/Profile/municipality");
+                            break;
+                        default:
+                            Message = "Unknown user type.";
+                            break;
                     }
                 }
             }
@@ -121,6 +123,6 @@
     {
         public string? Id { get; set; }
         public int UserType { get; set; }
-        public string? Token { get; set; } // ✅ Make sure backend includes this in response
+        public string? Token { get; set; }
     }
 }

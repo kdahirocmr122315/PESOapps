@@ -10,7 +10,7 @@ namespace webapi_peso.Dbcontext
 {
     public class TupadRepository(IConfiguration configuration)
     {
-        private readonly string? _connectionString = configuration.GetConnectionString("DefaultConnection");
+        private readonly string? _connectionString = configuration.GetConnectionString("pesoTest");
 
 
        

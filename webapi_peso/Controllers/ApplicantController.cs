@@ -1051,6 +1051,11 @@ namespace webapi_peso.Controllers
             {
                 // Update Applicant Information
                 data.ApplicantInformation.AccountId = AccountId;
+                var existingInformation = db.ApplicantInformation.AsNoTracking().FirstOrDefault(x => x.AccountId == AccountId);
+                if (existingInformation != null)
+                {
+                    data.ApplicantInformation.Email = existingInformation.Email; // Preserve the email
+                }
                 data.ApplicantInformation.DateLastUpdate = Helper.currentTimeMillis();
                 db.ApplicantInformation.Update(data.ApplicantInformation);
 

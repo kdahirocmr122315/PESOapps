@@ -1,9 +1,10 @@
 ﻿<div class="navbars">
     <div class="navbar-container">
         <div class="navbar-logo">
-            <div class="log-diver">
-                <img src="_content/PESOapps.Shared/images/peso.png" />
-                <div class="log-inside-conts">
+            <NavLink href="" Match="NavLinkMatch.All">
+                <div class="log-diver">
+                    <img src="_content/PESOapps.Shared/images/peso.png" />
+                    <div class="log-inside-conts">
                     <div class="log-inside">
                         <h5>P</h5><h5 class="ext">ublic</h5>
                         <h5>E</h5><h5 class="ext">mployment</h5>
@@ -11,23 +12,26 @@
                         <h5>O</h5><h5 class="ext">ffice</h5>
                     </div>
                     <div class="log-inside">
-                        <span>Misamis Oriental</span>
-                     </div>
+                    <span>Misamis Oriental</span>
+                    </div>
+                    </div>
                 </div>
-            </div>
+            </NavLink>
         </div>
         <div class="nav-scrollable">
             <nav class="navbar-option">
                 <div class="nav-item">
                     <NavLink class="nav-links" href="" Match="NavLinkMatch.All">
-                        <i class="fa-solid fa-house"></i>
+                        <div class="nav-icons">
+                            <img src="_content/PESOapps.Shared/svg/house-solid.svg" />
+                        </div>
                         <span>Home</span>
                     </NavLink>
                 </div>
 
                 <div class="nav-item has-submenu">
                     <NavLink class="nav-links" href="nbiconcern">
-                        <i class="fa-solid fa-hand-holding-heart"></i>
+                        <img src="_content/PESOapps.Shared/svg/hand-holding-heart-solid.svg" />
                         <span>Services</span>
                     </NavLink>
                     <div class="nav-sub">
@@ -54,10 +58,10 @@
                         </NavLink>
                     </div>
                 </div>
-
                 <div class="nav-item has-submenu">
-                    <NavLink class="nav-links" href="https://pesomisor.com/">
-                        Programs
+                    <NavLink class="nav-links" href="SPES">
+                        <img src="_content/PESOapps.Shared/svg/handshake-solid.svg" />
+                        <span>Programs</span>
                     </NavLink>
                     <div class="nav-sub">
                             Special Program for Employment of Students (SPES)
@@ -74,6 +78,18 @@
                                 <NavLink class="nav-links-sub" href="TUPAD">
                                     1.Tulong Panghanapbuhay sa ating Displaced/Disadvantaged Workers (TUPAD)
                                 </NavLink>
+                                <div class="sub-sub-sub-sub">
+                                    <NavLink class="nav-links-sub tupad" href="Tupadreg">
+                                        <button class="nav-link">
+                                            TUPAD Beneficiary
+                                        </button>
+                                    </NavLink>
+                                    <NavLink class="nav-links-sub tupad" href="Login">
+                                        <button class="nav-link">
+                                            LOGIN
+                                        </button>
+                                    </NavLink>
+                                </div>
                                 <NavLink class="nav-links-sub" href="">
                                     2. DOLE Integrated Livelihood Program (DILP)
                                 </NavLink>
@@ -92,7 +108,7 @@
                 <div class="nav-item has-submenu">
                     <NavLink class="nav-links" href="https://pesomisor.com/" target="_blank">
                         <i class="fa-solid fa-user-tie"></i>
-                        <span>Job Portal</span>
+                        <span>Job Vacancies</span>
                     </NavLink>
                     <div class="nav-sub">
                         <NavLink class="nav-links-sub" href="https://www.facebook.com/PESO.misamisoriental" target="_blank">

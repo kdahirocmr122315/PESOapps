@@ -1,0 +1,208 @@
+﻿@page "/Joblist/dash"
+@using System.Text.Json
+@inject NavigationManager Navigation
+@inject HttpClient Http
+@inject IJSRuntime JS
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+
+@if (!isUserLoggedIn)
+{
+    <p>Redirecting to login...</p>
+}
+else if (profile == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="job-board">
+        <div class="job-list">
+            @if (jobList == null)
+            {
+                <p>Loading jobs...</p>
+            }
+            else
+            {
+                @foreach (var job in jobList)
+                {
+                    <div class="job-card @(selectedJob?.JobPost?.Id == job.JobPost?.Id ? "selected" : "")" @onclick="@(() => SelectJob(job))">
+                        <div class="card-name elips">@job.JobPost?.Description</div>
+                        <p>@GetEstablishmentName(job)</p>
+                        <p class="muted">@job.EmpDetails?.Address</p>
+                        <p class="card-date"><em>@job.JobPost?.DatePosted.ToString("MMMM dd, yyyy")</em></p>
+                    </div>
+                }
+            }
+        </div>
+
+        <div class="job-details">
+                @if (selectedJob != null)
+                {
+                    <div class="card-name">@selectedJob.JobPost?.Description</div>
+                    <p>@selectedJob?.EmpDetails?.EstablishmentName</p>
+                    <p class="muted">@selectedJob?.EmpDetails?.Address</p>
+                    <p class="card-date"><em>@selectedJob?.JobPost?.DatePosted.ToString("MMMM dd, yyyy")</em></p>
+                    <p class="card-details-sal">
+                        @if (selectedJob?.JobPost?.Salary != null)
+                        {
+                            @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", selectedJob.JobPost.Salary)
+                        }
+                    </p>
+                    <hr />
+                <div class="details-inner">
+                    <div class="details-divider">
+                        <p class="card-description">
+                            @if (selectedJob?.JobPost?.Description2 != null)
+                            {
+                                @selectedJob?.JobPost?.Description2
+                            }
+                            else
+                            {
+                                <span>--------------</span>
+                            }
+                        </p>
+                    </div>
+
+                    <div class="details-divider">
+                        <p class="card-details">Other Details</p>
+                        <p class="card-details-in">
+                            @if (selectedJob?.JobPost?.EducationalAttainment != null)
+                            {
+                                <span class="card-span">Must be: </span>
+                                @($"{selectedJob?.JobPost?.EducationalAttainment}")
+                            }
+                            else
+                            {
+                            }
+                        </p>
+                        <p class="card-details-in">
+                            @if (selectedJob?.JobPost?.WorkExperience != null)
+                            {
+                                <span class="card-span">Work Experience: </span>
+                                @($"{selectedJob?.JobPost?.WorkExperience}")
+                            }
+                            else
+                            {
+                            }
+                        </p>
+                        <p class="card-details-in">
+                            @if (selectedJob?.JobPost?.NumberOfVacancy > 0)
+                            {
+                                <span class="card-span">Number of vacancies: </span> 
+                                @($"{selectedJob?.JobPost?.NumberOfVacancy}")
+                            }
+                             else
+                            {
+                            }
+                        </p>
+                        <p class="card-details-in">
+                            <span class="card-span">Gender:</span>
+                            @if (selectedJob?.JobPost?.Gender != null)
+                            {
+                                @($"{selectedJob?.JobPost?.Gender}")
+                            }
+                            else
+                            {
+                            <span>Any</span>
+                            }
+                        </p>
+                        <p class="card-details-in">
+                            <span class="card-span">Age:</span>
+                            @if (selectedJob?.JobPost?.AgeFrom != 0 && selectedJob?.JobPost?.AgeTo != 0)
+                            {
+                                @($"{selectedJob?.JobPost?.AgeFrom} to {selectedJob?.JobPost?.AgeTo}")
+                            }
+                            else
+                            {
+                                <span>No required</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+                }
+                else
+                {
+                    <p>Select a job to view details</p>
+                }
+        </div>
+    </div>
+}
+
+@code {
+    private AccountAndInformationViewModel? profile;
+    private bool isUserLoggedIn = false;
+    private bool loaded = false;
+
+    private List<JobPostViewModel>? jobList;
+    private JobPostViewModel? selectedJob;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !loaded)
+        {
+            loaded = true;
+
+            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+            var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+
+            if (!string.IsNullOrWhiteSpace(userId) && isLoggedIn == "true")
+            {
+                isUserLoggedIn = true;
+                Http.DefaultRequestHeaders.Authorization =
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+                try
+                {
+                    var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
+
+                    if (response.IsSuccessStatusCode)
+                    {
+                        var json = await response.Content.ReadAsStringAsync();
+                        profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                        // Load job list after confirming user profile
+                        jobList = await Http.GetFromJsonAsync<List<JobPostViewModel>>("http://localhost:5167/api/Applicant/GetJobLists");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("Error: " + ex.Message);
+                }
+
+                StateHasChanged(); // Refresh the UI
+            }
+            else
+            {
+                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            }
+        }
+    }
+
+    void SelectJob(JobPostViewModel job)
+    {
+        selectedJob = job;
+    }
+
+    public class JobPostViewModel
+    {
+        public EmployerDetails? EmpDetails { get; set; }
+        public EmployerJobPost? JobPost { get; set; }
+        public string? FirstImage { get; set; }
+    }
+
+    private string? GetEstablishmentName(JobPostViewModel job)
+    {
+        if (job.JobPost?.EmployerDetailsId != null && job.EmpDetails?.Id != null)
+        {
+            if (job.JobPost.EmployerDetailsId == job.EmpDetails.Id)
+            {
+                return job.EmpDetails.EstablishmentName;
+            }
+        }
+        return "Unknown Establishment";
+    }
+
+}

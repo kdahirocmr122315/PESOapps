@@ -1,25 +1,51 @@
-﻿@inherits LayoutComponentBase
+﻿@using PESOapps.Shared.Services
+@inherits LayoutComponentBase
 @inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject UiStateService UiState
 
-<div class="main-container-layout">
+<div class="main-container-layout @UiState.SidebarClass">
     <div class="navigation-section">
-        <NavMenu />
+        @if (Navigation.Uri.EndsWith("/dash", StringComparison.OrdinalIgnoreCase))
+        {
+            <NavMenuDash />
+        }
+        else
+        {
+            <NavMenu />
+        }
     </div>
     <div class="cover">
-        <img class="bg-image" src="_content/PESOapps.Shared/images/banner_img.png">
+        @* <img class="bg-image" src="_content/PESOapps.Shared/images/banner_img.png"> *@
+        <img class="bg-image" src="_content/PESOapps.Shared/images/gov_Uy.png">
     </div>
     <div class="coverlog">
-        <img class="log-image" src="" />
+        <model-viewer src="_content/PESOapps.Shared/glb/pgmlogo.glb"
+                      autoplay
+                      auto-rotate
+                      style="width: 400px; height: 400px;">
+        </model-viewer>
     </div>
-    <main>
-        <article class="main-container">
-            @Body
-        </article>
-    </main>
-    <div id="themeButton" class="theme btn dark-mode" @onclick="ToggleTheme">
+    @if (Navigation.Uri.EndsWith("/dash", StringComparison.OrdinalIgnoreCase))
+        {
+        <main class="main-content">
+            <article class="main-container">
+                @Body
+            </article>
+        </main>
+        }
+        else
+        {
+        <main>
+            <article class="main-container">
+                @Body
+            </article>
+        </main>
+        }
+    <div id="themeButton" class="theme btn light-mode" @onclick="ToggleTheme">
         <div class="btn__indicator">
             <div class="btn__icon">
-                <i id="icons" class="fa-solid fa-moon"></i>
+                <i id="icons" class="fa-solid fa-sun"></i>
             </div>
         </div>
     </div>
@@ -31,10 +57,19 @@
         </div>
     </div>
 </div>
-
 @code {
     private async Task ToggleTheme()
     {
         await JS.InvokeVoidAsync("toggleTheme");
+    }
+
+    protected override void OnInitialized()
+    {
+        UiState.OnChange += StateHasChanged;
+    }
+
+    public void Dispose()
+    {
+        UiState.OnChange -= StateHasChanged;
     }
 }

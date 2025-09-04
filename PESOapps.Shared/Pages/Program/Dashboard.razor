@@ -1,0 +1,521 @@
+﻿@page "/dashboard"
+@using Microsoft.AspNetCore.Components.ProtectedBrowserStorage
+@inject NavigationManager Navigation
+@inject ProtectedSessionStorage SessionStorage
+
+@if (!isUserLoggedIn)
+{
+    <p>Redirecting to login...</p>
+}
+
+else
+{
+    <div class="form-cont dashb">
+        <input class="form-control mb-3" placeholder="Search full name..." @bind="SearchTerm" @bind:event="oninput" />
+
+        <div class="monitoring-boxes">
+            <div class="box verified">
+                <div class="boxdiv">
+                    <h4>Verified</h4>
+                    <i class="fa-solid fa-check"></i>
+                </div>
+                <p class="totals">Total: </p><p>@VerifiedList.Count</p>
+            </div>
+            <div class="box unverified">
+                <div class="boxdiv">
+                    <h4>Unverified</h4>
+                    <i class="fa-solid fa-xmark"></i>
+                </div>
+                <p class="totals">Total: </p><p>@UnverifiedList.Count</p>
+            </div>
+        </div>
+        <h3>Verified Tupad List</h3>
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Verification</th>
+                        <th scope="col">Details</th>
+                        <th scope="col">Delete</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Birthdate</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Type Of ID</th>
+                        <th scope="col">ID Number</th>
+                        <th scope="col">Contact No.</th>
+                        <th scope="col">E Payment</th>
+                        <th scope="col">Type Of Beneficiary</th>
+                        <th scope="col">Occupation</th>
+                        <th scope="col">Sex</th>
+                        <th scope="col">Civil Status</th>
+                        <th scope="col">Age</th>
+                        <th scope="col">Average Income</th>
+                        <th scope="col">Dependent</th>
+                        <th scope="col">Interest Wage</th>
+                        <th scope="col">Skills</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (PaginatedVerifiedList != null)
+                    {
+                        int count = (currentPageVerified - 1) * pageSize + 1;
+                        @foreach (var item in PaginatedVerifiedList)
+                        {
+                            <tr>
+                                <td scope="row" class="center-align">@count</td>
+                                <td>
+                                    <button class="btn btn-warning" @onclick="() => ChangeVerificationStatus(item.ID, false)">
+                                        Verified
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-info" @onclick="() => ShowInfoDetails(item.ID)">
+                                        Details
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-danger" @onclick="() => ConfirmDelete(item.ID)">
+                                        Delete
+                                    </button>
+                                </td>
+                                <td class="nowrap center-align">@item.Lastname, @item.Firstname @item.MiddleName @item.ExtensionName</td>
+                                <td>@(DateTime.TryParse(item.Birthday, out var birthDate) ? birthDate.ToString("yyyy/MM/dd") : item.Birthday)</td>
+                                <td>@item.Street @item.Barangay, @item.Municipality, @item.Province, District @item.District</td>
+                                <td>@item.IDType</td>
+                                <td>@item.IDNumber</td>
+                                <td>@item.ContactNo</td>
+                                <td>@item.Epayment</td>
+                                <td>@item.TypeOfBenef</td>
+                                <td>@item.Occupation</td>
+                                <td class="center-align">@item.Sex</td>
+                                <td class="center-align">@item.CivilStatus</td>
+                                <td class="center-align">@item.Age</td>
+                                <td>@item.AverageIncome</td>
+                                <td>@item.Dependent</td>
+                                <td>@item.InterestWage</td>
+                                <td>@item.SkillsTraining</td>
+                            </tr>
+                            count++;
+                        }
+                    }
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button class="btn" @onclick="PreviousPageVerified" disabled="@(currentPageVerified == 1)">Previous</button>
+                <span> Page @currentPageVerified of @TotalPagesVerified </span>
+                <button class="btn" @onclick="NextPageVerified" disabled="@(currentPageVerified == TotalPagesVerified)">Next</button>
+            </div>
+        </div>
+        <h3>Unverified Tupad List</h3>
+        <div class="table-scroll">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">ID</th>
+                        <th scope="col">Verification</th>
+                        <th scope="col">Details</th>
+                        <th scope="col">Delete</th>
+                        <th scope="col">Name</th>
+                        <th scope="col">Birthdate</th>
+                        <th scope="col">Address</th>
+                        <th scope="col">Type Of ID</th>
+                        <th scope="col">ID Number</th>
+                        <th scope="col">Contact No.</th>
+                        <th scope="col">E Payment</th>
+                        <th scope="col">Type Of Beneficiary</th>
+                        <th scope="col">Occupation</th>
+                        <th scope="col">Sex</th>
+                        <th scope="col">Civil Status</th>
+                        <th scope="col">Age</th>
+                        <th scope="col">Average Income</th>
+                        <th scope="col">Dependent</th>
+                        <th scope="col">Interest Wage</th>
+                        <th scope="col">Skills</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (PaginatedUnverifiedList != null)
+                    {
+                        int count = (currentPageUnverified - 1) * pageSize + 1;
+                        @foreach (var item in PaginatedUnverifiedList)
+                        {
+                            <tr>
+                                <td scope="row" class="center-align">@count</td>
+                                <td>
+                                    <button class="btn btn-success" @onclick="() => ChangeVerificationStatus(item.ID, true)">
+                                       Unverify
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-info" @onclick="() => ShowInfoDetails(item.ID)">
+                                        Details
+                                    </button>
+                                </td>
+                                <td>
+                                    <button class="btn btn-danger" @onclick="() => ConfirmDelete(item.ID)">
+                                        Delete
+                                    </button>
+                                </td>
+                                <td class="nowrap center-align">@item.Lastname, @item.Firstname @item.MiddleName @item.ExtensionName</td>
+                                <td>@(DateTime.TryParse(item.Birthday, out var birthDate) ? birthDate.ToString("yyyy/MM/dd") : item.Birthday)</td>
+                                <td>@item.Street @item.Barangay, @item.Municipality, @item.Province, District @item.District</td>
+                                <td>@item.IDType</td>
+                                <td>@item.IDNumber</td>
+                                <td>@item.ContactNo</td>
+                                <td>@item.Epayment</td>
+                                <td>@item.TypeOfBenef</td>
+                                <td>@item.Occupation</td>
+                                <td class="center-align">@item.Sex</td>
+                                <td class="center-align">@item.CivilStatus</td>
+                                <td class="center-align">@item.Age</td>
+                                <td>@item.AverageIncome</td>
+                                <td>@item.Dependent</td>
+                                <td>@item.InterestWage</td>
+                                <td>@item.SkillsTraining</td>
+                            </tr>
+                            count++;
+                        }
+                    }
+                </tbody>
+            </table>
+            <div class="pagination">
+                <button class="btn" @onclick="PreviousPageUnverified" disabled="@(currentPageUnverified == 1)">Previous</button>
+                <span> Page @currentPageUnverified of @TotalPagesUnverified </span>
+                <button class="btn" @onclick="NextPageUnverified" disabled="@(currentPageUnverified == TotalPagesUnverified)">Next</button>
+            </div>
+        </div>
+        <div class="buts lo">
+            <button class="btn" @onclick="DownloadExcel">Export to Excel</button>
+        </div>
+    </div>
+
+    <!-- Bootstrap Modal -->
+    <div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="infoModalLabel">Beneficiary Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    @if (selectedBeneficiary != null)
+                    {
+                        <p><strong>Name : </strong> @selectedBeneficiary.Lastname, @selectedBeneficiary.Firstname @selectedBeneficiary.MiddleName</p>
+                        <p><strong>Birthdate : </strong> @(DateTime.TryParse(selectedBeneficiary.Birthday, out var birthDate) ? birthDate.ToString("yyyy/MM/dd") : selectedBeneficiary.Birthday)</p>
+                        <p><strong>Address : </strong> @selectedBeneficiary.Street @selectedBeneficiary.Barangay, @selectedBeneficiary.Municipality, @selectedBeneficiary.Province</p>
+                        <p><strong>Type of ID : </strong> @selectedBeneficiary.IDType</p>
+                        <p><strong>ID Number : </strong> @selectedBeneficiary.IDNumber</p>
+                        <p><strong>Contact No. : </strong> @selectedBeneficiary.ContactNo</p>
+                        <p><strong>Occupation : </strong> @selectedBeneficiary.Occupation</p>
+                        <p><strong>Sex : </strong> @selectedBeneficiary.Sex</p>
+                        <p><strong>Age : </strong> @selectedBeneficiary.Age</p>
+                        <p><strong>Average Income : </strong> @selectedBeneficiary.AverageIncome</p>
+                        <p><strong>Dependent : </strong> @selectedBeneficiary.Dependent</p>
+                        <p><strong>Skills : </strong> @selectedBeneficiary.SkillsTraining</p>
+                    }
+                    else
+                    {
+                        <p>Loading details...</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+}
+
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject IJSRuntime JSS
+@inject ExcelService ExcelService
+
+@using System.Net.Http.Headers
+@using System.IO;
+@using System.Threading.Tasks;
+@using PESOapps.Shared.Services
+@using iTextSharp.text;
+@using iTextSharp.text.pdf;
+@using Microsoft.JSInterop;
+
+@code {
+    private string _searchTerm = "";
+    private string SearchTerm
+    {
+        get => _searchTerm;
+        set
+        {
+            if (_searchTerm != value)
+            {
+                _searchTerm = value;
+                currentPageVerified = 1;
+                currentPageUnverified = 1;
+            }
+        }
+    }
+
+    // Filters full name (last, first, middle, ext)
+    private bool MatchesSearch(TupadModel t) =>
+        string.IsNullOrWhiteSpace(SearchTerm) || $"{t.Lastname} {t.Firstname} {t.MiddleName} {t.ExtensionName}"
+            .Contains(SearchTerm, StringComparison.OrdinalIgnoreCase);
+
+    // Apply filtering before pagination
+    private List<TupadModel> FilteredVerified => VerifiedList.Where(MatchesSearch).ToList();
+    private List<TupadModel> FilteredUnverified => UnverifiedList.Where(MatchesSearch).ToList();
+
+
+
+    private bool isUserLoggedIn = false;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var sessionResult = await SessionStorage.GetAsync<bool>("IsLoggedIn");
+
+            if (!sessionResult.Success || !sessionResult.Value)
+            {
+                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            }
+            else
+            {
+                isUserLoggedIn = true;
+                StateHasChanged(); // Ensures UI updates after session check
+            }
+        }
+    }
+
+    private async Task Logout()
+    {
+        await SessionStorage.DeleteAsync("IsLoggedIn");
+        Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+    }
+    private List<TupadModel> VerifiedList = new();
+    private List<TupadModel> UnverifiedList = new();
+    private string Token = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/verified");
+        requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+
+        var response = await Http.SendAsync(requestMessage);
+
+        if (response.IsSuccessStatusCode)
+        {
+            beneficiaries = await response.Content.ReadFromJsonAsync<List<TupadBeneficiary>>();
+            await LoadData();
+        }
+        else
+        {
+            Console.WriteLine("Error fetching data: " + response.StatusCode);
+        }
+    }
+
+
+    private async Task LoadData()
+    {
+        try
+        {
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/verified");
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+            var response = await Http.SendAsync(requestMessage);
+            if (response.IsSuccessStatusCode)
+            {
+                VerifiedList = await response.Content.ReadFromJsonAsync<List<TupadModel>>();
+            }
+
+            requestMessage = new HttpRequestMessage(HttpMethod.Get, "https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/unverified");
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+            response = await Http.SendAsync(requestMessage);
+            if (response.IsSuccessStatusCode)
+            {
+                UnverifiedList = await response.Content.ReadFromJsonAsync<List<TupadModel>>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading data: {ex.Message}");
+        }
+    }
+
+    private async Task ChangeVerificationStatus(int id, bool isVerified)
+    {
+        try
+        {
+            var updateData = new { Verification = isVerified ? "Yes" : "No" };
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/{id}")
+                {
+                    Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(updateData), System.Text.Encoding.UTF8, "application/json")
+                };
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+
+            var response = await Http.SendAsync(requestMessage);
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData(); // Refresh the data after update
+            }
+            else
+            {
+                Console.WriteLine($"Failed to update verification status: {response.StatusCode}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating verification status: {ex.Message}");
+        }
+    }
+
+    private class TupadModel
+    {
+        public int ID { get; set; }
+
+        public string? Firstname { get; set; }
+        public string? MiddleName { get; set; }
+        public string? Lastname { get; set; }
+        public string? ExtensionName { get; set; }
+
+        public string? Birthday { get; set; }
+
+        public string? Street { get; set; }
+        public string? Barangay { get; set; }
+        public string? Municipality { get; set; }
+        public string? Province { get; set; }
+        public string? District { get; set; }
+
+        public string? IDType { get; set; }
+        public string? IDNumber { get; set; }
+        public string? ContactNo { get; set; }
+        public string? Epayment { get; set; }
+        public string? TypeOfBenef { get; set; }
+        public string? Occupation { get; set; }
+        public string? Sex { get; set; }
+        public string? CivilStatus { get; set; }
+        public string? Age { get; set; }
+        public string? AverageIncome { get; set; }
+        public string? Dependent { get; set; }
+        public string? InterestWage { get; set; }
+        public string? SkillsTraining { get; set; }
+        public string? Verification { get; set; }
+        public string? Deleted { get; set; }
+   
+    }
+
+    private async Task ConfirmDelete(int id)
+    {
+        bool confirm = await JS.InvokeAsync<bool>("confirm", "Are you sure you want to delete this record?");
+        if (confirm)
+        {
+            await DeleteRecord(id); // Call DeleteRecord to mark the record as deleted
+            await LoadData();  // Refresh data
+        }
+    }
+
+    private async Task DeleteRecord(int id)
+    {
+        try
+        {
+            var deleteupdate = new
+            {
+                Verification = "deleted",
+                DeletedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") // Add the current timestamp
+            };
+
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"https://portal.misamisoriental.gov.ph/peso2api/Api/Tupad/{id}")
+                {
+                    Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(deleteupdate), System.Text.Encoding.UTF8, "application/json")
+                };
+
+            requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
+
+            var response = await Http.SendAsync(requestMessage);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadData(); // Refresh the data
+            }
+            else
+            {
+                string errorMessage = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"Failed to mark record as deleted: {response.StatusCode} - {errorMessage}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error marking record as deleted: {ex.Message}");
+        }
+    }
+
+
+
+    private List<TupadBeneficiary> beneficiaries = new();
+
+
+    private async Task DownloadExcel()
+    {
+        if (beneficiaries == null || beneficiaries.Count == 0)
+        {
+            Console.WriteLine("No data available!");
+            return;
+        }
+
+        var fileContent = await ExcelService.GenerateExcelAsync(beneficiaries);
+        var fileName = "TUPAD_Beneficiaries.xlsx";
+        await JS.InvokeVoidAsync("saveAsFile", fileName, Convert.ToBase64String(fileContent));
+    }
+
+    private int currentPageVerified = 1;
+    private int currentPageUnverified = 1;
+    private int pageSize = 5;
+
+    private int TotalPagesVerified => (int)Math.Ceiling(FilteredVerified.Count / (double)pageSize);
+    private int TotalPagesUnverified => (int)Math.Ceiling(FilteredUnverified.Count / (double)pageSize);
+
+
+    private List<TupadModel> PaginatedVerifiedList =>
+        FilteredVerified.Skip((currentPageVerified - 1) * pageSize).Take(pageSize).ToList();
+
+    private List<TupadModel> PaginatedUnverifiedList =>
+        FilteredUnverified.Skip((currentPageUnverified - 1) * pageSize).Take(pageSize).ToList();
+
+
+    private void NextPageVerified()
+    {
+        if (currentPageVerified < TotalPagesVerified) currentPageVerified++;
+    }
+
+    private void PreviousPageVerified()
+    {
+        if (currentPageVerified > 1) currentPageVerified--;
+    }
+
+    private void NextPageUnverified()
+    {
+        if (currentPageUnverified < TotalPagesUnverified) currentPageUnverified++;
+    }
+
+    private void PreviousPageUnverified()
+    {
+        if (currentPageUnverified > 1) currentPageUnverified--;
+    }
+
+    <!-- Bootstrap Modal -->
+    private TupadModel? selectedBeneficiary;
+
+    private async Task ShowInfoDetails(int id)
+    {
+        selectedBeneficiary = VerifiedList.FirstOrDefault(b => b.ID == id) ??
+                              UnverifiedList.FirstOrDefault(b => b.ID == id);
+
+        if (selectedBeneficiary != null)
+        {
+            await JS.InvokeVoidAsync("showModal", "#infoModal"); // Show Bootstrap Modal
+        }
+    }
+}
+<script>
+    function showModal(modalId) {
+        var modal = new bootstrap.Modal(document.querySelector(modalId));
+        modal.show();
+    }
+</script>

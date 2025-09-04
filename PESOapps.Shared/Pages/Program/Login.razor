@@ -1,0 +1,109 @@
+﻿@page "/Login"
+@using webapi_peso.Model
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+
+<PageTitle>Login</PageTitle>
+
+<div class="login-containers">
+    <div class="login-cards">
+        <h2>Login</h2>
+
+        @if (!string.IsNullOrEmpty(Message))
+        {
+            <div class="error-message">@Message</div>
+        }
+
+        <div class="input-groups">
+            <label>Email</label>
+            <input type="text" @bind="username" placeholder="Enter your Email" />
+        </div>
+
+        <div class="input-groups">
+            <label>Password</label>
+            <input type="password" @bind="password" placeholder="Enter your password" />
+        </div>
+
+        <button @onclick="LoginUser">Login</button>
+    </div>
+</div>
+
+@code {
+    private string? username { get; set; }
+    private string? password { get; set; }
+    private string? Message { get; set; }
+
+    private string apiUrl = "http://localhost:5167/Log/User";
+
+    // ✅ This is the token required by the API to allow login (admin key or pre-auth token)
+    private string initialBearerToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4Mjc5ODUzMjMsImlzcyI6InBtaXMiLCJhdWQiOiJtaXNhbWlzIG9yaWVudGFsIn0.TNAG-ODpEb_gfDf_sRfvK5wFvloBU_pcd9WKY6ajQfk";
+
+    private async Task LoginUser()
+    {
+        try
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+            {
+                Content = new StringContent(
+                    $"{{\"email\":\"{username?.Trim()}\", \"password\":\"{password?.Trim()}\"}}",
+                    System.Text.Encoding.UTF8,
+                    "application/json")
+            };
+
+            // ✅ Add the required Bearer token to authenticate the login call itself
+            request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", initialBearerToken);
+
+            var response = await Http.SendAsync(request);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+
+                var user = System.Text.Json.JsonSerializer.Deserialize<LoginResponse>(json,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (user != null)
+                {
+                    // ✅ Store values in localStorage for later use (including new Token returned by API)
+                    await JS.InvokeVoidAsync("localStorage.setItem", "UserId", user.Id);
+                    await JS.InvokeVoidAsync("localStorage.setItem", "UserType", user.UserType.ToString());
+                    await JS.InvokeVoidAsync("localStorage.setItem", "Token", user.Token);
+                    await JS.InvokeVoidAsync("localStorage.setItem", "IsLoggedIn", "true");
+
+                    if (user.UserType == 1 || user.UserType == 2)
+                    {
+                        Navigation.NavigateTo("/pesobeta/Profile/dash");
+                    }
+                    else if (user.UserType == 3)
+                    {
+                        Navigation.NavigateTo("/pesobeta/Profile/dash");
+                    }
+                    else
+                    {
+                        Message = "Unknown user type.";
+                    }
+                }
+            }
+            else if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+            {
+                Message = "Invalid username or password.";
+            }
+            else
+            {
+                Message = $"Server error: {response.StatusCode}";
+            }
+        }
+        catch (Exception ex)
+        {
+            Message = $"Error: {ex.Message}";
+        }
+    }
+
+    public class LoginResponse
+    {
+        public string? Id { get; set; }
+        public int UserType { get; set; }
+        public string? Token { get; set; } // ✅ Make sure backend includes this in response
+    }
+}

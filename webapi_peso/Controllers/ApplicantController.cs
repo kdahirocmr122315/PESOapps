@@ -263,6 +263,15 @@ namespace webapi_peso.Controllers
             return Ok();
         }
 
+        [HttpGet("CheckEmailExist/{email}")]
+        public IActionResult CheckEmailExist(string email)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var param = new ParameterViewModel();
+            param.Result = db.UserAccounts.Any(x => x.Email == email);
+            return Ok(param);
+        }
+
         [HttpPost("SaveNSRP")]
         public IActionResult SaveNSRP(ApplicantDataViewModel data)
         {
@@ -888,15 +897,23 @@ namespace webapi_peso.Controllers
             var userAccount = db.UserAccounts.Where(x => x.Email == account.Email).FirstOrDefault();
             if (userAccount == null)
             {
-                string base64Guid = Guid.NewGuid().ToString();
-                userAccount = new UserAccount();
-                userAccount.Id = base64Guid;
-                userAccount.Email = account.Email;
-                userAccount.Password = Helper.RandomString(6).ToLower();
-                userAccount.DateCreated = DateTime.Now;
-                userAccount.UserType = ProjectConfig.USER_TYPE.APPLICANT;
+                string base64Guid;
+                do
+                {
+                    base64Guid = Guid.NewGuid().ToString();
+                } while (db.UserAccounts.Any(x => x.Id == base64Guid));
+
+                userAccount = new UserAccount
+                {
+                    Id = base64Guid,
+                    Email = account.Email,
+                    Password = Helper.RandomString(6).ToLower(),
+                    DateCreated = DateTime.Now,
+                    UserType = ProjectConfig.USER_TYPE.APPLICANT
+                };
+
                 db.UserAccounts.Add(userAccount);
-                db.SaveChanges();
+                db.SaveChanges();  
             }
 
             var IsExist = db.ApplicantAccount.Any(x => x.Email.ToLower() == account.Email.ToLower());
@@ -1034,6 +1051,11 @@ namespace webapi_peso.Controllers
             {
                 // Update Applicant Information
                 data.ApplicantInformation.AccountId = AccountId;
+                var existingInformation = db.ApplicantInformation.AsNoTracking().FirstOrDefault(x => x.AccountId == AccountId);
+                if (existingInformation != null)
+                {
+                    data.ApplicantInformation.Email = existingInformation.Email; // Preserve the email
+                }
                 data.ApplicantInformation.DateLastUpdate = Helper.currentTimeMillis();
                 db.ApplicantInformation.Update(data.ApplicantInformation);
 
@@ -1136,5 +1158,21 @@ namespace webapi_peso.Controllers
             db.SaveChanges();
             return Ok(data);
         }
+
+        [HttpPost]
+        [Route("GenerateId")]
+        public IActionResult GenerateId()
+        {
+            using var db = dbFactory.CreateDbContext();
+            string base64Guid;
+            do
+            {
+                base64Guid = Guid.NewGuid().ToString();
+            } while (db.UserAccounts.Any(x => x.Id == base64Guid));
+
+            return Ok(base64Guid);
+        }
+
+
     }
 }

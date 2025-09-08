@@ -1178,6 +1178,21 @@ namespace webapi_peso.Controllers
             return Ok(base64Guid);
         }
 
+        [HttpPost("SaveJobApplication")]
+        public IActionResult SaveJobApplication(JobApplicantion data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            data.Id = Guid.NewGuid().ToString().ToOwnGUID();
+            data.DateCreated = DateTime.Now;
+            db.JobApplicantion.Add(data);
+            var rs = db.SaveChanges();
+            if (rs > 0)
+            {
+                return Ok(data);
+            }
+            return BadRequest("Failed to save job application.");
+        }
+
 
     }
 }

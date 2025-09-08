@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using System.Linq;
 using System.Net;
+using System.Net.Http.Headers;
 using webapi_peso.Model;
 using webapi_peso.ViewModels;
 
@@ -17,11 +18,13 @@ namespace webapi_peso.Controllers
     {
         private readonly IDbContextFactory<ApplicationDbContext> dbFactory;
         private readonly IMemoryCache cache;
+        private readonly IWebHostEnvironment env;
 
-        public ApplicantController(IDbContextFactory<ApplicationDbContext> _dbFactory, IMemoryCache _cache)
+        public ApplicantController(IDbContextFactory<ApplicationDbContext> _dbFactory, IMemoryCache _cache, IWebHostEnvironment _env)
         {
             dbFactory = _dbFactory;
             cache = _cache;
+            env = _env;
         }
 
         [HttpGet("GetJobLists")]
@@ -1178,6 +1181,62 @@ namespace webapi_peso.Controllers
             return Ok(base64Guid);
         }
 
+        [HttpPost("SaveJobApplication")]
+        public IActionResult SaveJobApplication(JobApplicantion data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            data.Id = Guid.NewGuid().ToString().ToOwnGUID();
+            data.DateCreated = DateTime.Now;
+            db.JobApplicantion.Add(data);
+            var rs = db.SaveChanges();
+            if (rs > 0)
+            {
+                return Ok(data);
+            }
+            return BadRequest("Failed to save job application.");
+        }
+
+        [HttpPost("UploadAttachments")]
+        public IActionResult UploadAttachments()
+        {
+            var files = Request.Form.Files;
+            var result = new List<AttachementsViewModel>();
+            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString();
+            var dir = System.IO.Path.Combine(env.WebRootPath, "files", "employers", folderName);
+            if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+
+            foreach (var file in files)
+            {
+                if (file.Length > 0)
+                {
+                    var origFileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
+                    var fileName = $"{origFileName}";
+                    fileName = WebUtility.HtmlEncode(fileName);
+                    var fullPath = System.IO.Path.Combine(dir, fileName);
+                    using (var stream = new FileStream(fullPath, FileMode.Create))
+                    {
+                        result.Add(new AttachementsViewModel()
+                        {
+                            FileName = fileName,
+                            FileSize = Helper.SizeSuffix(file.Length),
+                            FolderName = folderName
+                        });
+                        file.CopyTo(stream);
+                    }
+                }
+
+            }
+            return Ok(result);
+        }
+
+        [HttpGet("CheckIfAlreadyApplied/{applicantId}/{jobpostId}")]
+        public IActionResult CheckIfAlreadyApplied(string applicantId, string jobpostId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var rs = new StatusViewModel();
+            rs.IsExist = db.JobApplicantion.Any(x => x.ApplicantId == applicantId && x.JobPostId == jobpostId);
+            return Ok(rs);
+        }
 
     }
 }

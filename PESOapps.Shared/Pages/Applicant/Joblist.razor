@@ -5,128 +5,174 @@
 @inject IJSRuntime JS
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
-    @if (!isUserLoggedIn)
-    {
-   
-    }
-    else if (profile == null)
-    {
-        <p>Loading...</p>
-    }
-    else
-    {
-        <div class="job-board">
-            <div class="job-list">
-                @if (jobList == null)
+
+@if (!isUserLoggedIn)
+{
+
+}
+else if (profile == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div class="job-board">
+        <div class="job-list">
+
+            <!-- 🔍 Search Bar -->
+            <div class="filter-bars">
+                <div class="search-bar">
+                    <input type="text"
+                           class="nsrp-input"
+                           placeholder="Search jobs..."
+                           @bind="searchTerm"
+                           @bind:event="oninput" />
+                </div>
+
+                <select @bind="selectedFilter" class="nsrp-input">
+                    <option value="All">All</option>
+                    <option value="Available">Available</option>
+                    <option value="Expired">Expired</option>
+                </select>
+            </div>
+
+            @if (jobList == null)
+            {
+                <p>Loading jobs...</p>
+            }
+            else
+            {
+                var filteredJobs = jobList
+                .Where(j =>
+                // 🔍 Search filter
+                string.IsNullOrEmpty(searchTerm) ||
+                (j.JobPost?.Description?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (j.EmpDetails?.EstablishmentName?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false) ||
+                (j.EmpDetails?.Address?.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
+                )
+                .Where(j =>
+                // ✅ Availability filter
+                selectedFilter == "All" ||
+                (selectedFilter == "Available" && (j.JobPost?.Expiry ?? DateTime.MinValue) >= DateTime.Now) ||
+                (selectedFilter == "Expired" && (j.JobPost?.Expiry ?? DateTime.MaxValue) < DateTime.Now)
+                )
+                .ToList();
+
+                if (filteredJobs.Count == 0)
                 {
-                    <p>Loading jobs...</p>
+                    <p>No jobs found.</p>
                 }
                 else
                 {
-                    @foreach (var job in jobList)
+                    @foreach (var job in filteredJobs)
                     {
-                        <div class="job-card @(selectedJob?.JobPost?.Id == job.JobPost?.Id ? "selected" : "")" @onclick="@(() => SelectJob(job))">
+                        bool isExpired = job.JobPost?.Expiry < DateTime.Now;
+
+                        <div class="job-card @(selectedJob?.JobPost?.Id == job.JobPost?.Id ? "selected" : "")"
+                             @onclick="@(() => SelectJob(job))">
                             <div class="card-name elips">@job.JobPost?.Description</div>
                             <p>@GetEstablishmentName(job)</p>
                             <p class="muted">@job.EmpDetails?.Address</p>
                             <p class="card-date"><em>@job.JobPost?.DatePosted.ToString("MMMM dd, yyyy")</em></p>
+
+                            @if (isExpired)
+                            {
+                                <p class="muted" style="color:red;"><strong>This job has expired.</strong></p>
+                            }
                         </div>
                     }
                 }
-            </div>
+            }
+        </div>
 
-            <div class="job-details">
-                    @if (selectedJob != null)
+        <div class="job-details">
+            @if (selectedJob != null)
+            {
+                bool isExpired = selectedJob.JobPost?.Expiry < DateTime.Now;
+
+                <div class="card-name">@selectedJob.JobPost?.Description</div>
+                <p>@selectedJob?.EmpDetails?.EstablishmentName</p>
+                <p class="muted">@selectedJob?.EmpDetails?.Address</p>
+                <p class="card-date"><em>@selectedJob?.JobPost?.DatePosted.ToString("MMMM dd, yyyy")</em></p>
+
+                @if (isExpired)
+                {
+                    <p class="muted" style="color:red;"><strong>This job has expired.</strong></p>
+                }
+
+                <p class="card-details-sal">
+                    @if (selectedJob?.JobPost?.Salary != null)
                     {
-                        <div class="card-name">@selectedJob.JobPost?.Description</div>
-                        <p>@selectedJob?.EmpDetails?.EstablishmentName</p>
-                        <p class="muted">@selectedJob?.EmpDetails?.Address</p>
-                        <p class="card-date"><em>@selectedJob?.JobPost?.DatePosted.ToString("MMMM dd, yyyy")</em></p>
-                        <p class="card-details-sal">
-                            @if (selectedJob?.JobPost?.Salary != null)
+                        @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", selectedJob.JobPost.Salary)
+                    }
+                </p>
+                <hr />
+                <div class="details-inner">
+                    <div class="details-divider">
+                        <p class="card-description">
+                            @if (selectedJob?.JobPost?.Description2 != null)
                             {
-                                @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", selectedJob.JobPost.Salary)
+                                @selectedJob?.JobPost?.Description2
+                            }
+                            else
+                            {
+                                <span>--------------</span>
                             }
                         </p>
-                        <hr />
-                    <div class="details-inner">
-                        <div class="details-divider">
-                            <p class="card-description">
-                                @if (selectedJob?.JobPost?.Description2 != null)
-                                {
-                                    @selectedJob?.JobPost?.Description2
-                                }
-                                else
-                                {
-                                    <span>--------------</span>
-                                }
-                            </p>
-                        </div>
-
-                        <div class="details-divider">
-                            <p class="card-details">Other Details</p>
-                            <p class="card-details-in">
-                                @if (selectedJob?.JobPost?.EducationalAttainment != null)
-                                {
-                                    <span class="card-span">Must be: </span>
-                                    @($"{selectedJob?.JobPost?.EducationalAttainment}")
-                                }
-                                else
-                                {
-                                }
-                            </p>
-                            <p class="card-details-in">
-                                @if (selectedJob?.JobPost?.WorkExperience != null)
-                                {
-                                    <span class="card-span">Work Experience: </span>
-                                    @($"{selectedJob?.JobPost?.WorkExperience}")
-                                }
-                                else
-                                {
-                                }
-                            </p>
-                            <p class="card-details-in">
-                                @if (selectedJob?.JobPost?.NumberOfVacancy > 0)
-                                {
-                                    <span class="card-span">Number of vacancies: </span> 
-                                    @($"{selectedJob?.JobPost?.NumberOfVacancy}")
-                                }
-                                 else
-                                {
-                                }
-                            </p>
-                            <p class="card-details-in">
-                                <span class="card-span">Gender:</span>
-                                @if (selectedJob?.JobPost?.Gender != null)
-                                {
-                                    @($"{selectedJob?.JobPost?.Gender}")
-                                }
-                                else
-                                {
-                                <span>Any</span>
-                                }
-                            </p>
-                            <p class="card-details-in">
-                                <span class="card-span">Age:</span>
-                                @if (selectedJob?.JobPost?.AgeFrom != 0 && selectedJob?.JobPost?.AgeTo != 0)
-                                {
-                                    @($"{selectedJob?.JobPost?.AgeFrom} to {selectedJob?.JobPost?.AgeTo}")
-                                }
-                                else
-                                {
-                                    <span>No required</span>
-                                }
-                            </p>
-                        </div>
                     </div>
-                    }
-                    else
-                    {
-                  
-                    }
-            </div>
+
+                    <div class="details-divider">
+                        <p class="card-details">Other Details</p>
+                        <p class="card-details-in">
+                            @if (selectedJob?.JobPost?.EducationalAttainment != null)
+                            {
+                                <span class="card-span">Must be: </span>
+                                @($"{selectedJob?.JobPost?.EducationalAttainment}")
+                            }
+                        </p>
+                        <p class="card-details-in">
+                            @if (selectedJob?.JobPost?.WorkExperience != null)
+                            {
+                                <span class="card-span">Work Experience: </span>
+                                @($"{selectedJob?.JobPost?.WorkExperience}")
+                            }
+                        </p>
+                        <p class="card-details-in">
+                            @if (selectedJob?.JobPost?.NumberOfVacancy > 0)
+                            {
+                                <span class="card-span">Number of vacancies: </span>
+                                @($"{selectedJob?.JobPost?.NumberOfVacancy}")
+                            }
+                        </p>
+                        <p class="card-details-in">
+                            <span class="card-span">Gender:</span>
+                            @if (selectedJob?.JobPost?.Gender != null)
+                            {
+                                @($"{selectedJob?.JobPost?.Gender}")
+                            }
+                            else
+                            {
+                                <span>Any</span>
+                            }
+                        </p>
+                        <p class="card-details-in">
+                            <span class="card-span">Age:</span>
+                            @if (selectedJob?.JobPost?.AgeFrom != 0 && selectedJob?.JobPost?.AgeTo != 0)
+                            {
+                                @($"{selectedJob?.JobPost?.AgeFrom} to {selectedJob?.JobPost?.AgeTo}")
+                            }
+                            else
+                            {
+                                <span>No required</span>
+                            }
+                        </p>
+                    </div>
+                </div>
+            }
         </div>
-    }
+    </div>
+}
+
 @code {
     private AccountAndInformationViewModel? profile;
     private bool isUserLoggedIn = false;
@@ -134,6 +180,9 @@
 
     private List<JobPostViewModel>? jobList;
     private JobPostViewModel? selectedJob;
+
+    private string searchTerm = string.Empty;
+    private string selectedFilter = "All"; // Default: show all
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -202,5 +251,4 @@
         }
         return "Unknown Establishment";
     }
-
 }

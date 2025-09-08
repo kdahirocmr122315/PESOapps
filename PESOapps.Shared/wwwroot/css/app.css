@@ -1326,6 +1326,18 @@ p.card-details-in .card-span {
     filter: brightness(0) saturate(100%) invert(21%) sepia(88%) saturate(389%) hue-rotate(98deg) brightness(100%) contrast(103%);
 }
 
+.modal-body th,
+.modal-body td {
+    padding: 3px;
+}
+
+
+.modal-body-print th,
+.modal-body-print td {
+    padding: 3px;
+}
+
+
 /* -------------- Job List ------------ */
 .text-muted {
     color: var(--muted) !important;

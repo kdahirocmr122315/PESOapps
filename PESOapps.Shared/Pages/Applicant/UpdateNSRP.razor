@@ -11,7 +11,7 @@
 
 @if (!isUserLoggedIn)
 {
-    <p>User not logged in.</p>
+ 
 }
 else if (applicant == null || !loaded)
 {
@@ -20,9 +20,407 @@ else if (applicant == null || !loaded)
 else
 {
     <div class="nsrp-container">
+        <!-- Modal -->
+        <div class="modal-overlay">
+            <div class="modal-container">
+                <div class="modal-body">
+                    <!-- Tabs -->
+                    <div class="tabs">
+                        <button class="tab-btn active" onclick="openTab(event, 'frontPage')">Front Page</button>
+                        <button class="tab-btn" onclick="openTab(event, 'backPage')">Back Page</button>
+                    </div>
+
+                    <!-- Front Page -->
+                    <div id="frontPage" class="tab-content active">
+                        <div style="overflow-y: auto; padding: 5px;">
+
+                            <p><strong>Reference#:</strong> @applicant.ApplicantInformation.JobFairReferenceCode</p>
+                            <!-- Header -->
+                            <table border="1" style="width:100%">
+                                <tr>
+                                    <td style="text-align:center; padding:5px;">
+                                        <p><b>NSRP Form 1</b></p>
+                                        <p><b>January 2017</b></p>
+                                    </td>
+                                    <td style="text-align:center; padding:5px;">
+                                        <p>Republic of the Philippines</p>
+                                        <p>Department of Labor and Employment</p>
+                                        <p><b>PESO EMPLOYMENT INFORMATION SYSTEM</b></p>
+                                        <p><b>REGISTRATION FORM</b></p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Personal Information -->
+                            <table border="1" style="width:100%; margin-top:5px;">
+                                <tr>
+                                    <td colspan="4"><b>I. PERSONAL INFORMATION</b></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">@applicant.ApplicantInformation.SurName</td>
+                                    <td class="text-center">@applicant.ApplicantInformation.FirstName</td>
+                                    <td class="text-center">@applicant.ApplicantInformation.MiddleName</td>
+                                    <td class="text-center">@applicant.ApplicantInformation.Suffix</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center"><b>SURNAME</b></td>
+                                    <td class="text-center"><b>FIRST NAME</b></td>
+                                    <td class="text-center"><b>MIDDLE NAME</b></td>
+                                    <td class="text-center"><b>SUFFIX</b> (Ex: Sr., Jr., III, etc)</td>
+                                </tr>
+                                <tr>
+                                    <td><b>DATE OF BIRTH (mm/dd/yyyy)</b></td>
+                                    <td>@applicant.ApplicantInformation.DateOfBirth</td>
+                                    <td><b>PLACE OF BIRTH</b></td>
+                                    <td>@applicant.ApplicantInformation.PlaceOfBirth</td>
+                                </tr>
+                                <tr>
+                                    <td><b>SEX</b></td>
+                                    <td>@applicant.ApplicantInformation.Gender</td>
+                                    <td colspan="2"><b>PRESENT ADDRESS</b></td>
+                                </tr>
+                                <tr>
+                                    <td><b>RELIGION</b></td>
+                                    <td>@applicant.ApplicantInformation.Religion</td>
+                                    <td>House No./Street Village</td>
+                                    <td>@applicant.ApplicantInformation.PresentHouseNoOrStreetVillage</td>
+                                </tr>
+                                <tr>
+                                    <td rowspan="3"><b>CIVIL STATUS</b></td>
+                                    <td rowspan="3">Married</td>
+                                    <td><small>Barangay</small></td>
+                                    <td>
+                                        <small>
+                                            @{
+                                                var barangayName = FilteredBarangaysPresent
+                                                .FirstOrDefault(b => b.brgyCode == applicant.ApplicantInformation.PresentBarangay)?.brgyDesc;
+
+                                                @barangayName
+                                            }
+                                        </small>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <td><small>Municipality</small></td>
+                                    <td>
+                                        <small>
+                                            @{
+                                                var cityName = FilteredCitiesPresent
+                                                .FirstOrDefault(c => c.citymunCode == applicant.ApplicantInformation.PresentMunicipalityCity)?.citymunDesc;
+
+                                                @cityName
+                                            }
+                                        </small>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><small>Province</small></td>
+                                    <td>
+                                        <small>
+                                            @{
+                                                var provinceName = FilteredProvincesPresent
+                                                .FirstOrDefault(p => p.provCode == applicant.ApplicantInformation.PresentProvince)?.provDesc;
+
+                                                @provinceName
+                                            }
+                                        </small>
+                                    </td>
+
+                                </tr>
+                                <tr>
+                                    <td><b>TIN</b></td>
+                                    <td>@applicant.ApplicantInformation.TIN</td>
+                                    <td><b>HEIGHT</b></td>
+                                    <td>@applicant.ApplicantInformation.Height</td>
+                                </tr>
+                                <tr>
+                                    <td><b>GSIS/SSS ID NO.</b></td>
+                                    <td>@applicant.ApplicantInformation.GSISORSSS</td>
+                                    <td><b>EMAIL ADDRESS</b></td>
+                                    <td>@applicant.ApplicantInformation.Email</td>
+                                </tr>
+                                <tr>
+                                    <td><b>PAG-IBIG NO.</b></td>
+                                    <td>@applicant.ApplicantInformation.PAGIBIG</td>
+                                    <td><b>LANDLINE NUMBER</b></td>
+                                    <td>@applicant.ApplicantInformation.LandlineNumber</td>
+                                </tr>
+                                <tr>
+                                    <td><b>PHILHEALTH NO.</b></td>
+                                    <td>@applicant.ApplicantInformation.PHILHEALTH</td>
+                                    <td><b>CELLPHONE NUMBER</b></td>
+                                    <td>@applicant.ApplicantInformation.CellphoneNumber</td>
+                                </tr>
+                                <tr>
+                                    <td><b>DISABILITY</b></td>
+                                    <td colspan="3"></td>
+                                </tr>
+                                <tr>
+                                    <td><b>EMPLOYMENT STATUS</b></td>
+                                    <td>@applicant.ApplicantInformation.EmpStatus</td>
+                                    <td><b>EMPLOYMENT TYPE</b></td>
+                                    <td>@applicant.ApplicantInformation.EmpStatusChild</td>
+                                </tr>
+                                <tr>
+                                    <td>Are you actively looking for work?</td>
+                                    <td>@applicant.ApplicantInformation.ActivelyLookingForWork</td>
+                                    <td>How long have you been looking for work?</td>
+                                    <td>@applicant.ApplicantInformation.HowLongLookingForWork</td>
+                                </tr>
+                                <tr>
+                                    <td>Willing to work immediately?</td>
+                                    <td>@applicant.ApplicantInformation.WillingToWorkNow</td>
+                                    <td>If no, When?</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td colspan="4">II. JOB PREFERENCE</td>
+                                </tr>
+                                <tr>
+                                    <td class="p-1"><b>PREFERRED OCCUPATION</b></td>
+                                    <td class="p-1" colspan="3"><b>PREFERRED WORK LOCATION</b></td>
+                                </tr>
+                                <tr>
+                                    <td class="p-1">
+                                        <ul>
+                                        @foreach (var jobPrefO in applicant.ApplicantJobPrefOccupation)
+                                        {
+               
+                                            <li>@jobPrefO.OccupationName</li>
+                              
+                                        }
+                                        </ul>
+                                    </td>
+                                    <td class="p-1" colspan="3">
+                                        <ul>
+                                        @foreach (var jobPrefW in applicant.ApplicantJobPrefWorkLocation)
+                                        {
+                                            <li>@jobPrefW.WorkLocationName (@jobPrefW.WorkLocationType)</li>
+                                        }
+                                        </ul>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="2"><b>Expected Salary (Range): </b>₱@applicant.ApplicantExpectedSalary.From - ₱@applicant.ApplicantExpectedSalary.To</td>
+                                    <td><b>Passport No.: </b>@applicant.ApplicantInformation.PassportNumber</td>
+                                    <td><b>Expiry Date: </b>@applicant.ApplicantInformation.PassportExpiryDate</td>
+                                </tr>
+                                <!-- Add the rest of your fields as needed... -->
+                            </table>
+
+                            <!-- Language / Dialect Proficiency -->
+                            <table border="1" style="width:100%; margin-top:5px;">
+                                <tr>
+                                    <td colspan="5"><b>III. LANGUAGE / DIALECT PROFICIENCY</b></td>
+                                </tr>
+                                <tr>
+                                    <td><b>LANGUAGE</b></td>
+                                    <td><b>READ</b></td>
+                                    <td><b>WRITE</b></td>
+                                    <td><b>SPEAK</b></td>
+                                    <td><b>UNDERSTAND</b></td>
+                                </tr>
+
+                                @foreach (var lang in applicant.ApplicantLanguageDialectProf)
+                                {
+                                    <tr>
+                                        <td>@lang.LanguageName</td>
+                                        <td>@(lang.Read == 1 ? "YES" : "NO")</td>
+                                        <td>@(lang.Write == 1 ? "YES" : "NO")</td>
+                                        <td>@(lang.Speak == 1 ? "YES" : "NO")</td>
+                                        <td>@(lang.Understand == 1 ? "YES" : "NO")</td>
+                                    </tr>
+                                }
+                            </table>
+
+                        </div>
+                    </div>
+
+                    <!-- Back Page -->
+                    <div id="backPage" class="tab-content">
+                        <div style="overflow-y: auto; padding: 5px;">
+                            <!-- Educational Background -->
+                            <table border="1" style="width:100%">
+                                <tr>
+                                    <td class="p-1" colspan="7"><b>IV. EDUCATIONAL BACKGROUND</b></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center" rowspan="2"><b>LEVEL</b></td>
+                                    <td class="text-center" rowspan="2"><b>SCHOOL</b></td>
+                                    <td class="text-center" rowspan="2"><b>COURSE</b></td>
+                                    <td class="text-center" rowspan="2"><b>YEAR GRAD.</b></td>
+                                    <td class="text-center" colspan="2"><b>If undergraduate</b></td>
+                                    <td class="text-center" rowspan="2"><b>AWARDS RECEIVED.</b></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-center">what level?</td>
+                                    <td class="text-center">year last attended</td>
+                                </tr>
+                                @foreach (var EduBack in applicant.ApplicantEducationalBackground)
+                                {
+                                <tr>
+                                    <td class="text-center">@EduBack.LevelName</td>
+                                    <td class="text-center">@EduBack.School</td>
+                                    <td class="text-center">@EduBack.Course</td>
+                                    <td class="text-center">@EduBack.YearGraduated</td>
+                                    <td class="text-center">@EduBack.UndergradLevel</td>
+                                    <td class="text-center">@EduBack.YearLastAttended</td>
+                                    <td class="text-center">@EduBack.AwardsReceived</td>
+                                </tr>
+                                }
+                            </table>
+
+                            <!-- Technical/Vocational -->
+                            <table border="1" style="width:100%; margin-top:5px;">
+                                <tr>
+                                    <td class="p-1" colspan="7">
+                                        <b>V. TECHNICAL/VOCATIONAL AND OTHER TRAINING</b> <small>(Include courses takens as part of college education)</small>
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td class="text-center" colspan="2"><b>TRAINING/VOCATIONAL COURSE</b></td>
+                                    <td class="text-center">
+                                        <p><b>Duration</b></p>
+                                        <small>(mm/dd/yyyy to mm/dd/yyyy)</small>
+                                    </td>
+                                    <td class="text-center"><b>Training Institution</b></td>
+                                    <td class="text-center">
+                                        <p><b>Certificates Received</b></p>
+                                        <small>(NC I, NC II, NC IV, etc)</small>
+                                    </td>
+                                </tr>
+                                @{
+                                    var count = 1;
+                                    var counts = 1;
+                                    var countss = 1;
+                                }
+                                @foreach (var Voca in applicant.ApplicantTechnicalVocational)
+                                {
+                                    <tr>
+                                        <td class="text-center" style="width:1%"><b>@count.</b></td>
+                                        <td class="text-center">@Voca.CourseName</td>
+                                        <td class="text-center">@Voca.DurationFrom?.ToString("MM/dd/yyyy") to @Voca.DurationTo?.ToString("MM/dd/yyyy")</td>
+                                        <td class="text-center">@Voca.TrainingInstitution</td>
+                                        <td class="text-center">@Voca.CertifcateReceived</td>
+                                    </tr>
+                                    count++;
+                                }
+
+                            </table>
+
+                            <!-- Eligibility -->
+                            <table border="1" style="width:100%; margin-top:5px;">
+                                
+                                <tr><td class="border border-dark" colspan="2"><b>VI. ELIGIBILITY/PROFESSIONAL LICENSE</b></td></tr>
+                                <tr>
+                                    <td>
+                                        <table style="width:100%">
+                                        @foreach (var Eli in applicant.ApplicantEligibility)
+                                        {
+                                            
+                                            <tr>
+                                                <td class="text-center" colspan="2"><b>ELIGIBILITY (Civil Service)</b></td>
+                                                <td class="text-center"><b>Rating</b></td>
+                                                <td class="text-center"><b>Date of examination</b></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-center" style="width:1%">@counts.</td>
+                                                    <td class="text-center">@Eli.EligibilityName</td>
+                                                    <td class="text-center">@Eli.Rating%</td>
+                                                    <td class="text-center">@Eli.DateOfExamination?.ToString("MMM dd, yyyy")</td>
+                                            </tr>
+                                                counts++;
+                                        }
+                                        </table>
+                                    </td>
+                                    <td>
+                                        <table style="width:100%">
+                                            @foreach (var Prc in applicant.ApplicantProfessionalLicense)
+                                        {
+                                            
+                                            <tr>
+                                                <td class="text-center" colspan="2"><b>PROFESSIONAL LICENSE (PRC)</b></td>
+                                                <td class="text-center"><b>Valid Until</b></td>
+                                            </tr>
+                                            <tr>
+                                                <td class="text-center" style="width:1%">@countss.</td>
+                                                    <td class="text-center">@Prc.ProfName</td>
+                                                    <td class="text-center">@Prc.Validity?.ToString("MMM dd, yyyy")</td>
+                                            </tr>
+                                                countss++;
+                                        }
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Work Experience -->
+                            <table border="1" style="width:100%; margin-top:5px;">
+                                <tr>
+                                    <td colspan="5"><b>VII. WORK EXPERIENCE</b> (Limit to 10 year period, start with the most recent employment)</td>
+                                </tr>
+                                <tr>
+                                    <td><b>Company Name</b></td>
+                                    <td>
+                                        <p><b>Address</b></p>
+                                        <small>(City/Municipality)</small>
+                                    </td>
+                                    <td><b>Position</b></td>
+                                    <td>
+                                        <p><b>Date</b></p>
+                                        <small>(mm/yyyy to mm/yyyy)</small>
+                                    </td>
+                                    <td>
+                                        <p><b>Status</b></p>
+                                        <small>(Permanent, Contractual, Part-time, Probationary)</small>
+                                    </td>
+                                </tr>
+                                @foreach (var Workep in applicant.ApplicantWorkExperience)
+                                {
+                                    <tr>
+                                        <td>@Workep.CompanyName</td>
+                                        <td>@Workep.CompanyAddress</td>
+                                        <td>@Workep.Position</td>
+                                        <td>@Workep.InclusiveDateFrom?.ToString("MM/yyyy") to @Workep.InclusiveDateTo?.ToString("MM/yyyy")</td>
+                                        <td>@Workep.Status</td>
+                                    </tr>
+                                }
+                            </table>
+
+                            <!-- Other Skills -->
+                            <table border="1" style="width:100%; margin-top:5px;">
+                                <tr>
+                                    <td class="p-1"><b>VIII. OTHER SKILLS ACQUIRED WITHOUT FORMAL TRAINING</b></td>
+                                </tr>    
+                                <tr>
+                                    <td class="p-1">
+                                        <ul>
+                                            @foreach (var Oth in applicant.ApplicantOtherSkills)
+                                            {
+                                                <li>@Oth.SkillName</li>
+                                            }
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="nsrp-toggle" onclick="printForm()">Print</button>
+                    <button class="nsrp-toggle" onclick="closeNSRP()">Close</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- END Modal -->
+
         <div class="nsrp-header">
-            <h2>Update NSRP</h2>
-            <button type="button" class="nsrp-toggle" @onclick="ToggleEdit">
+            <button class="nsrp-toggle" onclick="openNSRP()">View NSRP Form</button>
+            <button class="nsrp-toggle" @onclick="ToggleEdit">
                 @(isEditing ? "Disable Update" : "Enable Update")
             </button>
         </div>
@@ -45,19 +443,37 @@ else
                 <li>
                     <button type="button" class="@(activeTab == "language" ? "nsrp-tab active" : "nsrp-tab")"
                             @onclick="@(() => ChangeTab("language"))">
-                        Language
+                        Language or Dialect Proficiency
                     </button>
                 </li>
                 <li>
                     <button type="button" class="@(activeTab == "education" ? "nsrp-tab active" : "nsrp-tab")"
                             @onclick="@(() => ChangeTab("education"))">
-                        Education
+                        Education Background
                     </button>
                 </li>
                 <li>
                     <button type="button" class="@(activeTab == "technical" ? "nsrp-tab active" : "nsrp-tab")"
                             @onclick="@(() => ChangeTab("technical"))">
-                        Technical/Vocational
+                        Technical/Vocational and Other Training
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="@(activeTab == "eligibility" ? "nsrp-tab active" : "nsrp-tab")"
+                            @onclick="@(() => ChangeTab("eligibility"))">
+                        Eligibility or Professional License
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="@(activeTab == "Work" ? "nsrp-tab active" : "nsrp-tab")"
+                            @onclick="@(() => ChangeTab("Work"))">
+                        Work Experience
+                    </button>
+                </li>
+                <li>
+                    <button type="button" class="@(activeTab == "Other" ? "nsrp-tab active" : "nsrp-tab")"
+                            @onclick="@(() => ChangeTab("Other"))">
+                        Other Skills Acquired
                     </button>
                 </li>
             </ul>
@@ -71,7 +487,23 @@ else
                         <div class="nsrp-grid">
                             <div>
                                 <label>Email</label>
-                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.Email" disabled="@(!isEditing)" />
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.Email" disabled />
+                            </div>
+                            <div>
+                                <label>Password</label>
+                                <div style="display:flex; align-items:center; gap:8px; position:relative;">
+                                    <input type="@passwordInputType"
+                                           class="nsrp-input"
+                                           @bind="applicant.ApplicantAccount.Password"
+                                           disabled="@(!isEditing)" />
+
+                                    <button style="height: 34px;" type="button"
+                                            class="showpass"
+                                            @onclick="TogglePassword"
+                                            disabled="@(!isEditing)">
+                                        @(showPassword ? "🙈" : "👁")
+                                    </button>
+                                </div>
                             </div>
                             <div>
                                 <label>First Name</label>
@@ -102,7 +534,7 @@ else
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.Religion" disabled="@(!isEditing)" />
                             </div>
                             <div>
-                                <label>Birthday</label>
+                                <label>Date of Birth</label>
                                 <input type="date" class="nsrp-input" @bind="DateOfBirthValue" @bind:format="yyyy-MM-dd" disabled="@(!isEditing)" />
                             </div>
                             <div>
@@ -216,8 +648,7 @@ else
                             </div>
                         </div>
 
-                        <h4>Permanent Address</h4>
-
+                        <h4>Other Information</h4>
                         <div class="nsrp-grid">
                             <!-- ===== Other Info ===== -->
                             <div class="form-group">
@@ -235,15 +666,25 @@ else
                                     <option value="Employed">Employed</option>
                                     <option value="Unemployed">Unemployed</option>
                                 </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label></label>
 
                                 <select class="nsrp-input"
                                         @bind="applicant.ApplicantInformation.EmpStatusChild"
                                         disabled="@(!isEditing)">
                                     <option value="Wage Employed">Wage Employed</option>
                                     <option value="Self Employed">Self Employed</option>
+                                    <option value="New Entrant / Fresh Graduate">New Entrant / Fresh Graduate</option>
+                                    <option value="Finished Contract">Finished Contract</option>
+                                    <option value="Resigned">Resigned</option>
+                                    <option value="Retired">Retired</option>
+                                    <option value="Terminated / Laidoff(local)">Terminated / Laidoff(local)</option>
+                                    <option value="Terminated / Laidoff(abroad)">Terminated / Laidoff(abroad)</option>
+                                    <option value="Others">Others</option>
                                 </select>
                             </div>
-
                             <div class="form-group">
                                 <label>Height</label>
                                 <input class="nsrp-input"
@@ -266,7 +707,28 @@ else
                                        @bind="applicant.ApplicantInformation.LandlineNumber"
                                        disabled="@(!isEditing)" />
                             </div>
+                            <div class="form-group">
+                                <label>Are you actively looking for work?</label>
+                                <select class="nsrp-input"
+                                        @bind="applicant.ApplicantInformation.ActivelyLookingForWork"
+                                        disabled="@(!isEditing)">
+                                    <option value="1">Yes</option>
+                                    <option value="0">No</option>
+                                </select>
+                            </div>
 
+                            <div class="form-group">
+                                <label>Willing to work immediately?</label>
+                                <select class="nsrp-input"
+                                        @bind="applicant.ApplicantInformation.WillingToWorkNow"
+                                        disabled="@(!isEditing)">
+                                    <option value="Yes">Yes</option>
+                                    <option value="No">No</option>
+                                </select>
+                            </div>
+                        </div>
+                        <h4>Government Mandate</h4>
+                        <div class="nsrp-grid">
                             <div class="form-group">
                                 <label>TIN</label>
                                 <input class="nsrp-input"
@@ -294,26 +756,6 @@ else
                                        @bind="applicant.ApplicantInformation.PAGIBIG"
                                        disabled="@(!isEditing)" />
                             </div>
-
-                            <div class="form-group">
-                                <label>Are you actively looking for work?</label>
-                                <select class="nsrp-input"
-                                        @bind="applicant.ApplicantInformation.ActivelyLookingForWork"
-                                        disabled="@(!isEditing)">
-                                    <option value="1">Yes</option>
-                                    <option value="0">No</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label>Willing to work immediately?</label>
-                                <select class="nsrp-input"
-                                        @bind="applicant.ApplicantInformation.WillingToWorkNow"
-                                        disabled="@(!isEditing)">
-                                    <option value="Yes">Yes</option>
-                                    <option value="No">No</option>
-                                </select>
-                            </div>
                         </div>
 
                     </div>
@@ -322,86 +764,537 @@ else
                 {
                     <div class="nsrp-section">
                         <h4>Job Preferences</h4>
-
-                        <!-- ===== Occupations ===== -->
-                        <div class="nsrp-subsection">
-                            <h5>Preferred Occupations</h5>
-                            <div class="nsrp-input-group">
-                                <input class="nsrp-input" placeholder="Enter occupation"
-                                       @bind="newOccupationName" disabled="@(!isEditing)" />
+                        <div class="nsrp-insection">
+                            <!-- ===== Occupations ===== -->
+                            <div class="nsrp-subsection">
+                                <h5>Preferred Occupations</h5>
+                                <div class="nsrp-input-group">
+                                    <input class="nsrp-input" placeholder="Enter occupation"
+                                           @bind="newOccupationName" disabled="@(!isEditing)" />
+                                </div>
                                 <button type="button" class="nsrp-btn" @onclick="AddOccupation" disabled="@(!isEditing)">
                                     Add
                                 </button>
+                                <table class="nsrp-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Occupation</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var occ in applicant.ApplicantJobPrefOccupation.Where(o => o.IsRemoved == 0))
+                                        {
+                                            <tr>
+                                                <td>@occ.Id</td>
+                                                <td>@occ.OccupationName</td>
+                                                <td class="text-end">
+                                                    <button type="button" class="nsrp-btn-remove"
+                                                            @onclick="@(() => RemoveOccupation(occ))"
+                                                            disabled="@(!isEditing)">
+                                                        Remove
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
 
-                            <ul class="nsrp-list">
-                                @foreach (var occ in applicant.ApplicantJobPrefOccupation.Where(o => o.IsRemoved == 0))
-                                {
-                                    <li class="nsrp-list-item">
-                                        <span>@occ.OccupationName</span>
-                                        <button type="button" class="nsrp-btn-remove"
-                                                @onclick="@(() => RemoveOccupation(occ))"
-                                                disabled="@(!isEditing)">
-                                            Remove
-                                        </button>
-                                    </li>
-                                }
-                            </ul>
-                        </div>
-
-                        <!-- ===== Work Locations ===== -->
-                        <div class="nsrp-subsection">
-                            <h5>Preferred Work Locations</h5>
-                            <div class="nsrp-input-group">
-                                <input class="nsrp-input" placeholder="Enter location"
-                                       @bind="newWorkLocationName" disabled="@(!isEditing)" />
-                                <select class="nsrp-select" @bind="newWorkLocationType" disabled="@(!isEditing)">
-                                    <option value="Local">Local</option>
-                                    <option value="Abroad">Abroad</option>
-                                </select>
+                            <!-- ===== Work Locations ===== -->
+                            <div class="nsrp-subsection">
+                                <h5>Preferred Work Locations</h5>
+                                <div class="nsrp-input-group">
+                                    <input class="nsrp-input" placeholder="Enter location"
+                                           @bind="newWorkLocationName" disabled="@(!isEditing)" />
+                                    <select class="nsrp-select nsrp-input" @bind="newWorkLocationType" disabled="@(!isEditing)">
+                                        <option value="Local">Local</option>
+                                        <option value="Abroad">Abroad</option>
+                                    </select>
+                                </div>
                                 <button type="button" class="nsrp-btn" @onclick="AddWorkLocation" disabled="@(!isEditing)">
                                     Add
                                 </button>
+                                <table class="nsrp-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Location</th>
+                                            <th>Type</th>
+                                            <th class="text-end">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var loc in applicant.ApplicantJobPrefWorkLocation.Where(l => l.IsRemoved == 0))
+                                        {
+                                            <tr>
+                                                <td>@loc.WorkLocationName</td>
+                                                <td>@loc.WorkLocationType</td>
+                                                <td class="text-end">
+                                                    <button type="button" class="nsrp-btn-remove"
+                                                            @onclick="@(() => RemoveWorkLocation(loc))"
+                                                            disabled="@(!isEditing)">
+                                                        Remove
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
                             </div>
-
-                            <ul class="nsrp-list">
-                                @foreach (var loc in applicant.ApplicantJobPrefWorkLocation.Where(l => l.IsRemoved == 0))
-                                {
-                                    <li class="nsrp-list-item">
-                                        <span>@loc.WorkLocationName (@loc.WorkLocationType)</span>
-                                        <button type="button" class="nsrp-btn-remove"
-                                                @onclick="@(() => RemoveWorkLocation(loc))"
-                                                disabled="@(!isEditing)">
-                                            Remove
-                                        </button>
-                                    </li>
-                                }
-                            </ul>
+                        </div>
+                        <h4>Passport Details</h4>
+                        <div class="nsrp-grid">
+                            <div>
+                                <label>Passport Number</label>
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.PassportNumber" disabled="@(!isEditing)" />
+                            </div>
+                            <div>
+                                <label>Passport Expiry Date</label>
+                                <input type="date" class="nsrp-input" @bind="PassportExpiry" @bind:format="yyyy-MM-dd" disabled="@(!isEditing)" />
+                            </div>
+                        </div>
+                        <h4>Expected Salary (Range)</h4>
+                        <div class="nsrp-grid">
+                            <div>
+                                <label>Amount From</label>
+                                <div class="nsrp-phone">
+                                    <span class="nsrp-phone-prefix">₱</span>
+                                    <input class="nsrp-input sal" @bind="applicant.ApplicantExpectedSalary.From" disabled="@(!isEditing)" />
+                                </div>
+                                </div>
+                            <div>
+                                <label>Amount To</label>
+                                <div class="nsrp-phone">
+                                    <span class="nsrp-phone-prefix">₱</span>
+                                    <input class="nsrp-input sal" @bind="applicant.ApplicantExpectedSalary.To" disabled="@(!isEditing)" />
+                                </div>
+                            </div>
                         </div>
                     </div>
+
 
                 }
                 else if (activeTab == "language")
                 {
                     <div class="nsrp-section">
                         <h4>Language Proficiency</h4>
-                        <p>TODO: Map ApplicantLanguage model here</p>
+
+                        <!-- Add New Language -->
+                        <div class="nsrp-input-group">
+                            <input class="nsrp-input" placeholder="Enter language"
+                                   @bind="newLanguageName" disabled="@(!isEditing)" />
+
+                            <label><input type="checkbox" @bind="newRead" disabled="@(!isEditing)" /> Read</label>
+                            <label><input type="checkbox" @bind="newWrite" disabled="@(!isEditing)" /> Write</label>
+                            <label><input type="checkbox" @bind="newSpeak" disabled="@(!isEditing)" /> Speak</label>
+                            <label><input type="checkbox" @bind="newUnderstand" disabled="@(!isEditing)" /> Understand</label>
+
+                            <button type="button" class="nsrp-btn"
+                                    @onclick="AddLanguage" disabled="@(!isEditing)">
+                                Add
+                            </button>
+                        </div>
+
+                        <!-- Language Table -->
+                        <table class="nsrp-table">
+                            <thead>
+                                <tr>
+                                    <th>Language</th>
+                                    <th>Read</th>
+                                    <th>Write</th>
+                                    <th>Speak</th>
+                                    <th>Understand</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var lang in applicant.ApplicantLanguageDialectProf)
+                                {
+                                    <tr>
+                                        <td>@lang.LanguageName</td>
+                                        <td><input type="checkbox" checked="@(@lang.Read == 1)" disabled /></td>
+                                        <td><input type="checkbox" checked="@(@lang.Write == 1)" disabled /></td>
+                                        <td><input type="checkbox" checked="@(@lang.Speak == 1)" disabled /></td>
+                                        <td><input type="checkbox" checked="@(@lang.Understand == 1)" disabled /></td>
+                                        <td class="text-end">
+                                            <button type="button" class="nsrp-btn-remove"
+                                                    @onclick="@(() => RemoveLanguage(lang))"
+                                                    disabled="@(!isEditing)">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 }
                 else if (activeTab == "education")
                 {
                     <div class="nsrp-section">
                         <h4>Educational Background</h4>
-                        <p>TODO: Map ApplicantEducation model here</p>
+
+                        <!-- Add New Education -->
+                        <div class="nsrp-input-group">
+                            <select class="nsrp-input" @bind="newLevelName" disabled="@(!isEditing)">
+                                <option value="">-- Select Level --</option>
+                                <option>Elementary</option>
+                                <option>Secondary</option>
+                                <option>Tertiary</option>
+                                <option>Graduate Studies</option>
+                                <option>Others</option>
+                            </select>
+
+                            <input class="nsrp-input" placeholder="School"
+                                   @bind="newSchool" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" placeholder="Course (if any)"
+                                   @bind="newCourse" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" type="number" placeholder="Year Graduated"
+                                   @bind="newYearGraduated" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" placeholder="Awards Received"
+                                   @bind="newAwards" disabled="@(!isEditing)" />
+
+                            <button type="button" class="nsrp-btn"
+                                    @onclick="AddEducation" disabled="@(!isEditing)">
+                                Add
+                            </button>
+                        </div>
+
+                        <!-- Education Table -->
+                        <table class="nsrp-table">
+                            <thead>
+                                <tr>
+                                    <th>Level</th>
+                                    <th>School</th>
+                                    <th>Course</th>
+                                    <th>Year Graduated</th>
+                                    <th>Awards</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var edu in applicant.ApplicantEducationalBackground
+                                                        .OrderBy(e => levelOrder.IndexOf(e.LevelName ?? "Others")))
+                                {
+                                    <tr>
+                                        <td>@edu.LevelName</td>
+                                        <td>@edu.School</td>
+                                        <td>@edu.Course</td>
+                                        <td>@edu.YearGraduated</td>
+                                        <td>@edu.AwardsReceived</td>
+                                        <td class="text-end">
+                                            <button type="button" class="nsrp-btn-remove"
+                                                    @onclick="@(() => RemoveEducation(edu))"
+                                                    disabled="@(!isEditing)">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
                     </div>
                 }
                 else if (activeTab == "technical")
                 {
                     <div class="nsrp-section">
                         <h4>Technical / Vocational</h4>
-                        <p>TODO: Map ApplicantTechVoc model here</p>
+
+                        <!-- Add New Technical/Vocational Training -->
+                        <div class="nsrp-input-group">
+                            <input class="nsrp-input" placeholder="Course Name"
+                                   @bind="newCourseName" disabled="@(!isEditing)"/>
+
+                            <input class="nsrp-input" type="date"
+                                   @bind="newDurationFrom" disabled="@(!isEditing)"/>
+
+                            <input class="nsrp-input" type="date"
+                                   @bind="newDurationTo" disabled="@(!isEditing)"/>
+
+                            <input class="nsrp-input" placeholder="Training Institution"
+                                   @bind="newInstitution" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" placeholder="Certificate Received"
+                                   @bind="newCertificate" disabled="@(!isEditing)"/>
+
+                            <button type="button" class="nsrp-btn"
+                                    @onclick="AddTechnical" disabled="@(!isEditing)">
+                                Add
+                            </button>
+                        </div>
+
+                        <!-- Technical / Vocational Table -->
+                        <table class="nsrp-table">
+                            <thead>
+                                <tr>
+                                    <th>Course Name</th>
+                                    <th>Duration (From - To)</th>
+                                    <th>Training Institution</th>
+                                    <th>Certificate Received</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var tech in applicant.ApplicantTechnicalVocational)
+                                {
+                                    <tr>
+                                        <td>@tech.CourseName</td>
+                                            <td>
+                                                @{
+                                                    var fromStr = tech.DurationFrom?.ToString("yyyy-MM-dd") ?? "";
+                                                    var toStr = tech.DurationTo?.ToString("yyyy-MM-dd") ?? "";
+                                                }
+                                                @(fromStr) - @(toStr)
+                                            </td>
+                                        <td>@tech.TrainingInstitution</td>
+                                        <td>@tech.CertifcateReceived</td>
+                                        <td class="text-end">
+                                        <button type="button" class="nsrp-btn-remove"
+                                                @onclick="@(() => RemoveTechnical(tech))"
+                                                disabled="@(!isEditing)">
+                                            Remove
+                                        </button>
+                                        </td>
+                                    </tr>
+                            }
+                            </tbody>
+                        </table>
                     </div>
                 }
+                else if (activeTab == "eligibility")
+                {
+                    <div class="nsrp-section">
+                        <h4>Eligibility</h4>
+
+                        <!-- Add New Eligibility -->
+                        <div class="nsrp-input-group">
+                            <input class="nsrp-input" placeholder="Eligibility Name"
+                                   @bind="newEligibilityName" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" type="number" placeholder="Rating"
+                                   @bind="newEligibilityRating" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" type="date"
+                                   @bind="newEligibilityDateExam" disabled="@(!isEditing)" />
+
+                            <button type="button" class="nsrp-btn"
+                                    @onclick="AddEligibility" disabled="@(!isEditing)">
+                                Add
+                            </button>
+                        </div>
+
+                        <table class="nsrp-table">
+                            <thead>
+                                <tr>
+                                    <th>Eligibility Name</th>
+                                    <th>Rating</th>
+                                    <th>Date of Examination</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var e in applicant.ApplicantEligibility)
+                                {
+                                    <tr>
+                                        <td>@e.EligibilityName</td>
+                                        <td>@e.Rating%</td>
+                                        <td>@e.DateOfExamination?.ToString("yyyy-MM-dd")</td>
+                                        <td class="text-end">
+                                            <button type="button" class="nsrp-btn-remove"
+                                                    @onclick="@(() => RemoveEligibility(e))"
+                                                    disabled="@(!isEditing)">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+
+                        <h4>Professional License</h4>
+
+                        <!-- Add New Professional License -->
+                        <div class="nsrp-input-group">
+                            <input class="nsrp-input" placeholder="License Name"
+                                   @bind="newProfName" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" type="date"
+                                   @bind="newProfValidity" disabled="@(!isEditing)" />
+
+                            <button type="button" class="nsrp-btn"
+                                    @onclick="AddProfessionalLicense" disabled="@(!isEditing)">
+                                Add
+                            </button>
+                        </div>
+
+                        <table class="nsrp-table">
+                            <thead>
+                                <tr>
+                                    <th>License Name</th>
+                                    <th>Validity</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var p in applicant.ApplicantProfessionalLicense)
+                                {
+                                    <tr>
+                                        <td>@p.ProfName</td>
+                                        <td>@p.Validity?.ToString("yyyy-MM-dd")</td>
+                                        <td class="text-end">
+                                            <button type="button" class="nsrp-btn-remove"
+                                                    @onclick="@(() => RemoveProfessionalLicense(p))"
+                                                    disabled="@(!isEditing)">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else if (activeTab == "Work")
+                {
+                    <div class="nsrp-section">
+                        <h4>Work Experience</h4>
+
+                        <!-- Add New Work Experience -->
+                        <div class="nsrp-input-group">
+                            <input class="nsrp-input" placeholder="Company Name"
+                                   @bind="newCompanyName" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" placeholder="Company Address"
+                                   @bind="newCompanyAddress" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" placeholder="Position"
+                                   @bind="newPosition" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" type="date"
+                                   @bind="newInclusiveDateFrom" disabled="@(!isEditing)" />
+
+                            <input class="nsrp-input" type="date"
+                                   @bind="newInclusiveDateTo" disabled="@(!isEditing)" />
+
+                            <select class="nsrp-input" @bind="newStatus" disabled="@(!isEditing)">
+                                <option value="Permanent">Permanent</option>
+                                <option value="Contractual">Contractual</option>
+                                <option value="Probationary">Probationary</option>
+                                <option value="Part-Time">Part-Time</option>
+                                <option value="Others">Others</option>
+                            </select>
+
+                            <button type="button" class="nsrp-btn"
+                                    @onclick="AddWorkExperience" disabled="@(!isEditing)">
+                                Add
+                            </button>
+                        </div>
+
+                        <!-- Work Experience Table -->
+                        <table class="nsrp-table">
+                            <thead>
+                                <tr>
+                                    <th>Company Name</th>
+                                    <th>Address</th>
+                                    <th>Position</th>
+                                    <th>Inclusive Dates</th>
+                                    <th>Status</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var work in applicant.ApplicantWorkExperience)
+                                {
+                                    <tr>
+                                        <td>@work.CompanyName</td>
+                                        <td>@work.CompanyAddress</td>
+                                        <td>@work.Position</td>
+                                        <td>
+                                            @work.InclusiveDateFrom?.ToString("yyyy-MM-dd")
+                                            -
+                                            @work.InclusiveDateTo?.ToString("yyyy-MM-dd")
+                                        </td>
+                                        <td>@work.Status</td>
+                                        <td class="text-end">
+                                            <button type="button" class="nsrp-btn-remove"
+                                                    @onclick="@(() => RemoveWorkExperience(work))"
+                                                    disabled="@(!isEditing)">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
+                else if (activeTab == "Other")
+                {
+                    <div class="nsrp-section">
+                        <h4>Other Skills</h4>
+
+                        <!-- Add New Skill -->
+                        <div class="nsrp-input-group">
+                            <input class="nsrp-input" placeholder="Enter skill"
+                                   @bind="newSkillName" list="skillOptions" disabled="@(!isEditing)" />
+
+                            <datalist id="skillOptions">
+                                <option value="Driving" />
+                                <option value="Cooking" />
+                                <option value="Baking" />
+                                <option value="Carpentry" />
+                                <option value="Masonry" />
+                                <option value="Plumbing" />
+                                <option value="Electrician" />
+                                <option value="Sewing / Tailoring" />
+                                <option value="Beautician" />
+                                <option value="Hairdressing / Barber" />
+                                <option value="Painting / Artist" />
+                                <option value="Embroidery" />
+                                <option value="Computer Repair / IT Support" />
+                                <option value="Gardening / Landscaping" />
+                                <option value="Welding" />
+                                <option value="Housekeeping" />
+                            </datalist>
+
+                            <button type="button" class="nsrp-btn"
+                                    @onclick="AddOtherSkill" disabled="@(!isEditing)">
+                                Add
+                            </button>
+                        </div>
+
+                        <!-- Other Skills Table -->
+                        <table class="nsrp-table">
+                            <thead>
+                                <tr>
+                                    <th>Skill Name</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var skill in applicant.ApplicantOtherSkills)
+                                {
+                                    <tr>
+                                        <td>@skill.SkillName</td>
+                                        <td class="text-end">
+                                            <button type="button" class="nsrp-btn-remove"
+                                                    @onclick="@(() => RemoveOtherSkill(skill))"
+                                                    disabled="@(!isEditing)">
+                                                Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+
             </div>
 
             <div class="nsrp-footer">
@@ -448,16 +1341,18 @@ else
     {
         try
         {
-            var response = await Http.PutAsJsonAsync("api/applicants/update", applicant);
+            var url = $"http://localhost:5167/api/Applicant/SaveApplicantData/true/{applicant.ApplicantInformation.AccountId}";
+            var response = await Http.PostAsJsonAsync(url, applicant);
 
             if (response.IsSuccessStatusCode)
             {
                 await JS.InvokeVoidAsync("alert", "Applicant updated successfully!");
-                Navigation.NavigateTo("/Applicants");
+                Navigation.NavigateTo("/pesobeta/UpdateNSRP/dash");
             }
             else
             {
-                await JS.InvokeVoidAsync("alert", "Failed to update applicant.");
+                var errorMsg = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Failed to update applicant. {errorMsg}");
             }
         }
         catch (Exception ex)
@@ -466,7 +1361,9 @@ else
         }
     }
 
+
     private void ToggleEdit() => isEditing = !isEditing;
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -527,6 +1424,33 @@ else
         }
     }
 
+    // Fix for CS1503: Argument 1: cannot convert from 'long?' to 'long'
+    // Update the PassportExpiry property to handle long? correctly
+
+    private DateTime? PassportExpiry
+    {
+        get
+        {
+            // Use GetValueOrDefault to ensure a long value is passed
+            if (applicant.ApplicantInformation.PassportExpiryDate == null || applicant.ApplicantInformation.PassportExpiryDate == 0)
+                return null;
+
+            return DateTimeOffset.FromUnixTimeMilliseconds(applicant.ApplicantInformation.PassportExpiryDate.GetValueOrDefault()).DateTime;
+        }
+        set
+        {
+            if (value.HasValue)
+            {
+                applicant.ApplicantInformation.PassportExpiryDate =
+                    new DateTimeOffset(value.Value).ToUnixTimeMilliseconds();
+            }
+            else
+            {
+                applicant.ApplicantInformation.PassportExpiryDate = 0;
+            }
+        }
+    }
+    // ********************************************************************** Add Occupation **********************************************************************
     private string newOccupationName = string.Empty;
     private string newWorkLocationName = string.Empty;
     private string newWorkLocationType = "Local";
@@ -538,6 +1462,7 @@ else
             applicant.ApplicantJobPrefOccupation.Add(new ApplicantJobPrefOccupation
             {
                 Id = Guid.NewGuid().ToString(),
+                AccountId = applicant.ApplicantInformation.AccountId,
                 OccupationName = newOccupationName,
                 IsRemoved = 0
             });
@@ -557,6 +1482,7 @@ else
             applicant.ApplicantJobPrefWorkLocation.Add(new ApplicantJobPrefWorkLocation
             {
                 Id = Guid.NewGuid().ToString(),
+                AccountId = applicant.ApplicantInformation.AccountId,
                 WorkLocationName = newWorkLocationName,
                 WorkLocationType = newWorkLocationType,
                 IsRemoved = 0
@@ -576,4 +1502,284 @@ else
     {
         activeTab = tab;
     }
+
+    // ********************************************************************** Add Language **********************************************************************
+    private string newLanguageName = string.Empty;
+    private bool newRead, newWrite, newSpeak, newUnderstand;
+
+    private void AddLanguage()
+    {
+        if (!string.IsNullOrWhiteSpace(newLanguageName))
+        {
+            applicant.ApplicantLanguageDialectProf.Add(new ApplicantLanguageDialectProf
+            {
+                Id = Guid.NewGuid().ToString(), // Fix: convert Guid to string
+                AccountId = applicant.ApplicantInformation.AccountId, // Fix: get AccountId from ApplicantInformation
+                LanguageName = newLanguageName,
+                Read = newRead ? 1 : 0,
+                Write = newWrite ? 1 : 0,
+                Speak = newSpeak ? 1 : 0,
+                Understand = newUnderstand ? 1 : 0,
+                DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+
+            // reset inputs
+            newLanguageName = string.Empty;
+            newRead = newWrite = newSpeak = newUnderstand = false;
+        }
+    }
+
+    private void RemoveLanguage(ApplicantLanguageDialectProf lang)
+    {
+        applicant.ApplicantLanguageDialectProf.Remove(lang);
+    }
+
+    // ********************************************************************** Add Educational Background **********************************************************************
+    private string newLevelName = string.Empty;
+    private string newSchool = string.Empty;
+    private string? newCourse = string.Empty;
+    private int? newYearGraduated;
+    private string? newAwards = string.Empty;
+
+    // Fixed order of levels
+    private readonly List<string> levelOrder = new()
+    {
+        "Elementary",
+        "Secondary",
+        "Tertiary",
+        "Graduate Studies",
+        "Others"
+    };
+
+    private void AddEducation()
+    {
+        if (!string.IsNullOrWhiteSpace(newLevelName) && !string.IsNullOrWhiteSpace(newSchool))
+        {
+            applicant.ApplicantEducationalBackground.Add(new ApplicantEducationalBackground
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccountId = applicant.ApplicantInformation.AccountId,
+                LevelName = newLevelName,
+                School = newSchool,
+                Course = string.IsNullOrWhiteSpace(newCourse) ? null : newCourse,
+                YearGraduated = newYearGraduated,
+                AwardsReceived = string.IsNullOrWhiteSpace(newAwards) ? null : newAwards,
+                DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+
+            // reset inputs
+            newLevelName = string.Empty;
+            newSchool = string.Empty;
+            newCourse = string.Empty;
+            newYearGraduated = null;
+            newAwards = string.Empty;
+        }
+    }
+
+    private void RemoveEducation(ApplicantEducationalBackground edu)
+    {
+        applicant.ApplicantEducationalBackground.Remove(edu);
+    }
+
+
+    // Add Technical/Vocational
+    private string newCourseName = string.Empty;
+    private DateTime? newDurationFrom;
+    private DateTime? newDurationTo;
+    private string newInstitution = string.Empty;
+    private string newCertificate = string.Empty;
+
+    private void AddTechnical()
+    {
+        if (!string.IsNullOrWhiteSpace(newCourseName) &&
+            !string.IsNullOrWhiteSpace(newInstitution) &&
+            newDurationFrom.HasValue &&
+            newDurationTo.HasValue)
+        {
+            applicant.ApplicantTechnicalVocational.Add(new ApplicantTechnicalVocational
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccountId = applicant.ApplicantInformation.AccountId,
+                CourseName = newCourseName,
+                DurationFrom = newDurationFrom,
+                DurationTo = newDurationTo,
+                TrainingInstitution = newInstitution,
+                CertifcateReceived = string.IsNullOrWhiteSpace(newCertificate) ? null : newCertificate,
+                DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+
+            // Reset inputs
+            newCourseName = string.Empty;
+            newDurationFrom = null;
+            newDurationTo = null;
+            newInstitution = string.Empty;
+            newCertificate = string.Empty;
+        }
+        else
+        {
+            // optional: show message to user
+            JS.InvokeVoidAsync("alert", "Please fill in all required fields (Course, Institution, Duration From, Duration To).");
+        }
+    }
+
+
+    private void RemoveTechnical(ApplicantTechnicalVocational tech)
+    {
+        applicant.ApplicantTechnicalVocational.Remove(tech);
+    }
+
+
+    // ********************************************************************** Add Eligibility **********************************************************************
+    private string newEligibilityName = string.Empty;
+    private int? newEligibilityRating;
+    private DateTime? newEligibilityDateExam;
+
+    private void AddEligibility()
+    {
+        if (!string.IsNullOrWhiteSpace(newEligibilityName))
+        {
+            applicant.ApplicantEligibility.Add(new ApplicantEligibility
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccountId = applicant.ApplicantInformation.AccountId,
+                EligibilityName = newEligibilityName,
+                Rating = newEligibilityRating ?? 0,
+                DateOfExamination = newEligibilityDateExam,
+                DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+
+            // Reset inputs
+            newEligibilityName = string.Empty;
+            newEligibilityRating = null;
+            newEligibilityDateExam = null;
+        }
+    }
+
+    private void RemoveEligibility(ApplicantEligibility e)
+    {
+        applicant.ApplicantEligibility.Remove(e);
+    }
+
+    // Professional License inputs
+    private string newProfName = string.Empty;
+    private DateTime? newProfValidity;
+
+    private void AddProfessionalLicense()
+    {
+        if (!string.IsNullOrWhiteSpace(newProfName))
+        {
+            applicant.ApplicantProfessionalLicense.Add(new ApplicantProfessionalLicense
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccountId = applicant.ApplicantInformation.AccountId,
+                ProfName = newProfName,
+                Validity = newProfValidity,
+                DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+
+            // Reset inputs
+            newProfName = string.Empty;
+            newProfValidity = null;
+        }
+    }
+
+    private void RemoveProfessionalLicense(ApplicantProfessionalLicense p)
+    {
+        applicant.ApplicantProfessionalLicense.Remove(p);
+    }
+    // ********************************************************************** Add Work Experience **********************************************************************
+
+    private string newCompanyName = string.Empty;
+    private string newCompanyAddress = string.Empty;
+    private string newPosition = string.Empty;
+    private DateTime? newInclusiveDateFrom;
+    private DateTime? newInclusiveDateTo;
+    private string newStatus = "Permanent";
+
+    private void AddWorkExperience()
+    {
+        if (!string.IsNullOrWhiteSpace(newCompanyName) &&
+            !string.IsNullOrWhiteSpace(newPosition))
+        {
+            applicant.ApplicantWorkExperience.Add(new ApplicantWorkExperience
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccountId = applicant.ApplicantInformation.AccountId,
+                CompanyName = newCompanyName,
+                CompanyAddress = newCompanyAddress,
+                Position = newPosition,
+                InclusiveDateFrom = newInclusiveDateFrom,
+                InclusiveDateTo = newInclusiveDateTo,
+                Status = newStatus,
+                DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+
+            // Reset inputs
+            newCompanyName = string.Empty;
+            newCompanyAddress = string.Empty;
+            newPosition = string.Empty;
+            newInclusiveDateFrom = null;
+            newInclusiveDateTo = null;
+            newStatus = "Permanent";
+        }
+    }
+    private void RemoveWorkExperience(ApplicantWorkExperience work)
+    {
+        applicant.ApplicantWorkExperience.Remove(work);
+    }
+    // ********************************************************************** Add Other Skills **********************************************************************
+
+    private string newSkillName = string.Empty;
+
+    private void AddOtherSkill()
+    {
+        if (!string.IsNullOrWhiteSpace(newSkillName))
+        {
+            applicant.ApplicantOtherSkills.Add(new ApplicantOtherSkills
+            {
+                Id = Guid.NewGuid().ToString(),
+                AccountId = applicant.ApplicantInformation.AccountId,
+                SkillName = newSkillName,
+                DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            });
+
+            // Reset input
+            newSkillName = string.Empty;
+        }
+    }
+
+    private void RemoveOtherSkill(ApplicantOtherSkills skill)
+    {
+        applicant.ApplicantOtherSkills.Remove(skill);
+    }
+
+    // ********************************************************************** Show password **********************************************************************
+
+    private bool showPassword = false;
+    private string passwordInputType => showPassword ? "text" : "password";
+
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+
+    // ********************************************************************** Show NSRP **********************************************************************
+
+    private bool showNSRPForm = false;
+
+    private void ShowNSRPForm()
+    {
+        showNSRPForm = true;
+    }
+
+    private void CloseNSRPForm()
+    {
+        showNSRPForm = false;
+    }
+
+    private async Task PrintNSRPForm()
+    {
+        await JS.InvokeVoidAsync("printDiv", "nsrpFormContent");
+    }
+
 }

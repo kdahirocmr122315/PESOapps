@@ -1229,6 +1229,14 @@ namespace webapi_peso.Controllers
             return Ok(result);
         }
 
+        [HttpGet("CheckIfAlreadyApplied/{applicantId}/{jobpostId}")]
+        public IActionResult CheckIfAlreadyApplied(string applicantId, string jobpostId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var rs = new StatusViewModel();
+            rs.IsExist = db.JobApplicantion.Any(x => x.ApplicantId == applicantId && x.JobPostId == jobpostId);
+            return Ok(rs);
+        }
 
     }
 }

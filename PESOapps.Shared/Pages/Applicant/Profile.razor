@@ -100,7 +100,7 @@ else
 
                     <section class="feed-card__body">
                         <p>Applied Job</p>
-                        <h3>@post.EmployerDetails?.ContactPosition</h3>
+                        <h3>@(post.EmployerDetails?.JobPosts?.FirstOrDefault()?.Description ?? "No Description")</h3>
                         <p>@post.EmployerDetails?.EstablishmentName</p>
                     </section>
                 </article>

@@ -17,8 +17,31 @@ else if (profile == null)
 else
 {
     <div class="job-board">
-        <div class="job-list">
+        @if (showApplyPopup)
+        {
+            <div class="modal-overlay">
+                <div class="modal-content">
+                    <h4>Apply for @selectedJob?.JobPost?.Description</h4>
 
+                    <input type="email"
+                           class="nsrp-input"
+                           placeholder="Enter your email"
+                           @bind="applicationEmail" />
+
+                    <textarea class="nsrp-input"
+                              placeholder="Enter your message"
+                              @bind="applicationMessage"></textarea>
+
+                    <div class="modal-actions">
+                        <button class="nsrp-toggle" @onclick="SubmitApplication">Submit</button>
+                        <button class="nsrp-toggle" @onclick="() => showApplyPopup = false">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        }
+
+
+        <div class="job-list">
             <!-- 🔍 Search Bar -->
             <div class="filter-bars">
                 <div class="search-bar">
@@ -99,13 +122,21 @@ else
                 {
                     <p class="muted" style="color:red;"><strong>This job has expired.</strong></p>
                 }
-
+                else if (hasAlreadyApplied)
+                {
+                    <p class="muted" style="color:orange;"><strong>Already applied to this job.</strong></p>
+                }
+                else
+                {
+                    <button class="nsrp-toggle" @onclick="ShowApplyPopup">Apply This Job</button>
+                }
                 <p class="card-details-sal">
                     @if (selectedJob?.JobPost?.Salary != null)
                     {
                         @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", selectedJob.JobPost.Salary)
                     }
                 </p>
+
                 <hr />
                 <div class="details-inner">
                     <div class="details-divider">
@@ -183,6 +214,7 @@ else
 
     private string searchTerm = string.Empty;
     private string selectedFilter = "All"; // Default: show all
+    private string userId = string.Empty; // store userId globally
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -190,7 +222,7 @@ else
         {
             loaded = true;
 
-            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+            userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId"); // <-- store here
             var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
             var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
 
@@ -219,7 +251,7 @@ else
                     Console.WriteLine("Error: " + ex.Message);
                 }
 
-                StateHasChanged(); // Refresh the UI
+                StateHasChanged();
             }
             else
             {
@@ -228,10 +260,38 @@ else
         }
     }
 
-    void SelectJob(JobPostViewModel job)
+    private bool hasAlreadyApplied = false;
+
+    private async Task SelectJob(JobPostViewModel job)
     {
         selectedJob = job;
+        hasAlreadyApplied = false;
+
+        if (selectedJob?.JobPost?.Id != null && profile?.ApplicantInformation?.Id != null)
+        {
+            try
+            {
+                var userId = profile.ApplicantInformation.Id;
+                var jobId = selectedJob.JobPost.Id;
+
+                var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/CheckIfAlreadyApplied/{userId}/{jobId}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var result = await response.Content.ReadAsStringAsync();
+                    hasAlreadyApplied = bool.TryParse(result, out var applied) && applied;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error checking application: {ex.Message}");
+            }
+        }
+
+        StateHasChanged();
     }
+
+
 
     public class JobPostViewModel
     {
@@ -251,4 +311,58 @@ else
         }
         return "Unknown Establishment";
     }
+
+    // *********************************************** APPLY JOB POP-UP  *********************************************** //
+
+    private bool showApplyPopup = false;
+    private string applicationEmail = string.Empty;
+    private string applicationMessage = string.Empty;
+
+    void ShowApplyPopup()
+    {
+        // Prefill email from profile if available
+        applicationEmail = profile?.ApplicantInformation?.Email ?? string.Empty;
+        applicationMessage = string.Empty;
+        showApplyPopup = true;
+    }
+
+    private async Task SubmitApplication()
+    {
+        if (selectedJob?.JobPost?.Id == null || string.IsNullOrWhiteSpace(applicationEmail) || string.IsNullOrWhiteSpace(applicationMessage))
+        {
+            await JS.InvokeVoidAsync("alert", "Please enter your email and message.");
+            return;
+        }
+
+        var payload = new
+        {
+            id = Guid.NewGuid().ToString(),
+            email = applicationEmail,
+            message = applicationMessage,
+            jobPostId = selectedJob.JobPost.Id.ToString(),
+            applicantId = userId,  // <-- use userId from Local Storage
+            dateCreated = DateTime.UtcNow
+        };
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("http://localhost:5167/api/Applicant/SaveJobApplication", payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "Application submitted successfully!");
+                showApplyPopup = false;
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Failed to apply: {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
 }

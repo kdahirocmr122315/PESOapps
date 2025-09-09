@@ -277,6 +277,10 @@ img.govpic {
     transform: scaleX(-1);
 }
 
+.org-logo-cont.texts {
+    align-self: center;
+}
+
 .org-contents,
 .container-aboutus {
     max-width: 1280px;
@@ -340,6 +344,7 @@ span.misvis-par {
 
 .services span {
     display: block;
+    font-size: 16px;
     margin: 5px 0;
     padding: 0 10px;
     border-radius: 10px;

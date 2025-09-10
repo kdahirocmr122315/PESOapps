@@ -1196,15 +1196,19 @@ namespace webapi_peso.Controllers
             return BadRequest("Failed to save job application.");
         }
 
-        [HttpPost("UploadAttachments")]
-        public IActionResult UploadAttachments()
+        [HttpPost("UploadApplicantResume")]
+        public IActionResult UploadApplicantResume()
         {
             var files = Request.Form.Files;
             var result = new List<AttachementsViewModel>();
             var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString();
-            var dir = System.IO.Path.Combine(env.WebRootPath, "files", "employers", folderName);
+            var dir = System.IO.Path.Combine(env.WebRootPath, "files", "applications", folderName);
             if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
-
+            foreach (var f in System.IO.Directory.GetFiles(dir))
+            {
+                if (System.IO.File.Exists(f))
+                    System.IO.File.Delete(f);
+            }
             foreach (var file in files)
             {
                 if (file.Length > 0)

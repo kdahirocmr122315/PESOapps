@@ -5,6 +5,7 @@
 @inject IJSRuntime JS
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
+@using Microsoft.AspNetCore.Components.Forms
 
 @if (!isUserLoggedIn)
 {
@@ -30,7 +31,13 @@ else
 
                     <textarea class="nsrp-input"
                               placeholder="Enter your message"
-                              @bind="applicationMessage"></textarea>
+                              @bind="applicationMessage">
+                    </textarea>
+
+                    <!-- File Upload -->
+                    <InputFile class="nsrp-input"
+                               OnChange="OnFileSelected"
+                               accept=".pdf,.doc,.docx" />
 
                     <div class="modal-actions">
                         <button class="nsrp-toggle" @onclick="SubmitApplication">Submit</button>
@@ -38,9 +45,9 @@ else
                     </div>
                 </div>
             </div>
+
         }
-
-
+         
         <div class="job-list">
             <!-- 🔍 Search Bar -->
             <div class="filter-bars">
@@ -57,6 +64,10 @@ else
                     <option value="Available">Available</option>
                     <option value="Expired">Expired</option>
                 </select>
+
+                <button class="nsrp-input" @onclick="ToggleSort" style="width: fit-content;justify-self: end;">
+                    @(sortLatestFirst ? "▼" : "▲")
+                </button>
             </div>
 
             @if (jobList == null)
@@ -122,21 +133,24 @@ else
                 {
                     <p class="muted" style="color:red;"><strong>This job has expired.</strong></p>
                 }
-                else if (hasAlreadyApplied)
-                {
-                    <p class="muted" style="color:orange;"><strong>Already applied to this job.</strong></p>
-                }
-                else
-                {
-                    <button class="nsrp-toggle" @onclick="ShowApplyPopup">Apply This Job</button>
-                }
+                
                 <p class="card-details-sal">
                     @if (selectedJob?.JobPost?.Salary != null)
                     {
                         @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", selectedJob.JobPost.Salary)
                     }
                 </p>
-
+                @if (!isExpired)
+                {
+                    if (hasAlreadyApplied)
+                    {
+                        <p class="muted" style="color:#07522D;font-size:1em;"><strong>Already applied to this job.</strong></p>
+                    }
+                    else
+                    {
+                        <button class="nsrp-toggle" @onclick="ShowApplyPopup">Apply This Job</button>
+                    }
+                }
                 <hr />
                 <div class="details-inner">
                     <div class="details-divider">
@@ -234,7 +248,7 @@ else
 
                 try
                 {
-                    var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
+                    var response = await Http.GetAsync($"/api/Applicant/GetApplicantProfile/{userId}");
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -243,7 +257,11 @@ else
                             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                         // Load job list after confirming user profile
-                        jobList = await Http.GetFromJsonAsync<List<JobPostViewModel>>("http://localhost:5167/api/Applicant/GetJobLists");
+                        jobList = await Http.GetFromJsonAsync<List<JobPostViewModel>>("/api/Applicant/GetJobLists");
+                        if (jobList != null)
+                        {
+                            SortJobList(); // <-- apply initial sorting
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -259,7 +277,38 @@ else
             }
         }
     }
+    private bool sortLatestFirst = true;
+    private void ToggleSort()
+    {
+        sortLatestFirst = !sortLatestFirst;
+        SortJobList();
+    }
 
+    private void SortJobList()
+    {
+        if (jobList == null) return;
+
+        // Use JobPost.DatePosted for sorting, fallback to DatePosted if null
+        if (sortLatestFirst)
+        {
+            jobList = jobList
+                .OrderByDescending(j => j.JobPost?.DatePosted ?? j.DatePosted)
+                .ToList();
+        }
+        else
+        {
+            jobList = jobList
+                .OrderBy(j => j.JobPost?.DatePosted ?? j.DatePosted)
+                .ToList();
+        }
+
+        StateHasChanged();
+    }
+
+    public class ApplicationCheckResponse
+    {
+        public bool IsExist { get; set; }
+    }
     private bool hasAlreadyApplied = false;
 
     private async Task SelectJob(JobPostViewModel job)
@@ -274,13 +323,14 @@ else
                 var userId = profile.ApplicantInformation.Id;
                 var jobId = selectedJob.JobPost.Id;
 
-                var response = await Http.GetAsync($"http://localhost:5167/api/Applicant/CheckIfAlreadyApplied/{userId}/{jobId}");
+                var response = await Http.GetAsync($"/api/Applicant/CheckIfAlreadyApplied/{userId}/{jobId}");
 
                 if (response.IsSuccessStatusCode)
                 {
-                    var result = await response.Content.ReadAsStringAsync();
-                    hasAlreadyApplied = bool.TryParse(result, out var applied) && applied;
+                    var result = await response.Content.ReadFromJsonAsync<ApplicationCheckResponse>();
+                    hasAlreadyApplied = result?.IsExist ?? false;
                 }
+
             }
             catch (Exception ex)
             {
@@ -290,6 +340,7 @@ else
 
         StateHasChanged();
     }
+  
 
 
 
@@ -298,6 +349,7 @@ else
         public EmployerDetails? EmpDetails { get; set; }
         public EmployerJobPost? JobPost { get; set; }
         public string? FirstImage { get; set; }
+        public DateTime DatePosted { get; set; }
     }
 
     private string? GetEstablishmentName(JobPostViewModel job)
@@ -326,6 +378,13 @@ else
         showApplyPopup = true;
     }
 
+    private IBrowserFile? uploadedFile;
+
+    private void OnFileSelected(InputFileChangeEventArgs e)
+    {
+        uploadedFile = e.File;
+    }
+
     private async Task SubmitApplication()
     {
         if (selectedJob?.JobPost?.Id == null || string.IsNullOrWhiteSpace(applicationEmail) || string.IsNullOrWhiteSpace(applicationMessage))
@@ -334,19 +393,30 @@ else
             return;
         }
 
-        var payload = new
+        if (uploadedFile == null)
         {
-            id = Guid.NewGuid().ToString(),
-            email = applicationEmail,
-            message = applicationMessage,
-            jobPostId = selectedJob.JobPost.Id.ToString(),
-            applicantId = userId,  // <-- use userId from Local Storage
-            dateCreated = DateTime.UtcNow
-        };
+            await JS.InvokeVoidAsync("alert", "Please upload your résumé (PDF or Word).");
+            return;
+        }
 
         try
         {
-            var response = await Http.PostAsJsonAsync("http://localhost:5167/api/Applicant/SaveJobApplication", payload);
+            var content = new MultipartFormDataContent();
+
+            // Add text fields (application info)
+            content.Add(new StringContent(Guid.NewGuid().ToString()), "Id");
+            content.Add(new StringContent(applicationEmail), "Email");
+            content.Add(new StringContent(applicationMessage), "Message");
+            content.Add(new StringContent(selectedJob.JobPost.Id.ToString()), "JobPostId");
+            content.Add(new StringContent(userId ?? ""), "ApplicantId");
+            content.Add(new StringContent(DateTime.UtcNow.ToString("o")), "DateCreated");
+
+            // Add the file
+            var stream = uploadedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB max
+            content.Add(new StreamContent(stream), "File", uploadedFile.Name);
+
+            // Send to your API
+            var response = await Http.PostAsync("/api/Applicant/UploadAttachments", content);
 
             if (response.IsSuccessStatusCode)
             {
@@ -364,5 +434,4 @@ else
             await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
         }
     }
-
 }

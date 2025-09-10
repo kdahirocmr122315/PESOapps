@@ -67,7 +67,7 @@ else
                     <p>@profile.Address</p>
                 </div>
             </div>
-            <h1>Establishment Contact Details</h1>
+            <h1 style="width: 100%;">Establishment Contact Details</h1>
             <div class="row">
                 <div class="col-md-6 mb-3">
                     <p class="mb-1 text-muted">Contact Person</p>
@@ -103,42 +103,44 @@ else
                 else
                 {
                     <!-- This area displays all applicants for each job post so employers can see who applied for each position -->
-                    @foreach (var post in applications)
+                    @foreach (var post in applications
+                                .Where(p => p.Applicants != null && p.Applicants.Any())
+                                .OrderByDescending(p => p.Applicants.Max(a => a.DateApplied)))
                     {
-                        if (post.Applicants != null && post.Applicants.Any())
-                        {
-                            <div class="mb-4">
-                                <h5 class="fw-bold mb-2">@post.Description</h5>
-                                <div class="emp-flex">
-                                    @foreach (var applicant in post.Applicants)
-                                    {
-                                        <article class="feed-card mb-3">
-                                            <header class="feed-card__header d-flex align-items-center">
-                                                <img src="_content/PESOapps.Shared/images/profile_placeholder.png" class="avatar me-2" style="width:40px;height:40px;" />
-                                                <div class="meta">
-                                                    <div class="name fw-semibold">
-                                                        @($"{applicant.Applicant?.FirstName} {applicant.Applicant?.MiddleName} {applicant.Applicant?.SurName} {applicant.Applicant?.Suffix}".Trim())
-                                                    </div>
-                                                    <div class="info text-muted small">
-                                                        <span>@applicant.DateApplied.ToString("MMMM dd, yyyy hh:mm tt")</span>
-                                                        <span class="fa fa-lock ms-2"></span>
-                                                    </div>
+                        <div class="mb-4">
+                            <h5 class="fw-bold mb-2">@post.Description</h5>
+                            <div class="emp-flex">
+                                @foreach (var applicant in post.Applicants
+                                                    .OrderByDescending(a => a.DateApplied))
+                                {
+                                    <article class="feed-card mb-3">
+                                        <header class="feed-card__header d-flex align-items-center">
+                                            <img src="_content/PESOapps.Shared/images/profile_placeholder.png"
+                                                 class="avatar me-2" style="width:35px;height:35px;" />
+                                            <div class="meta">
+                                                <div class="name fw-semibold">
+                                                    @($"{applicant.Applicant?.FirstName} {applicant.Applicant?.MiddleName} {applicant.Applicant?.SurName} {applicant.Applicant?.Suffix}".Trim())
                                                 </div>
-                                            </header>
-                                            <section class="feed-card__body mt-2">
-                                                <p>
-                                                    Applied for <span class="fw-semibold">@post.Description</span> position
-                                                </p>
-                                                @if (!string.IsNullOrWhiteSpace(applicant.FilePath))
-                                                {
-                                                    <a href="@applicant.FilePath" target="_blank" class="btn btn-sm btn-outline-primary">View Resume</a>
-                                                }
-                                            </section>
-                                        </article>
-                                    }
-                                </div>
+                                                <div class="info text-muted small">
+                                                    <span>@applicant.DateApplied.ToString("MMMM dd, yyyy hh:mm tt")</span>
+                                                    <span class="fa fa-lock ms-2"></span>
+                                                </div>
+                                            </div>
+                                        </header>
+                                        <section class="feed-card__body mt-2">
+                                            <p>
+                                                Applied for <span class="fw-semibold">@post.Description</span> position
+                                            </p>
+                                            @if (!string.IsNullOrWhiteSpace(applicant.FilePath))
+                                            {
+                                                <a href="@applicant.FilePath" target="_blank"
+                                                   class="btn btn-sm btn-outline-primary">View Resume</a>
+                                            }
+                                        </section>
+                                    </article>
+                                }
                             </div>
-                        }
+                        </div>
                     }
                 }
             </div>
@@ -180,7 +182,7 @@ else
                        A. Fetch Employer profile (your old call)
                        ───────────────────────────────────────── */
                     var profileResponse =
-                        await Http.GetAsync($"http://localhost:5167/api/Employer/GetEmployerDetailsByEmail/{userId}");
+                        await Http.GetAsync($"/api/Employer/GetEmployerDetailsByEmail/{userId}");
 
                     if (profileResponse.IsSuccessStatusCode)
                     {
@@ -194,7 +196,7 @@ else
                         Console.WriteLine($"Profile call failed: {profileResponse.StatusCode}");
                     }
                     var appsResponse =
-                         await Http.GetAsync($"http://localhost:5167/api/Employer/GetApplicantsByEmployer/{userId}");
+                         await Http.GetAsync($"/api/Employer/GetApplicantsByEmployer/{userId}");
 
                     if (appsResponse.IsSuccessStatusCode)
                     {

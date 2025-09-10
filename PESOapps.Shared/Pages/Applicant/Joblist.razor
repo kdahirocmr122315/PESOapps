@@ -3,6 +3,8 @@
 @inject NavigationManager Navigation
 @inject HttpClient Http
 @inject IJSRuntime JS
+@using System.Net.Http.Headers
+@using Tewr.Blazor.FileReader
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
 @using Microsoft.AspNetCore.Components.Forms
@@ -37,11 +39,13 @@ else
                     <!-- File Upload -->
                     <InputFile class="nsrp-input"
                                OnChange="OnFileSelected"
-                               accept=".pdf,.doc,.docx" />
+                               accept=".pdf,.doc,.docx" multiple />
 
                     <div class="modal-actions">
-                        <button class="nsrp-toggle" @onclick="SubmitApplication">Submit</button>
-                        <button class="nsrp-toggle" @onclick="() => showApplyPopup = false">Cancel</button>
+                        <button class="nsrp-toggle" @onclick="SubmitApplication" disabled="@isLoading">
+                            @(isLoading ? "Submitting..." : "Submit")
+                        </button>
+                        <button class="nsrp-toggle" @onclick="() => showApplyPopup = false" disabled="@isLoading">Cancel</button>
                     </div>
                 </div>
             </div>
@@ -375,63 +379,172 @@ else
         // Prefill email from profile if available
         applicationEmail = profile?.ApplicantInformation?.Email ?? string.Empty;
         applicationMessage = string.Empty;
+        uploadedFiles.Clear();
         showApplyPopup = true;
     }
 
-    private IBrowserFile? uploadedFile;
-
     private void OnFileSelected(InputFileChangeEventArgs e)
     {
-        uploadedFile = e.File;
+        uploadedFiles = e.GetMultipleFiles().ToList();
     }
+
+    private List<IBrowserFile> uploadedFiles = new();
+    // Removed unused fields: ElementReference _input and filesToUpload
+    private List<AttachementsViewModel> listOfAttachments = new();
+    private bool isLoading = false;
 
     private async Task SubmitApplication()
     {
-        if (selectedJob?.JobPost?.Id == null || string.IsNullOrWhiteSpace(applicationEmail) || string.IsNullOrWhiteSpace(applicationMessage))
+        if (selectedJob?.JobPost?.Id == null)
+        {
+            await JS.InvokeVoidAsync("alert", "No job selected.");
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(applicationEmail) || string.IsNullOrWhiteSpace(applicationMessage))
         {
             await JS.InvokeVoidAsync("alert", "Please enter your email and message.");
             return;
         }
 
-        if (uploadedFile == null)
+        if (string.IsNullOrEmpty(userId))
         {
-            await JS.InvokeVoidAsync("alert", "Please upload your résumé (PDF or Word).");
+            await JS.InvokeVoidAsync("alert", "User not logged in.");
+            return;
+        }
+
+        if (!uploadedFiles.Any())
+        {
+            await JS.InvokeVoidAsync("alert", "Please upload at least one resume file.");
             return;
         }
 
         try
         {
-            var content = new MultipartFormDataContent();
+            isLoading = true;
+            StateHasChanged();
 
-            // Add text fields (application info)
-            content.Add(new StringContent(Guid.NewGuid().ToString()), "Id");
-            content.Add(new StringContent(applicationEmail), "Email");
-            content.Add(new StringContent(applicationMessage), "Message");
-            content.Add(new StringContent(selectedJob.JobPost.Id.ToString()), "JobPostId");
-            content.Add(new StringContent(userId ?? ""), "ApplicantId");
-            content.Add(new StringContent(DateTime.UtcNow.ToString("o")), "DateCreated");
-
-            // Add the file
-            var stream = uploadedFile.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024); // 10MB max
-            content.Add(new StreamContent(stream), "File", uploadedFile.Name);
-
-            // Send to your API
-            var response = await Http.PostAsync("/api/Applicant/UploadAttachments", content);
-
-            if (response.IsSuccessStatusCode)
+            // Step 1: Save application metadata
+            var payload = new
             {
+                id = Guid.NewGuid().ToString(),
+                email = applicationEmail,
+                message = applicationMessage,
+                jobPostId = selectedJob.JobPost.Id.ToString(),
+                applicantId = userId,
+                dateCreated = DateTime.UtcNow
+            };
+
+            var saveResponse = await Http.PostAsJsonAsync("/api/Applicant/SaveJobApplication", payload);
+            if (!saveResponse.IsSuccessStatusCode)
+            {
+                var error = await saveResponse.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Failed to save application: {error}");
+                return;
+            }
+
+            var savedApplication = await saveResponse.Content.ReadFromJsonAsync<JobApplicantion>();
+            if (savedApplication == null || string.IsNullOrEmpty(savedApplication.Id))
+            {
+                await JS.InvokeVoidAsync("alert", "Application not saved properly.");
+                return;
+            }
+
+            // Sanitize folder name before sending to server to avoid invalid path parts
+            var applicationFolder = SanitizeFolderName(savedApplication.Id);
+
+            // Step 2: Upload resume files
+            const long maxFileSize = 10 * 1024 * 1024; // 10 MB
+            var content = new MultipartFormDataContent();
+            // keep header name "f" to remain compatible with server-side ApplicantController
+            content.Headers.Add("f", applicationFolder);
+
+            var streams = new List<System.IO.MemoryStream>();
+            try
+            {
+                foreach (var file in uploadedFiles)
+                {
+                    if (file == null) continue;
+                    if (file.Size > maxFileSize)
+                    {
+                        await JS.InvokeVoidAsync("alert", $"File '{file.Name}' exceeds 10 MB.");
+                        return;
+                    }
+
+                    var ms = new System.IO.MemoryStream();
+                    await file.OpenReadStream(maxFileSize).CopyToAsync(ms);
+                    ms.Position = 0;
+                    streams.Add(ms); // keep reference
+
+                    content.Add(CreateFileContent(ms, file.Name, file.ContentType ?? "application/octet-stream"), "files", file.Name);
+                }
+
+                var uploadResponse = await Http.PostAsync("/api/Applicant/UploadApplicantResume", content);
+                if (!uploadResponse.IsSuccessStatusCode)
+                {
+                    var error = await uploadResponse.Content.ReadAsStringAsync();
+                    await JS.InvokeVoidAsync("alert", $"File upload failed: {error}");
+                    return;
+                }
+
                 await JS.InvokeVoidAsync("alert", "Application submitted successfully!");
                 showApplyPopup = false;
+                uploadedFiles.Clear();
             }
-            else
+            finally
             {
-                var error = await response.Content.ReadAsStringAsync();
-                await JS.InvokeVoidAsync("alert", $"Failed to apply: {error}");
+                // Dispose memory streams after request
+                foreach (var ms in streams)
+                    ms.Dispose();
             }
         }
         catch (Exception ex)
         {
             await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
         }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
     }
+
+    private static string SanitizeFolderName(string? folderName)
+    {
+        if (string.IsNullOrWhiteSpace(folderName))
+            return Guid.NewGuid().ToString("N");
+
+        try
+        {
+            var invalid = System.IO.Path.GetInvalidFileNameChars().ToHashSet();
+            var filtered = new string(folderName.Where(c => !invalid.Contains(c) && c != '/' && c != '\\').ToArray());
+            if (string.IsNullOrWhiteSpace(filtered))
+                return Guid.NewGuid().ToString("N");
+            // Optionally trim length
+            if (filtered.Length > 100)
+                return filtered.Substring(0, 100);
+            return filtered;
+        }
+        catch
+        {
+            return Guid.NewGuid().ToString("N");
+        }
+    }
+
+    public static StreamContent CreateFileContent(System.IO.Stream stream, string fileName, string contentType)
+    {
+        var fileContent = new StreamContent(stream);
+        fileContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+        {
+            Name = "\"files\"",
+            FileName = "\"" + fileName + "\""
+        };
+        try
+        {
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        }
+        catch { }
+        return fileContent;
+    }
+
 }

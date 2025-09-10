@@ -5,6 +5,7 @@ using PESOapps.Shared.Services;
 using PESOapps.Web.Components;
 using PESOapps.Web.Services;
 using System.Net.Http;
+using Tewr.Blazor.FileReader;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddScoped<AuthService>();
@@ -32,6 +33,8 @@ builder.Services.AddProtectedBrowserStorage();
 builder.Services.AddScoped<ProtectedLocalStorage>();
 builder.Services.AddScoped<ExcelService>();
 builder.Services.AddScoped<UiStateService>();
+builder.Services.AddFileReaderService(options => options.InitializeOnFirstCall = true);
+
 // Register AddressService (Ensure it properly loads JSON)
 builder.Services.AddScoped<AddressService>(sp =>
 {

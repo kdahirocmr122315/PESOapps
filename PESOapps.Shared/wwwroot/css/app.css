@@ -696,11 +696,14 @@ a.form-link:after {
 }
 
 .nav-sub:hover {
-/*    background: #07522D !important;*/
     color: #ffffff;
     border-radius: 30px 0 30px 30px;
     text-align: center;
     transition: 0.5s ease-out;
+}
+
+.log-outs .nav-sub:hover {
+    background: #07522D !important;
 }
 
 table {
@@ -790,7 +793,7 @@ a.nav-links-sub.tupad:after {
     text-align: center;
 }
 
-/********************MONITORING BOXES********************/
+/********************MONITORING BOXES*******************
 .monitoring-boxes {
     display: flex;
     justify-content: start;
@@ -1153,6 +1156,9 @@ a:hover span {
 .profile-feeds.employer {
     flex-direction: column;
     gap: 0;
+    padding: 1rem;
+    background-color: rgb(255, 255, 255, .5);
+    margin: 0;
 }
 
 /* header */
@@ -1206,6 +1212,11 @@ a:hover span {
 .prof-container h1 {
     font-size: 1.8rem;
     margin: 10px 0;
+}
+
+.profile-feeds .mb-3,
+.profile-feeds .mb-4:first-child{
+    margin-bottom: 0rem !important;
 }
 
 /* -------------- Job List ------------ */

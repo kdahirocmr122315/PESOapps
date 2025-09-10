@@ -1201,8 +1201,8 @@ namespace webapi_peso.Controllers
         {
             var files = Request.Form.Files;
             var result = new List<AttachementsViewModel>();
-            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString();
-            var dir = System.IO.Path.Combine(env.WebRootPath, "files", "applications", folderName);
+            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString(); ;
+            var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "applications", folderName);
             if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
             foreach (var f in System.IO.Directory.GetFiles(dir))
             {

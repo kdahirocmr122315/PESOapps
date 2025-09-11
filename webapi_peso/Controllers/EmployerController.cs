@@ -530,6 +530,23 @@ namespace webapi_peso.Controllers
             return Ok();
         }
 
+        [HttpPost("UpdateEmployer")]
+        public EmployerDetails UpdateEmployer(EmployerRegistrationViewModel data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            db.EmployerDetails.Update(data.EmployerDetails);
+            db.SaveChanges();
+            var folderDestination = System.IO.Path.Combine(env.ContentRootPath, "files", "employers", data.EmployerDetails.Id);
+            if (!System.IO.Directory.Exists(folderDestination))
+                System.IO.Directory.CreateDirectory(folderDestination);
+            foreach (var f in data.ListOfAttachments)
+            {
+                var filepath = System.IO.Path.Combine(env.WebRootPath, "file_temp", f.FolderName, f.FileName);
+                if (System.IO.File.Exists(filepath))
+                    System.IO.File.Move(filepath, System.IO.Path.Combine(folderDestination, f.FileName));
+            }
+            return db.EmployerDetails.Include(x => x.JobPosts).Where(x => x.Id == data.EmployerDetails.Id).FirstOrDefault();
+        }
 
     }
 }

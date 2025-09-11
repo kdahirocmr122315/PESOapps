@@ -1201,14 +1201,19 @@ namespace webapi_peso.Controllers
         {
             var files = Request.Form.Files;
             var result = new List<AttachementsViewModel>();
-            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString(); ;
+            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString();
             var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "applications", folderName);
+
             if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+
             foreach (var f in System.IO.Directory.GetFiles(dir))
             {
                 if (System.IO.File.Exists(f))
                     System.IO.File.Delete(f);
             }
+
+            using var db = dbFactory.CreateDbContext();
+
             foreach (var file in files)
             {
                 if (file.Length > 0)
@@ -1217,6 +1222,7 @@ namespace webapi_peso.Controllers
                     var fileName = $"{origFileName}";
                     fileName = WebUtility.HtmlEncode(fileName);
                     var fullPath = System.IO.Path.Combine(dir, fileName);
+
                     using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
                         result.Add(new AttachementsViewModel()
@@ -1227,9 +1233,17 @@ namespace webapi_peso.Controllers
                         });
                         file.CopyTo(stream);
                     }
-                }
 
+                    // Save the filename in the JobApplicantionAttachment table
+                    var attachment = new JobApplicantionAttachment
+                    {
+                        FileName = fileName
+                    };
+                    db.JobApplicantionAttachment.Add(attachment);
+                }
             }
+
+            db.SaveChanges();
             return Ok(result);
         }
 
@@ -1240,6 +1254,30 @@ namespace webapi_peso.Controllers
             var rs = new StatusViewModel();
             rs.IsExist = db.JobApplicantion.Any(x => x.ApplicantId == applicantId && x.JobPostId == jobpostId);
             return Ok(rs);
+        }
+
+        [HttpDelete("DeleteApplicantAttachment/{fileName}")]
+        public IActionResult DeleteApplicantAttachment(string fileName)
+        {
+            var dir = System.IO.Path.Combine(env.ContentRootPath, "applications");
+            var fullPath = System.IO.Path.Combine(dir, fileName);
+
+            if (System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+
+                using var db = dbFactory.CreateDbContext();
+                var attachment = db.JobApplicantionAttachment.FirstOrDefault(a => a.FileName == fileName);
+                if (attachment != null)
+                {
+                    db.JobApplicantionAttachment.Remove(attachment);
+                    db.SaveChanges();
+                }
+
+                return Ok(new { Message = "Attachment deleted successfully." });
+            }
+
+            return NotFound(new { Message = "Attachment not found." });
         }
 
     }

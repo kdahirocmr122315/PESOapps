@@ -1256,5 +1256,29 @@ namespace webapi_peso.Controllers
             return Ok(rs);
         }
 
+        [HttpDelete("DeleteApplicantAttachment/{fileName}")]
+        public IActionResult DeleteApplicantAttachment(string fileName)
+        {
+            var dir = System.IO.Path.Combine(env.ContentRootPath, "applications");
+            var fullPath = System.IO.Path.Combine(dir, fileName);
+
+            if (System.IO.File.Exists(fullPath))
+            {
+                System.IO.File.Delete(fullPath);
+
+                using var db = dbFactory.CreateDbContext();
+                var attachment = db.JobApplicantionAttachment.FirstOrDefault(a => a.FileName == fileName);
+                if (attachment != null)
+                {
+                    db.JobApplicantionAttachment.Remove(attachment);
+                    db.SaveChanges();
+                }
+
+                return Ok(new { Message = "Attachment deleted successfully." });
+            }
+
+            return NotFound(new { Message = "Attachment not found." });
+        }
+
     }
 }

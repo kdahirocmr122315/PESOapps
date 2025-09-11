@@ -1201,14 +1201,19 @@ namespace webapi_peso.Controllers
         {
             var files = Request.Form.Files;
             var result = new List<AttachementsViewModel>();
-            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString(); ;
+            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString();
             var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "applications", folderName);
+
             if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+
             foreach (var f in System.IO.Directory.GetFiles(dir))
             {
                 if (System.IO.File.Exists(f))
                     System.IO.File.Delete(f);
             }
+
+            using var db = dbFactory.CreateDbContext();
+
             foreach (var file in files)
             {
                 if (file.Length > 0)
@@ -1217,6 +1222,7 @@ namespace webapi_peso.Controllers
                     var fileName = $"{origFileName}";
                     fileName = WebUtility.HtmlEncode(fileName);
                     var fullPath = System.IO.Path.Combine(dir, fileName);
+
                     using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
                         result.Add(new AttachementsViewModel()
@@ -1227,9 +1233,17 @@ namespace webapi_peso.Controllers
                         });
                         file.CopyTo(stream);
                     }
-                }
 
+                    // Save the filename in the JobApplicantionAttachment table
+                    var attachment = new JobApplicantionAttachment
+                    {
+                        FileName = fileName
+                    };
+                    db.JobApplicantionAttachment.Add(attachment);
+                }
             }
+
+            db.SaveChanges();
             return Ok(result);
         }
 

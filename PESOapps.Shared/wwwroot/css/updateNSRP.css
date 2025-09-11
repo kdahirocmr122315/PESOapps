@@ -37,13 +37,13 @@
 }
 
 /* Tabs */
+/*
 .nsrp-tabs {
     list-style: none;
     display: flex;
-    gap: 1rem;
     padding: 0;
     margin: 1rem 0;
-    border-bottom: 2px solid #eee;
+    border-bottom: 0px solid #eee;
 }
 
 .nsrp-tab {
@@ -54,12 +54,19 @@
     cursor: pointer;
     color: #555;
     position: relative;
+    border: 0px solid transparent;
+    border-bottom: 1px solid #07522D;
+    border-radius: 10px 10px 0 0;
 }
 
 .nsrp-tab.active {
     color: #07522D;
+    border: 1px solid #07522D;
+    border-bottom: 0px solid #07522D;
 }
+*/
 
+/*
 .nsrp-tab.active::after {
     content: "";
     position: absolute;
@@ -70,7 +77,66 @@
     background: #07522D;
     border-radius: 3px;
 }
+*/
 
+
+
+/*************************** START Carousel *********************************/
+.nsrp-carousel {
+    display: flex;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.nsrp-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    scrollbar-width: none;
+    /* hide scrollbar Firefox */
+}
+
+.nsrp-tabs::-webkit-scrollbar {
+    display: none;
+    /* hide scrollbar Chrome */
+}
+
+.nsrp-tabs li {
+    flex: 0 0 auto;
+}
+
+.nsrp-tab,
+.carousel-arrow {
+    padding: 0.75rem 1rem;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #f8f9fa;
+    cursor: pointer;
+    margin: 0.25rem;
+    white-space: nowrap;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+}
+
+.carousel-arrow {
+    padding: 0.75rem 5px;
+    box-shadow: none;
+    border: 0;
+}
+
+.nsrp-tab.active,
+.carousel-arrow:hover {
+    background: #ffffff;
+    color: #07522D;
+    border-color: #07522D;
+    font-weight: bold;
+}
+
+/*************************** END Carousel *********************************/
 /* Section */
 .nsrp-section {
     margin-top: 1rem;
@@ -80,8 +146,9 @@
 }
 
 .nsrp-insection {
-    display: flex;
     gap: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(278px, 1fr));
 }
 
 .nsrp-insection .nsrp-subsection {
@@ -378,4 +445,16 @@ body .modal-body-print {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+@media only screen and (max-width: 768px) {
+
+    .nsrp-container,
+    .job-details {
+        padding: 10px;
+    }
+
+    .job-card p.muted {
+        display: none;
+    }
 }

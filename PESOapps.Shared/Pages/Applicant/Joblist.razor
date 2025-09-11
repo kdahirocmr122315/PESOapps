@@ -124,37 +124,35 @@ else
         </div>
 
         <div class="job-details">
-            @if (selectedJob != null)
+           @if (selectedJob != null)
             {
                 bool isExpired = selectedJob.JobPost?.Expiry < DateTime.Now;
 
                 <div class="card-name">@selectedJob.JobPost?.Description</div>
                 <p>@selectedJob?.EmpDetails?.EstablishmentName</p>
                 <p class="muted">@selectedJob?.EmpDetails?.Address</p>
-                <p class="card-date"><em>@selectedJob?.JobPost?.DatePosted.ToString("MMMM dd, yyyy")</em></p>
-
-                @if (isExpired)
-                {
-                    <p class="muted" style="color:red;"><strong>This job has expired.</strong></p>
-                }
-                
+                <p class="card-date"><em>@selectedJob?.JobPost?.DatePosted.ToString("MMMM dd, yyyy")</em></p>            
                 <p class="card-details-sal">
                     @if (selectedJob?.JobPost?.Salary != null)
                     {
                         @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", selectedJob.JobPost.Salary)
                     }
                 </p>
-                @if (!isExpired)
+
+                @if (isExpired)
                 {
-                    if (hasAlreadyApplied)
-                    {
-                        <p class="muted" style="color:#07522D;font-size:1em;"><strong>Already applied to this job.</strong></p>
-                    }
-                    else
-                    {
-                        <button class="nsrp-toggle" @onclick="ShowApplyPopup">Apply This Job</button>
-                    }
+                    <p class="muted" style="color:red;"><strong>This job has expired.</strong></p>
                 }
+                else if (hasAlreadyApplied) 
+                {
+                    <p class="muted" style="color:#07522D;font-size:1em;"><strong>Already applied to this job.</strong></p>
+                }
+                else
+                {
+                    <button class="nsrp-toggle" @onclick="ShowApplyPopup">Apply This Job</button>
+                }
+
+
                 <hr />
                 <div class="details-inner">
                     <div class="details-divider">
@@ -324,7 +322,7 @@ else
         {
             try
             {
-                var userId = profile.ApplicantInformation.Id;
+                var userId = profile.ApplicantInformation.AccountId;
                 var jobId = selectedJob.JobPost.Id;
 
                 var response = await Http.GetAsync($"/api/Applicant/CheckIfAlreadyApplied/{userId}/{jobId}");
@@ -334,7 +332,6 @@ else
                     var result = await response.Content.ReadFromJsonAsync<ApplicationCheckResponse>();
                     hasAlreadyApplied = result?.IsExist ?? false;
                 }
-
             }
             catch (Exception ex)
             {
@@ -344,9 +341,6 @@ else
 
         StateHasChanged();
     }
-  
-
-
 
     public class JobPostViewModel
     {

@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css?family=Poppins:300,400,500,700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap');
 @import url('https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css');
 
@@ -20,6 +21,14 @@
 
 html {
     scroll-behavior: smooth;
+}
+
+html,
+body {
+    font-family: "Montserrat", sans-serif;
+    color: var(--font-color);
+    font-size: 14px;
+    font-weight: 400;
 }
 
 #themeButton {
@@ -74,12 +83,6 @@ p {
     margin: 0;
 }
 
-html,
-body {
-    font-family: 'Poppins', sans-serif;
-    color: var(--font-color);
-    font-size: 14px;
-}
 
 .dboard {
     font-size: 12px;
@@ -1149,8 +1152,9 @@ a:hover span {
 }
 
 .emp-flex {
-    display: flex;
     gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
 }
 
 .profile-feeds.employer {
@@ -1159,6 +1163,7 @@ a:hover span {
     padding: 1rem;
     background-color: rgb(255, 255, 255, .5);
     margin: 0;
+    flex-wrap: nowrap;
 }
 
 /* header */
@@ -1215,8 +1220,8 @@ a:hover span {
 }
 
 .profile-feeds .mb-3,
-.profile-feeds .mb-4:first-child{
-    margin-bottom: 0rem !important;
+.profile-feeds .mb-4:first-child {
+    margin-bottom: 0.5rem !important;
 }
 
 /* -------------- Job List ------------ */
@@ -1288,11 +1293,11 @@ a:hover span {
 
 p.muted {
     color: #6c757d;
-    font-size: .8em;
+    /*    font-size: .8em;*/
 }
 
 p.card-date {
-    font-size: .8em;
+    /*    font-size: .8em;*/
 }
 
 p.card-description {
@@ -1304,7 +1309,7 @@ p.card-details-in {
 }
 
 p.card-details-in .card-span {
-    font-size: .9em;
+    /*    font-size: .9em;*/
     margin-right: 5px;
     color: var(--maincolor);
 }

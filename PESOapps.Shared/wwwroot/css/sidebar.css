@@ -234,3 +234,23 @@ a.dashnav-links.active:hover span {
 }
 
 /* -------------- Sidebar Navigation ------------ */
+
+
+@media only screen and (max-width: 768px) {
+    .sbopen .main-content {
+        margin: 60px 0 0 65px;
+    }
+
+    .main-container-layout.sbopen .main-container {
+        pointer-events: none;
+    }
+
+    .main-container-layout.sbopen .main-container input,
+    .main-container-layout.sbopen .main-container button {
+        opacity: .4;
+    }
+
+    .dboard {
+        font-size: 10px;
+    }
+}

@@ -427,56 +427,79 @@ else
 
         <form @onsubmit="HandleValidSubmit">
             <!-- Tab Navigation -->
-            <ul class="nsrp-tabs">
-                <li>
-                    <button type="button" class="@(activeTab == "personal" ? "nsrp-tab active" : "nsrp-tab")"
-                            @onclick="@(() => ChangeTab("personal"))">
-                        Personal Info
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="@(activeTab == "jobpref" ? "nsrp-tab active" : "nsrp-tab")"
-                            @onclick="@(() => ChangeTab("jobpref"))">
-                        Job Preference
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="@(activeTab == "language" ? "nsrp-tab active" : "nsrp-tab")"
-                            @onclick="@(() => ChangeTab("language"))">
-                        Language or Dialect Proficiency
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="@(activeTab == "education" ? "nsrp-tab active" : "nsrp-tab")"
-                            @onclick="@(() => ChangeTab("education"))">
-                        Education Background
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="@(activeTab == "technical" ? "nsrp-tab active" : "nsrp-tab")"
-                            @onclick="@(() => ChangeTab("technical"))">
-                        Technical/Vocational and Other Training
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="@(activeTab == "eligibility" ? "nsrp-tab active" : "nsrp-tab")"
-                            @onclick="@(() => ChangeTab("eligibility"))">
-                        Eligibility or Professional License
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="@(activeTab == "Work" ? "nsrp-tab active" : "nsrp-tab")"
-                            @onclick="@(() => ChangeTab("Work"))">
-                        Work Experience
-                    </button>
-                </li>
-                <li>
-                    <button type="button" class="@(activeTab == "Other" ? "nsrp-tab active" : "nsrp-tab")"
-                            @onclick="@(() => ChangeTab("Other"))">
-                        Other Skills Acquired
-                    </button>
-                </li>
-            </ul>
+            <div class="nsrp-carousel">
+                <button type="button" class="carousel-arrow left" onclick="scrollTabs(-200)">&#10094;</button>
+
+                <ul class="nsrp-tabs">
+                    <li>
+                        <button type="button"
+                                @ref="btnPersonal"
+                                @onclick='@(async () => await SelectAndCenter("personal", btnPersonal))'
+                                class='@(activeTab == "personal" ? "nsrp-tab active" : "nsrp-tab")'>
+                            Personal Info
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                                @ref="btnJobpref"
+                                @onclick='@(async () => await SelectAndCenter("jobpref", btnJobpref))'
+                                class='@(activeTab == "jobpref" ? "nsrp-tab active" : "nsrp-tab")'>
+                            Job Preference
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                                @ref="btnLanguage"
+                                @onclick='@(async () => await SelectAndCenter("language", btnLanguage))'
+                                class='@(activeTab == "language" ? "nsrp-tab active" : "nsrp-tab")'>
+                            Language or Dialect Proficiency
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                                @ref="btnEducation"
+                                @onclick='@(async () => await SelectAndCenter("education", btnEducation))'
+                                class='@(activeTab == "education" ? "nsrp-tab active" : "nsrp-tab")'>
+                            Education Background
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                                @ref="btnTechnical"
+                                @onclick='@(async () => await SelectAndCenter("technical", btnTechnical))'
+                                class='@(activeTab == "technical" ? "nsrp-tab active" : "nsrp-tab")'>
+                            Technical/Vocational and Other Training
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                                @ref="btnEligibility"
+                                @onclick='@(async () => await SelectAndCenter("eligibility", btnEligibility))'
+                                class='@(activeTab == "eligibility" ? "nsrp-tab active" : "nsrp-tab")'>
+                            Eligibility or Professional License
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                                @ref="btnWork"
+                                @onclick='@(async () => await SelectAndCenter("Work", btnWork))'
+                                class='@(activeTab == "Work" ? "nsrp-tab active" : "nsrp-tab")'>
+                            Work Experience
+                        </button>
+                    </li>
+                    <li>
+                        <button type="button"
+                                @ref="btnOther"
+                                @onclick='@(async () => await SelectAndCenter("Other", btnOther))'
+                                class='@(activeTab == "Other" ? "nsrp-tab active" : "nsrp-tab")'>
+                            Other Skills Acquired
+                        </button>
+                    </li>
+                </ul>
+
+                <button type="button" class="carousel-arrow right" onclick="scrollTabs(200)">&#10095;</button>
+            </div>
+
 
             <!-- Tab Content -->
             <div class="nsrp-content">
@@ -897,37 +920,39 @@ else
                         </div>
 
                         <!-- Language Table -->
-                        <table class="nsrp-table">
-                            <thead>
-                                <tr>
-                                    <th>Language</th>
-                                    <th>Read</th>
-                                    <th>Write</th>
-                                    <th>Speak</th>
-                                    <th>Understand</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var lang in applicant.ApplicantLanguageDialectProf)
-                                {
+                        <div class="table-scroll">
+                            <table class="nsrp-table">
+                                <thead>
                                     <tr>
-                                        <td>@lang.LanguageName</td>
-                                        <td><input type="checkbox" checked="@(@lang.Read == 1)" disabled /></td>
-                                        <td><input type="checkbox" checked="@(@lang.Write == 1)" disabled /></td>
-                                        <td><input type="checkbox" checked="@(@lang.Speak == 1)" disabled /></td>
-                                        <td><input type="checkbox" checked="@(@lang.Understand == 1)" disabled /></td>
-                                        <td class="text-end">
-                                            <button type="button" class="nsrp-btn-remove"
-                                                    @onclick="@(() => RemoveLanguage(lang))"
-                                                    disabled="@(!isEditing)">
-                                                Remove
-                                            </button>
-                                        </td>
+                                        <th>Language</th>
+                                        <th>Read</th>
+                                        <th>Write</th>
+                                        <th>Speak</th>
+                                        <th>Understand</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach (var lang in applicant.ApplicantLanguageDialectProf)
+                                    {
+                                        <tr>
+                                            <td>@lang.LanguageName</td>
+                                            <td><input type="checkbox" checked="@(@lang.Read == 1)" disabled /></td>
+                                            <td><input type="checkbox" checked="@(@lang.Write == 1)" disabled /></td>
+                                            <td><input type="checkbox" checked="@(@lang.Speak == 1)" disabled /></td>
+                                            <td><input type="checkbox" checked="@(@lang.Understand == 1)" disabled /></td>
+                                            <td class="text-end">
+                                                <button type="button" class="nsrp-btn-remove"
+                                                        @onclick="@(() => RemoveLanguage(lang))"
+                                                        disabled="@(!isEditing)">
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
                 else if (activeTab == "education")
@@ -965,38 +990,40 @@ else
                         </div>
 
                         <!-- Education Table -->
-                        <table class="nsrp-table">
-                            <thead>
-                                <tr>
-                                    <th>Level</th>
-                                    <th>School</th>
-                                    <th>Course</th>
-                                    <th>Year Graduated</th>
-                                    <th>Awards</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var edu in applicant.ApplicantEducationalBackground
-                                                        .OrderBy(e => levelOrder.IndexOf(e.LevelName ?? "Others")))
-                                {
+                        <div class="table-scroll">
+                            <table class="nsrp-table">
+                                <thead>
                                     <tr>
-                                        <td>@edu.LevelName</td>
-                                        <td>@edu.School</td>
-                                        <td>@edu.Course</td>
-                                        <td>@edu.YearGraduated</td>
-                                        <td>@edu.AwardsReceived</td>
-                                        <td class="text-end">
-                                            <button type="button" class="nsrp-btn-remove"
-                                                    @onclick="@(() => RemoveEducation(edu))"
-                                                    disabled="@(!isEditing)">
-                                                Remove
-                                            </button>
-                                        </td>
+                                        <th>Level</th>
+                                        <th>School</th>
+                                        <th>Course</th>
+                                        <th>Year Graduated</th>
+                                        <th>Awards</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach (var edu in applicant.ApplicantEducationalBackground
+                                                            .OrderBy(e => levelOrder.IndexOf(e.LevelName ?? "Others")))
+                                    {
+                                        <tr>
+                                            <td>@edu.LevelName</td>
+                                            <td>@edu.School</td>
+                                            <td>@edu.Course</td>
+                                            <td>@edu.YearGraduated</td>
+                                            <td>@edu.AwardsReceived</td>
+                                            <td class="text-end">
+                                                <button type="button" class="nsrp-btn-remove"
+                                                        @onclick="@(() => RemoveEducation(edu))"
+                                                        disabled="@(!isEditing)">
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
                 else if (activeTab == "technical")
@@ -1028,41 +1055,43 @@ else
                         </div>
 
                         <!-- Technical / Vocational Table -->
-                        <table class="nsrp-table">
-                            <thead>
-                                <tr>
-                                    <th>Course Name</th>
-                                    <th>Duration (From - To)</th>
-                                    <th>Training Institution</th>
-                                    <th>Certificate Received</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var tech in applicant.ApplicantTechnicalVocational)
-                                {
+                        <div class="table-scroll">
+                            <table class="nsrp-table">
+                                <thead>
                                     <tr>
-                                        <td>@tech.CourseName</td>
-                                            <td>
-                                                @{
-                                                    var fromStr = tech.DurationFrom?.ToString("yyyy-MM-dd") ?? "";
-                                                    var toStr = tech.DurationTo?.ToString("yyyy-MM-dd") ?? "";
-                                                }
-                                                @(fromStr) - @(toStr)
-                                            </td>
-                                        <td>@tech.TrainingInstitution</td>
-                                        <td>@tech.CertifcateReceived</td>
-                                        <td class="text-end">
-                                        <button type="button" class="nsrp-btn-remove"
-                                                @onclick="@(() => RemoveTechnical(tech))"
-                                                disabled="@(!isEditing)">
-                                            Remove
-                                        </button>
-                                        </td>
+                                        <th>Course Name</th>
+                                        <th>Duration (From - To)</th>
+                                        <th>Training Institution</th>
+                                        <th>Certificate Received</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
-                            }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach (var tech in applicant.ApplicantTechnicalVocational)
+                                    {
+                                        <tr>
+                                            <td>@tech.CourseName</td>
+                                                <td>
+                                                    @{
+                                                        var fromStr = tech.DurationFrom?.ToString("yyyy-MM-dd") ?? "";
+                                                        var toStr = tech.DurationTo?.ToString("yyyy-MM-dd") ?? "";
+                                                    }
+                                                    @(fromStr) - @(toStr)
+                                                </td>
+                                            <td>@tech.TrainingInstitution</td>
+                                            <td>@tech.CertifcateReceived</td>
+                                            <td class="text-end">
+                                            <button type="button" class="nsrp-btn-remove"
+                                                    @onclick="@(() => RemoveTechnical(tech))"
+                                                    disabled="@(!isEditing)">
+                                                Remove
+                                            </button>
+                                            </td>
+                                        </tr>
+                                }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
                 else if (activeTab == "eligibility")
@@ -1086,35 +1115,35 @@ else
                                 Add
                             </button>
                         </div>
-
-                        <table class="nsrp-table">
-                            <thead>
-                                <tr>
-                                    <th>Eligibility Name</th>
-                                    <th>Rating</th>
-                                    <th>Date of Examination</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var e in applicant.ApplicantEligibility)
-                                {
+                        <div class="table-scroll">
+                            <table class="nsrp-table">
+                                <thead>
                                     <tr>
-                                        <td>@e.EligibilityName</td>
-                                        <td>@e.Rating%</td>
-                                        <td>@e.DateOfExamination?.ToString("yyyy-MM-dd")</td>
-                                        <td class="text-end">
-                                            <button type="button" class="nsrp-btn-remove"
-                                                    @onclick="@(() => RemoveEligibility(e))"
-                                                    disabled="@(!isEditing)">
-                                                Remove
-                                            </button>
-                                        </td>
+                                        <th>Eligibility Name</th>
+                                        <th>Rating</th>
+                                        <th>Date of Examination</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
-
+                                </thead>
+                                <tbody>
+                                    @foreach (var e in applicant.ApplicantEligibility)
+                                    {
+                                        <tr>
+                                            <td>@e.EligibilityName</td>
+                                            <td>@e.Rating%</td>
+                                            <td>@e.DateOfExamination?.ToString("yyyy-MM-dd")</td>
+                                            <td class="text-end">
+                                                <button type="button" class="nsrp-btn-remove"
+                                                        @onclick="@(() => RemoveEligibility(e))"
+                                                        disabled="@(!isEditing)">
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                         <h4>Professional License</h4>
 
                         <!-- Add New Professional License -->
@@ -1130,32 +1159,33 @@ else
                                 Add
                             </button>
                         </div>
-
-                        <table class="nsrp-table">
-                            <thead>
-                                <tr>
-                                    <th>License Name</th>
-                                    <th>Validity</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var p in applicant.ApplicantProfessionalLicense)
-                                {
+                        <div class="table-scroll">
+                            <table class="nsrp-table">
+                                <thead>
                                     <tr>
-                                        <td>@p.ProfName</td>
-                                        <td>@p.Validity?.ToString("yyyy-MM-dd")</td>
-                                        <td class="text-end">
-                                            <button type="button" class="nsrp-btn-remove"
-                                                    @onclick="@(() => RemoveProfessionalLicense(p))"
-                                                    disabled="@(!isEditing)">
-                                                Remove
-                                            </button>
-                                        </td>
+                                        <th>License Name</th>
+                                        <th>Validity</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach (var p in applicant.ApplicantProfessionalLicense)
+                                    {
+                                        <tr>
+                                            <td>@p.ProfName</td>
+                                            <td>@p.Validity?.ToString("yyyy-MM-dd")</td>
+                                            <td class="text-end">
+                                                <button type="button" class="nsrp-btn-remove"
+                                                        @onclick="@(() => RemoveProfessionalLicense(p))"
+                                                        disabled="@(!isEditing)">
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
                 else if (activeTab == "Work")
@@ -1195,41 +1225,43 @@ else
                         </div>
 
                         <!-- Work Experience Table -->
-                        <table class="nsrp-table">
-                            <thead>
-                                <tr>
-                                    <th>Company Name</th>
-                                    <th>Address</th>
-                                    <th>Position</th>
-                                    <th>Inclusive Dates</th>
-                                    <th>Status</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var work in applicant.ApplicantWorkExperience)
-                                {
+                        <div class="table-scroll">
+                            <table class="nsrp-table">
+                                <thead>
                                     <tr>
-                                        <td>@work.CompanyName</td>
-                                        <td>@work.CompanyAddress</td>
-                                        <td>@work.Position</td>
-                                        <td>
-                                            @work.InclusiveDateFrom?.ToString("yyyy-MM-dd")
-                                            -
-                                            @work.InclusiveDateTo?.ToString("yyyy-MM-dd")
-                                        </td>
-                                        <td>@work.Status</td>
-                                        <td class="text-end">
-                                            <button type="button" class="nsrp-btn-remove"
-                                                    @onclick="@(() => RemoveWorkExperience(work))"
-                                                    disabled="@(!isEditing)">
-                                                Remove
-                                            </button>
-                                        </td>
+                                        <th>Company Name</th>
+                                        <th>Address</th>
+                                        <th>Position</th>
+                                        <th>Inclusive Dates</th>
+                                        <th>Status</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach (var work in applicant.ApplicantWorkExperience)
+                                    {
+                                        <tr>
+                                            <td>@work.CompanyName</td>
+                                            <td>@work.CompanyAddress</td>
+                                            <td>@work.Position</td>
+                                            <td>
+                                                @work.InclusiveDateFrom?.ToString("yyyy-MM-dd")
+                                                -
+                                                @work.InclusiveDateTo?.ToString("yyyy-MM-dd")
+                                            </td>
+                                            <td>@work.Status</td>
+                                            <td class="text-end">
+                                                <button type="button" class="nsrp-btn-remove"
+                                                        @onclick="@(() => RemoveWorkExperience(work))"
+                                                        disabled="@(!isEditing)">
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
 
@@ -1269,29 +1301,31 @@ else
                         </div>
 
                         <!-- Other Skills Table -->
-                        <table class="nsrp-table">
-                            <thead>
-                                <tr>
-                                    <th>Skill Name</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach (var skill in applicant.ApplicantOtherSkills)
-                                {
+                        <div class="table-scroll">
+                            <table class="nsrp-table">
+                                <thead>
                                     <tr>
-                                        <td>@skill.SkillName</td>
-                                        <td class="text-end">
-                                            <button type="button" class="nsrp-btn-remove"
-                                                    @onclick="@(() => RemoveOtherSkill(skill))"
-                                                    disabled="@(!isEditing)">
-                                                Remove
-                                            </button>
-                                        </td>
+                                        <th>Skill Name</th>
+                                        <th class="text-end">Action</th>
                                     </tr>
-                                }
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    @foreach (var skill in applicant.ApplicantOtherSkills)
+                                    {
+                                        <tr>
+                                            <td>@skill.SkillName</td>
+                                            <td class="text-end">
+                                                <button type="button" class="nsrp-btn-remove"
+                                                        @onclick="@(() => RemoveOtherSkill(skill))"
+                                                        disabled="@(!isEditing)">
+                                                    Remove
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 }
 
@@ -1496,12 +1530,6 @@ else
         loc.IsRemoved = 1;
     }
 
-    private string activeTab = "personal";
-
-    private void ChangeTab(string tab)
-    {
-        activeTab = tab;
-    }
 
     // ********************************************************************** Add Language **********************************************************************
     private string newLanguageName = string.Empty;
@@ -1782,4 +1810,54 @@ else
         await JS.InvokeVoidAsync("printDiv", "nsrpFormContent");
     }
 
+    // ********************************************************************** Tabs **********************************************************************
+    
+    // ElementReferences for each tab button
+    private ElementReference btnPersonal;
+    private ElementReference btnJobpref;
+    private ElementReference btnLanguage;
+    private ElementReference btnEducation;
+    private ElementReference btnTechnical;
+    private ElementReference btnEligibility;
+    private ElementReference btnWork;
+    private ElementReference btnOther;
+
+    private string activeTab = "personal";
+
+    private void ChangeTab(string tab)
+    {
+        activeTab = tab;
+    }
+
+    // helper: call ChangeTab and then center the clicked button via JS interop
+    private async Task SelectAndCenter(string tab, ElementReference btn)
+    {
+        ChangeTab(tab);
+
+        // let Blazor update DOM (small delay to ensure layout finishes)
+        await InvokeAsync(StateHasChanged);
+        await Task.Delay(40);
+
+        // call JS to center the button
+        await JS.InvokeVoidAsync("centerTab", btn);
+    }
+
 }
+<script>
+        function scrollTabs(amount) {
+        const tabs = document.querySelector(".nsrp-tabs");
+        tabs.scrollBy({ left: amount, behavior: "smooth" });
+    }
+    // receives an ElementReference from Blazor (becomes the actual DOM element)
+    window.centerTab = (el) => {
+      const tabs = document.querySelector('.nsrp-tabs');
+      if (!tabs || !el) return;
+
+      // ensure we have an HTML element
+      const btn = el instanceof HTMLElement ? el : el;
+
+      const tabCenter = btn.offsetLeft + btn.offsetWidth / 2;
+      const scrollTo = tabCenter - tabs.offsetWidth / 2;
+      tabs.scrollTo({ left: scrollTo, behavior: 'smooth' });
+    };
+</script>

@@ -186,7 +186,7 @@ else
             return;
         }
 
-        var employerDetailsResponse = await Http.GetAsync($"http://localhost:5167/api/Employer/GetEmployerDetailsByEmail/{userId}");
+        var employerDetailsResponse = await Http.GetAsync($"/api/Employer/GetEmployerDetailsByEmail/{userId}");
         if (!employerDetailsResponse.IsSuccessStatusCode)
         {
             DebugMessage = $"Error fetching employer details for defaults: {employerDetailsResponse.StatusCode}";
@@ -216,7 +216,7 @@ else
         }
 
         DebugMessage = $"UserId found: {userId}. Fetching employer details...";
-        var employerDetailsResponse = await Http.GetAsync($"http://localhost:5167/api/Employer/GetEmployerDetailsByEmail/{userId}");
+        var employerDetailsResponse = await Http.GetAsync($"/api/Employer/GetEmployerDetailsByEmail/{userId}");
         if (!employerDetailsResponse.IsSuccessStatusCode)
         {
             DebugMessage = $"Error fetching employer details: {employerDetailsResponse.StatusCode}";
@@ -258,7 +258,7 @@ else
             gender = ""
         };
 
-        var response = await Http.PostAsJsonAsync("http://localhost:5167/api/Employer/GetNearbyApplicantsV2", request);
+        var response = await Http.PostAsJsonAsync("/api/Employer/GetNearbyApplicantsV2", request);
 
         if (response.IsSuccessStatusCode)
         {
@@ -294,7 +294,7 @@ else
         }
 
         DebugMessage = $"UserId found: {userId}. Fetching employer details...";
-        var employerDetailsResponse = await Http.GetAsync($"http://localhost:5167/api/Employer/GetEmployerDetailsByEmail/{userId}");
+        var employerDetailsResponse = await Http.GetAsync($"/api/Employer/GetEmployerDetailsByEmail/{userId}");
         if (!employerDetailsResponse.IsSuccessStatusCode)
         {
             DebugMessage = $"Error fetching employer details: {employerDetailsResponse.StatusCode}";
@@ -350,7 +350,7 @@ else
             gender = ""
         };
 
-        var response = await Http.PostAsJsonAsync("http://localhost:5167/api/Employer/GetNearbyApplicantsV2", request);
+        var response = await Http.PostAsJsonAsync("/api/Employer/GetNearbyApplicantsV2", request);
 
         if (response.IsSuccessStatusCode)
         {

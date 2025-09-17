@@ -152,7 +152,7 @@ else
 
                 try
                 {
-                    var profileResponse = await Http.GetAsync($"http://localhost:5167/api/Applicant/GetApplicantProfile/{userId}");
+                    var profileResponse = await Http.GetAsync($"/api/Applicant/GetApplicantProfile/{userId}");
                     if (profileResponse.IsSuccessStatusCode)
                     {
                         var json = await profileResponse.Content.ReadAsStringAsync();
@@ -161,7 +161,7 @@ else
                             PropertyNameCaseInsensitive = true 
                         });
 
-                        var jobResponse = await Http.GetAsync($"http://localhost:5167/api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
+                        var jobResponse = await Http.GetAsync($"/api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
                         if (jobResponse.IsSuccessStatusCode)
                         {
                             var rawJson = await jobResponse.Content.ReadAsStringAsync();
@@ -213,7 +213,7 @@ else
         try
         {
             applicants = await Http.GetFromJsonAsync<List<AppliedApplicantViewModel>>
-                ($"http://localhost:5167/api/Employer/GetApplicantsByJobPost/{jobId}") ?? new();
+                ($"/api/Employer/GetApplicantsByJobPost/{jobId}") ?? new();
         }
         catch (Exception ex)
         {

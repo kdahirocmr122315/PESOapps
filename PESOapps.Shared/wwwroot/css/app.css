@@ -262,7 +262,7 @@ h1:focus {
 
 span.peso-log {
     font-size: 40px;
-    font-weight: 100;
+/*    font-weight: 100;*/
     text-shadow: 1px 1px var(--text-shadow);
 }
 
@@ -313,7 +313,7 @@ span.misvis-header {
 }
 
 span.misvis-par {
-    font-weight: 100;
+/*    font-weight: 100;*/
     line-height: 2;
     text-align: justify;
 }

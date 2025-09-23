@@ -417,9 +417,61 @@ else
         </div>
 
         <!-- END Modal -->
+        @if (showChangePasswordModal)
+        {
+            <div class="changepassword-modal-overlay">
+                <div class="changepassword-modal">
+                    <div class="changepassword-header">
+                        <h3>Change Password</h3>
+                        <button class="changepassword-close" @onclick="CloseChangePasswordModal">×</button>
+                    </div>
 
+                    <div class="changepassword-body">
+                        <div>
+                            <label>Current Password</label>
+                            <div style="display:flex; align-items:center; gap:8px; position:relative;">
+                                <input type="@passwordInputType" class="changepassword-input" @bind="currentPassword" />
+                                <button style="height: 34px;" type="button"
+                                        class="showpass"
+                                        @onclick="TogglePassword">
+                                    @(showPassword ? "🙈" : "👁")
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>New Password</label>
+                             <div style="display:flex; align-items:center; gap:8px; position:relative;">
+                                <input type="@passwordInputType" class="changepassword-input" @bind="newPassword" />
+                                <button style="height: 34px;" type="button"
+                                        class="showpass"
+                                        @onclick="TogglePassword">
+                                    @(showPassword ? "🙈" : "👁")
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Confirm New Password</label>
+                            <div style="display:flex; align-items:center; gap:8px; position:relative;">
+                                <input type="@passwordInputType" class="changepassword-input" @bind="repeatPassword" />
+                                <button style="height: 34px;" type="button"
+                                        class="showpass"
+                                        @onclick="TogglePassword">
+                                    @(showPassword ? "🙈" : "👁")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="changepassword-footer">
+                        <button class="changepassword-submit" @onclick="SubmitChangePassword">Submit</button>
+                        <button class="changepassword-cancel" @onclick="CloseChangePasswordModal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        }
         <div class="nsrp-header">
             <button class="nsrp-toggle" onclick="openNSRP()">View NSRP Form</button>
+            <button class="nsrp-toggle" @onclick="OpenChangePasswordModal">Change Password</button>
             <button class="nsrp-toggle" @onclick="ToggleEdit">
                 @(isEditing ? "Disable Update" : "Enable Update")
             </button>
@@ -512,7 +564,7 @@ else
                                 <label>Email</label>
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.Email" disabled />
                             </div>
-                            <div>
+                            @* <div>
                                 <label>Password</label>
                                 <div style="display:flex; align-items:center; gap:8px; position:relative;">
                                     <input type="@passwordInputType"
@@ -527,7 +579,7 @@ else
                                         @(showPassword ? "🙈" : "👁")
                                     </button>
                                 </div>
-                            </div>
+                            </div> *@
                             <div>
                                 <label>First Name</label>
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.FirstName" disabled="@(!isEditing)" />
@@ -801,7 +853,6 @@ else
                                 <table class="nsrp-table">
                                     <thead>
                                         <tr>
-                                            <th>ID</th>
                                             <th>Occupation</th>
                                             <th class="text-end">Action</th>
                                         </tr>
@@ -810,7 +861,6 @@ else
                                         @foreach (var occ in applicant.ApplicantJobPrefOccupation.Where(o => o.IsRemoved == 0))
                                         {
                                             <tr>
-                                                <td>@occ.Id</td>
                                                 <td>@occ.OccupationName</td>
                                                 <td class="text-end">
                                                     <button type="button" class="nsrp-btn-remove"
@@ -1841,6 +1891,65 @@ else
         // call JS to center the button
         await JS.InvokeVoidAsync("centerTab", btn);
     }
+    // ********************************************************************** Change password **********************************************************************
+
+
+    private bool showChangePasswordModal = false;
+    private string currentPassword = string.Empty;
+    private string newPassword = string.Empty;
+    private string repeatPassword = string.Empty;
+
+    private void OpenChangePasswordModal() => showChangePasswordModal = true;
+    private void CloseChangePasswordModal()
+    {
+        showChangePasswordModal = false;
+        currentPassword = newPassword = repeatPassword = string.Empty;
+    }
+
+    private async Task SubmitChangePassword()
+    {
+        if (newPassword != repeatPassword)
+        {
+            Console.WriteLine("New password and Repeat password do not match.");
+            return;
+        }
+
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            Console.WriteLine("UserId not found in local storage.");
+            return;
+        }
+
+        var payload = new
+        {
+            id = userId,
+            currentPassword = currentPassword,
+            newPassword = newPassword,
+            repeatPassword = repeatPassword
+        };
+
+        var response = await Http.PostAsJsonAsync("api/Applicant/ChangeUserPassword", payload);
+
+        if (response.IsSuccessStatusCode)
+        {
+            Console.WriteLine("Password changed successfully!");
+            CloseChangePasswordModal();
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"Failed: {error}");
+
+            // 🔹 Example: if the API says "invalid current password"
+            if (error.Contains("invalid", StringComparison.OrdinalIgnoreCase))
+            {
+                Console.WriteLine("Your current password is incorrect.");
+            }
+        }
+    }
+
 
 }
 <script>

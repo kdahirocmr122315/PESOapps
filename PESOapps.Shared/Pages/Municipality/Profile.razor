@@ -104,7 +104,7 @@ else
         }
 
         // ✅ Fetch from API if not cached
-        var response = await Http.GetAsync($"/api/Manager/GetPESOManagerAccount/{userId}");
+        var response = await Http.GetAsync($"api/Manager/GetPESOManagerAccount/{userId}");
         if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
         {
             Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
@@ -141,7 +141,7 @@ else
             }
 
             var statsResponse = await Http.GetAsync(
-                $"/api/Manager/GetNumberOfEmplyerAndApplicant/{provCode}/{cityCode}");
+                $"api/Manager/GetNumberOfEmplyerAndApplicant/{provCode}/{cityCode}");
 
             if (statsResponse.IsSuccessStatusCode)
             {

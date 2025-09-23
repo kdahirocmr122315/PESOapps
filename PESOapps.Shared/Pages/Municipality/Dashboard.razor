@@ -295,7 +295,7 @@ else
 
                     // Fetch applicant profile
                     var response = await Http.GetAsync(
-                        $"/api/Applicant/GetApplicantProfile/{userId}");
+                        $"api/Applicant/GetApplicantProfile/{userId}");
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -336,7 +336,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "/Api/Tupad/verified");
+        var requestMessage = new HttpRequestMessage(HttpMethod.Get, "api/Tupad/verified");
         requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
 
         var response = await Http.SendAsync(requestMessage);
@@ -357,7 +357,7 @@ else
     {
         try
         {
-            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "/Api/Tupad/verified");
+            var requestMessage = new HttpRequestMessage(HttpMethod.Get, "api/Tupad/verified");
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
             var response = await Http.SendAsync(requestMessage);
             if (response.IsSuccessStatusCode)
@@ -365,7 +365,7 @@ else
                 VerifiedList = await response.Content.ReadFromJsonAsync<List<TupadModel>>();
             }
 
-            requestMessage = new HttpRequestMessage(HttpMethod.Get, "/Api/Tupad/unverified");
+            requestMessage = new HttpRequestMessage(HttpMethod.Get, "api/Tupad/unverified");
             requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", Token);
             response = await Http.SendAsync(requestMessage);
             if (response.IsSuccessStatusCode)
@@ -384,7 +384,7 @@ else
         try
         {
             var updateData = new { Verification = isVerified ? "Yes" : "No" };
-            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"/Api/Tupad/{id}")
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"api/Tupad/{id}")
                 {
                     Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(updateData), System.Text.Encoding.UTF8, "application/json")
                 };
@@ -461,7 +461,7 @@ else
                 DeletedDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") // Add the current timestamp
             };
 
-            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"/Api/Tupad/{id}")
+            var requestMessage = new HttpRequestMessage(HttpMethod.Put, $"api/Tupad/{id}")
                 {
                     Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(deleteupdate), System.Text.Encoding.UTF8, "application/json")
                 };

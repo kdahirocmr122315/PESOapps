@@ -250,7 +250,7 @@ else
 
                 try
                 {
-                    var response = await Http.GetAsync($"/api/Applicant/GetApplicantProfile/{userId}");
+                    var response = await Http.GetAsync($"api/Applicant/GetApplicantProfile/{userId}");
 
                     if (response.IsSuccessStatusCode)
                     {
@@ -259,7 +259,7 @@ else
                             new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                         // Load job list after confirming user profile
-                        jobList = await Http.GetFromJsonAsync<List<JobPostViewModel>>("/api/Applicant/GetJobLists");
+                        jobList = await Http.GetFromJsonAsync<List<JobPostViewModel>>("api/Applicant/GetJobLists");
                         if (jobList != null)
                         {
                             SortJobList(); // <-- apply initial sorting
@@ -325,7 +325,7 @@ else
                 var userId = profile.ApplicantInformation.AccountId;
                 var jobId = selectedJob.JobPost.Id;
 
-                var response = await Http.GetAsync($"/api/Applicant/CheckIfAlreadyApplied/{userId}/{jobId}");
+                var response = await Http.GetAsync($"api/Applicant/CheckIfAlreadyApplied/{userId}/{jobId}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -429,7 +429,7 @@ else
                 dateCreated = DateTime.UtcNow
             };
 
-            var saveResponse = await Http.PostAsJsonAsync("/api/Applicant/SaveJobApplication", payload);
+            var saveResponse = await Http.PostAsJsonAsync("api/Applicant/SaveJobApplication", payload);
             if (!saveResponse.IsSuccessStatusCode)
             {
                 var error = await saveResponse.Content.ReadAsStringAsync();
@@ -473,7 +473,7 @@ else
                     content.Add(CreateFileContent(ms, file.Name, file.ContentType ?? "application/octet-stream"), "files", file.Name);
                 }
 
-                var uploadResponse = await Http.PostAsync("/api/Applicant/UploadApplicantResume", content);
+                var uploadResponse = await Http.PostAsync("api/Applicant/UploadApplicantResume", content);
                 if (!uploadResponse.IsSuccessStatusCode)
                 {
                     var error = await uploadResponse.Content.ReadAsStringAsync();

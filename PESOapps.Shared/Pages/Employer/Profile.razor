@@ -182,7 +182,7 @@ else
                        A. Fetch Employer profile (your old call)
                        ───────────────────────────────────────── */
                     var profileResponse =
-                        await Http.GetAsync($"/api/Employer/GetEmployerDetailsByEmail/{userId}");
+                        await Http.GetAsync($"api/Employer/GetEmployerDetailsByEmail/{userId}");
 
                     if (profileResponse.IsSuccessStatusCode)
                     {
@@ -196,7 +196,7 @@ else
                         Console.WriteLine($"Profile call failed: {profileResponse.StatusCode}");
                     }
                     var appsResponse =
-                         await Http.GetAsync($"/api/Employer/GetApplicantsByEmployer/{userId}");
+                         await Http.GetAsync($"api/ Employer/GetApplicantsByEmployer/{userId}");
 
                     if (appsResponse.IsSuccessStatusCode)
                     {

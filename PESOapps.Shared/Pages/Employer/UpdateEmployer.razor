@@ -261,7 +261,7 @@ else
     {
         try
         {
-            employer = await Http.GetFromJsonAsync<EmployerDetails>($"/api/Employer/GetEmployerDetailsByEmail/{userId}");
+            employer = await Http.GetFromJsonAsync<EmployerDetails>($"api/Employer/GetEmployerDetailsByEmail/{userId}");
         }
         catch (Exception ex)
         {
@@ -291,7 +291,7 @@ else
                 ListOfAttachments = new List<object>() // send empty if you don't need attachments
             };
 
-            var response = await Http.PostAsJsonAsync("/api/Employer/UpdateEmployer", request);
+            var response = await Http.PostAsJsonAsync("api/Employer/UpdateEmployer", request);
 
             if (response.IsSuccessStatusCode)
             {

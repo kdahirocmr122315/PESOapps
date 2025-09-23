@@ -201,7 +201,7 @@
     {
         try
         {
-            int count = await Http.GetFromJsonAsync<int>("http://localhost:5167/api/Applicant/GetNumberOfVerifiedApplicant");
+            int count = await Http.GetFromJsonAsync<int>("https://portal.misamisoriental.gov.ph/peso2api/api/Applicant/GetNumberOfVerifiedApplicant");
             verifiedCountText = count.ToString();
         }
         catch (Exception ex)

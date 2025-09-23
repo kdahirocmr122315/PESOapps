@@ -124,7 +124,7 @@ else
                     // Add token to the request headers
                     Http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", initialBearerToken);
 
-                    var response = await Http.GetAsync($"/api/Applicant/GetApplicantProfile/{userId}");
+                    var response = await Http.GetAsync($"api/Applicant/GetApplicantProfile/{userId}");
                     if (response.IsSuccessStatusCode)
                     {
                         var json = await response.Content.ReadAsStringAsync();

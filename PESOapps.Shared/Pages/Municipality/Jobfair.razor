@@ -310,7 +310,7 @@
             var cityCode = SelectedCityCode ?? "";
 
             var res = await Http.GetAsync(
-                $"/api/Manager/GetPreRegList1/{provCode}/{cityCode}");
+                $"api/Manager/GetPreRegList1/{provCode}/{cityCode}");
 
             if (res.IsSuccessStatusCode)
             {
@@ -362,7 +362,7 @@
 
         try
         {
-            var res = await Http.GetAsync($"/api/Manager/ValidateReferenceNumber/{referenceNumber}");
+            var res = await Http.GetAsync($"api/Manager/ValidateReferenceNumber/{referenceNumber}");
             if (res.IsSuccessStatusCode)
             {
                 var json = await res.Content.ReadAsStringAsync();

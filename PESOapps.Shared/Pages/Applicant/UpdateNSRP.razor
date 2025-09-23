@@ -1375,7 +1375,7 @@ else
     {
         try
         {
-            var url = $"/api/Applicant/SaveApplicantData/true/{applicant.ApplicantInformation.AccountId}";
+            var url = $"api/Applicant/SaveApplicantData/true/{applicant.ApplicantInformation.AccountId}";
             var response = await Http.PostAsJsonAsync(url, applicant);
 
             if (response.IsSuccessStatusCode)
@@ -1420,7 +1420,7 @@ else
                 AllBarangays = await AddressService.GetBarangaysAsync();
 
                 applicant = await Http.GetFromJsonAsync<ApplicantDataViewModel>(
-                    $"/api/Employer/ApplicantDataViewModel/{accountId}"
+                    $"api/Employer/ApplicantDataViewModel/{accountId}"
                 ) ?? new ApplicantDataViewModel();
 
                 loaded = true;

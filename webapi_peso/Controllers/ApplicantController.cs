@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using PESOServerAPI.Services;
 using System.Linq;
 using System.Net;
 using System.Net.Http.Headers;
@@ -19,12 +20,14 @@ namespace webapi_peso.Controllers
         private readonly IDbContextFactory<ApplicationDbContext> dbFactory;
         private readonly IMemoryCache cache;
         private readonly IWebHostEnvironment env;
+        private readonly IGmailServices gmail;
 
-        public ApplicantController(IDbContextFactory<ApplicationDbContext> _dbFactory, IMemoryCache _cache, IWebHostEnvironment _env)
+        public ApplicantController(IDbContextFactory<ApplicationDbContext> _dbFactory, IMemoryCache _cache, IWebHostEnvironment _env, IGmailServices gmail)
         {
             dbFactory = _dbFactory;
             cache = _cache;
             env = _env;
+            this.gmail = gmail;
         }
 
         [HttpGet("GetJobLists")]
@@ -1052,10 +1055,10 @@ namespace webapi_peso.Controllers
             }
             else
             {
-                // Update Applicant Account
-                data.ApplicantAccount.Id = AccountId;
-                data.ApplicantAccount.DateLastUpdate = Helper.currentTimeMillis();
-                db.ApplicantAccount.Update(data.ApplicantAccount);
+                //// Update Applicant Account
+                //data.ApplicantAccount.Id = AccountId;
+                //data.ApplicantAccount.DateLastUpdate = Helper.currentTimeMillis();
+                //db.ApplicantAccount.Update(data.ApplicantAccount);
 
                 // Update Applicant Information
                 data.ApplicantInformation.AccountId = AccountId;
@@ -1278,6 +1281,28 @@ namespace webapi_peso.Controllers
             }
 
             return NotFound(new { Message = "Attachment not found." });
+        }
+
+        [HttpPost("SendUserReplyEmail")]
+        public async Task<IActionResult> SendUserReplyEmail(EmailViewModel data)
+        {
+            await gmail.SendEmail(data.Email, data.MessageBody);
+            return Ok(data);
+        }
+
+        [HttpPost("ChangeUserPassword")]
+        public IActionResult ChangeUserPassword(ChangePasswordViewModel data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var user = db.UserAccounts.Where(x => x.Id == data.Id).FirstOrDefault();
+            if (user != null)
+            {
+                user.Password = data.NewPassword;
+                db.UserAccounts.Update(user);
+                db.SaveChanges();
+                return Ok(true);
+            }
+            return Ok(false);
         }
 
     }

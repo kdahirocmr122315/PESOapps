@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using PESOServerAPI.Services;
 using System.Text;
 using webapi_peso;
 using webapi_peso.Dbcontext;
@@ -54,7 +55,7 @@ builder.Services.AddSwaggerGen(option =>
 
 builder.Services.AddSingleton<TupadRepository>();
 builder.Services.AddSingleton<MainRepository>();
-
+builder.Services.AddScoped<IGmailServices, GmailServices>();
 
 
 

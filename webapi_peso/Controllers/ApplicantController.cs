@@ -1297,6 +1297,13 @@ namespace webapi_peso.Controllers
             var user = db.UserAccounts.Where(x => x.Id == data.Id).FirstOrDefault();
             if (user != null)
             {
+                // Validate the current password
+                if (user.Password != data.CurrentPassword)
+                {
+                    return BadRequest("The current password is incorrect.");
+                }
+
+                // Update the password
                 user.Password = data.NewPassword;
                 db.UserAccounts.Update(user);
                 db.SaveChanges();

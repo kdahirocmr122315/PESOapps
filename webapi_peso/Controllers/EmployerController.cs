@@ -548,5 +548,13 @@ namespace webapi_peso.Controllers
             return db.EmployerDetails.Include(x => x.JobPosts).Where(x => x.Id == data.EmployerDetails.Id).FirstOrDefault();
         }
 
+        [HttpPost("AddJobPost")]
+        public IActionResult AddJobPost(EmployerJobPost jobPost)
+        {
+            using var db = dbFactory.CreateDbContext();
+            db.EmployerJobPost.Add(jobPost);
+            db.SaveChanges();
+            return Ok(jobPost);
+        }
     }
 }

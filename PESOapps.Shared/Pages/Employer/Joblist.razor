@@ -21,11 +21,139 @@ else if (jobPosts == null)
 else if (!jobPosts.Any())
 {
     <p>No job postings available.</p>
+    <div class="filter-bars">
+        <button class="addjob-toggle" @onclick="() => showAddJobModal = true">+ Post a Job</button>
+    </div>
 }
 else
 {
     <div class="job-board">
+
+        @if (showAddJobModal)
+        {
+            <div class="modal-overlay">
+                <div class="addjob-modal-content">
+                    <h3>Post a Job</h3>
+                    <div class="addjob-cont">
+                        <div class="nsrp-grid">
+                            <div>
+                                <label>Job Title</label>
+                                <input type="text" class="nsrp-input" @bind="newJob.Description" />
+                                <p class="mud-input-helper-text">e.g. Service Crew, Data Encoder, Web Designer, etc.</p>
+                            </div>
+                            <div>
+                                <label>Job Description</label>
+                                <textarea class="nsrp-input" @bind="newJob.Description2"></textarea>
+                                <p class="mud-input-helper-text">Please include the requirements, qualifications, instructions, etc.</p>
+                            </div>
+                        </div>
+
+                        <div class="nsrp-grid">
+                            <div>
+                                <label>Educational Attainment</label>
+                                <select class="nsrp-input" @bind="newJob.EducationalAttainment">
+                                    <option value="">Select</option>
+                                    <option value="HIGH SCHOOL LEVEL">HIGH SCHOOL LEVEL</option>
+                                    <option value="HIGH SCHOOL GRADUATE">HIGH SCHOOL GRADUATE</option>
+                                    <option value="COLLEGE LEVEL">COLLEGE LEVEL</option>
+                                    <option value="COLLEGE GRADUATE">COLLEGE GRADUATE</option>
+                                    <option value="POST GRADUATE/MASTERS DEGREE">POST GRADUATE/MASTERS DEGREE</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label>Work Experience</label>
+                                <select class="nsrp-input" @bind="newJob.WorkExperience">
+                                    <option value="">Select</option>
+                                    <option value="Less than a year">Less than a year</option>
+                                    <option value="1 - 3 years">1 - 3 years</option>
+                                    <option value="3 - 5 years">3 - 5 years</option>
+                                    <option value="5+ years">5+ years</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label>Number of Vacancy</label>
+                                <input type="number"
+                                       class="nsrp-input"
+                                       @bind="newJob.NumberOfVacancy" />
+                            </div>
+
+                            <div>
+                                <label>Gender</label>
+                                <select class="nsrp-input" @bind="newJob.Gender">
+                                    <option value="">Select</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Any">Any</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label>Age From</label>
+                                <input type="number"
+                                       class="nsrp-input"
+                                       @bind="newJob.AgeFrom" />
+                            </div>
+
+                            <div>
+                                <label>Age To</label>
+                                <input type="number"
+                                       class="nsrp-input"
+                                       @bind="newJob.AgeTo" />
+                            </div>
+
+                            <div>
+                                <label>Civil Status</label>
+                                <input type="text"
+                                       class="nsrp-input"
+                                       @bind="newJob.CivilStatus" />
+                            </div>
+
+                            <div>
+                                <label>Expected Salary (₱)</label>
+                                <input type="number"
+                                       class="nsrp-input"
+                                       @bind="newJob.Salary" />
+                            </div>
+                        </div>
+
+                        <div class="reason-section">
+                            <label><strong>Reason for Job Opening:</strong></label>
+
+                            <div>
+                                <input type="checkbox" id="reasonExpansion"
+                                       @bind="newJob.ReasonExpansion" />
+                                <label for="reasonExpansion">Expansion</label>
+                            </div>
+
+                            <div>
+                                <input type="checkbox" id="reasonReplaceMent"
+                                       @bind="newJob.ReasonReplaceMent" />
+                                <label for="reasonReplaceMent">Replacement</label>
+                            </div>
+
+                            <div>
+                                <input type="checkbox" id="reasonOthers"
+                                       @bind="newJob.ReasonOthers" />
+                                <label for="reasonOthers">Others</label>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!-- Optional extra fields -->
+                    <div class="modal-actions">
+                        <button class="nsrp-toggle" @onclick="PostAJob">Submit</button>
+                        <button class="nsrp-toggle" @onclick="() => showAddJobModal = false">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        }
         <div class="job-list">
+            <!-- 🔍 Search Bar -->
+            <div class="filter-bars">
+                <button class="nsrp-toggle" @onclick="() => showAddJobModal = true">+ Post a Job</button>
+            </div>
             @foreach (var post in jobPosts.OrderByDescending(p => p.DatePosted))
             {
                 bool isExpired = post.Expiry < DateTime.Now;
@@ -141,6 +269,7 @@ else
             loaded = true;
 
             var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+            var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
             var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
 
             if (!string.IsNullOrWhiteSpace(userId) && isLoggedIn == "true")
@@ -148,7 +277,7 @@ else
                 isUserLoggedIn = true;
 
                 Http.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", initialBearerToken);
+                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
                 try
                 {
@@ -226,28 +355,80 @@ else
         }
     }
 
-    public class EmployerRegistrationViewModel
+    <!-- Add Job Post -->
+    private bool showAddJobModal = false;
+    private EmployerJobPost newJob = new EmployerJobPost();
+    private async Task PostAJob()
     {
-        public EmployerDetails? EmployerDetails { get; set; }
-        public List<AttachementsViewModel>? ListOfAttachments { get; set; }
-    }
+        if (employerDetails == null) return;
 
-    public class EmployerDetails
-    {
-        public string? Id { get; set; }
-        public string? EstablishmentName { get; set; }
-        public string? Address { get; set; }
-        public List<EmployerJobPost>? JobPosts { get; set; }
-        public DateTime? DateCreated { get; set; }
-    }
+        try
+        {
+            // fill in required job data
+            newJob.Id = Guid.NewGuid().ToString();
+            newJob.DatePosted = DateTime.Now;
+            if (newJob.Expiry == default) newJob.Expiry = DateTime.Now.AddDays(30);
+            newJob.EmployerDetailsId = employerDetails.Id;
+            newJob.IsVacant = 1;
+            newJob.IsDeleted = false;
 
-    public class EmployerJobPost
-    {
-        public string? Id { get; set; }
-        public string? Description { get; set; }
-        public string? Description2 { get; set; }
-        public decimal? Salary { get; set; }
-        public DateTime DatePosted { get; set; }
-        public DateTime Expiry { get; set; }
+            // clone employer object with all required fields
+            var payload = new
+            {
+                Id = employerDetails.Id,
+                EstablishmentName = employerDetails.EstablishmentName,
+                AcronymAbbreviation = employerDetails.AcronymAbbreviation,
+                Tin = employerDetails.TIN,
+                EmployerType = employerDetails.EmployerType,
+                WorkForce = employerDetails.WorkForce,
+                LineOfBusiness = employerDetails.LineOfBusiness,
+                Address = employerDetails.Address,
+                Barangay = employerDetails.Barangay,
+                CityMunicipality = employerDetails.CityMunicipality,
+                Province = employerDetails.Province,
+                Region = employerDetails.Region,
+                ContactPrependName = employerDetails.ContactPrependName,
+                ContactFullName = employerDetails.ContactFullName,
+                ContactPosition = employerDetails.ContactPosition,
+                ContactTelephoneNo = employerDetails.ContactTelephoneNo,
+                ContactMobileNo = employerDetails.ContactMobileNo,
+                ContactFaxNo = employerDetails.ContactFaxNo,
+                ContactEmailAddress = employerDetails.ContactEmailAddress,
+                NumberOfHiredApplicants = employerDetails.NumberOfHiredApplicants,
+                DateCreated = employerDetails.DateCreated ?? DateTime.Now,
+                Status = employerDetails.Status,
+                PesoRemarks = employerDetails.PESORemarks,
+                LastUpdate = DateTime.Now,
+                JobPosts = new List<EmployerJobPost> { newJob }
+            };
+
+            // call API
+            var response = await Http.PostAsJsonAsync("api/Employer/AddEmpJobPost", payload);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // append new job locally so UI updates without reload
+                jobPosts ??= new List<EmployerJobPost>();
+                jobPosts.Add(newJob);
+
+                // reset modal
+                newJob = new EmployerJobPost();
+                showAddJobModal = false;
+                StateHasChanged();
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("❌ Failed to post job: " + error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("❌ Error posting job: " + ex.Message);
+        }
     }
+    public bool ReasonExpansion { get; set; }
+    public bool ReasonReplaceMent { get; set; }
+    public bool ReasonOthers { get; set; }
+
 }

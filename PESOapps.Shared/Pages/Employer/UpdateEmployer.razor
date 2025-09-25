@@ -1,5 +1,6 @@
 ﻿@page "/UpdateEmployer/employer"
 @using PESOapps.Shared.Address
+@using System.Net.Http.Headers
 @using webapi_peso.Model
 @inject HttpClient Http
 @inject NavigationManager Navigation
@@ -20,7 +21,69 @@ else
 {
     <div class="nsrp-container">
 
+
+        <!--change password -->
+        @if (showChangePasswordModal)
+        {
+            <div class="changepassword-modal-overlay">
+                <div class="changepassword-modal">
+                    <div class="changepassword-header">
+                        <h3>Change Password</h3>
+                        <button class="changepassword-close" @onclick="CloseChangePasswordModal">×</button>
+                    </div>
+
+                    <div class="changepassword-body">
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="changepassword-error">@errorMessage</div>
+                        }
+
+                        <div>
+                            <label>Current Password</label>
+                            <div style="display:flex; align-items:center; gap:8px; position:relative;">
+                                <input type="@passwordInputType" class="changepassword-input" @bind="currentPassword" />
+                                <button style="height: 34px;" type="button"
+                                        class="showpass"
+                                        @onclick="TogglePassword">
+                                    @(showPassword ? "🙈" : "👁")
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>New Password</label>
+                            <div style="display:flex; align-items:center; gap:8px; position:relative;">
+                                <input type="@passwordInputType1" class="changepassword-input" @bind="newPassword" />
+                                <button style="height: 34px;" type="button"
+                                        class="showpass"
+                                        @onclick="TogglePassword1">
+                                    @(showPassword1 ? "🙈" : "👁")
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label>Confirm New Password</label>
+                            <div style="display:flex; align-items:center; gap:8px; position:relative;">
+                                <input type="@passwordInputType2" class="changepassword-input" @bind="repeatPassword" />
+                                <button style="height: 34px;" type="button"
+                                        class="showpass"
+                                        @onclick="TogglePassword2">
+                                    @(showPassword2 ? "🙈" : "👁")
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="changepassword-footer">
+                        <button class="changepassword-submit" @onclick="SubmitChangePassword">Submit</button>
+                        <button class="changepassword-cancel" @onclick="CloseChangePasswordModal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        }
+        <!-- END change password -->
+
         <div class="nsrp-header">
+            <button class="nsrp-toggle" @onclick="OpenChangePasswordModal">Change Password</button>
             <button class="nsrp-toggle" @onclick="ToggleEdit">
                 @(isEditing ? "Disable Update" : "Enable Update")
             </button>
@@ -32,22 +95,6 @@ else
                 <div>
                     <label>Email</label>
                     <input class="nsrp-input" @bind="employer.ContactEmailAddress" disabled />
-                </div>
-                <div>
-                    <label>Password</label>
-                    <div style="display:flex; align-items:center; gap:8px; position:relative;">
-                        <input type="@passwordInputType"
-                               class="nsrp-input"
-                               @bind="employer.AcronymAbbreviation"
-                               disabled="@(!isEditing)" />
-
-                        <button style="height: 34px;" type="button"
-                                class="showpass"
-                                @onclick="TogglePassword"
-                                disabled="@(!isEditing)">
-                            @(showPassword ? "🙈" : "👁")
-                        </button>
-                    </div>
                 </div>
                 <div>
                     <label>Establishment Name</label>
@@ -311,14 +358,100 @@ else
     }
     // ********************************************************************** Show password **********************************************************************
 
+
+    private bool showChangePasswordModal = false;
+    private string currentPassword = string.Empty;
+    private string newPassword = string.Empty;
+    private string repeatPassword = string.Empty;
+    private string errorMessage = string.Empty;
+
     private bool showPassword = false;
     private string passwordInputType => showPassword ? "text" : "password";
+
+    private bool showPassword1 = false;
+    private string passwordInputType1 => showPassword1 ? "text" : "password";
+
+    private bool showPassword2 = false;
+    private string passwordInputType2 => showPassword2 ? "text" : "password";
 
     private void TogglePassword()
     {
         showPassword = !showPassword;
     }
+    private void TogglePassword1()
+    {
+        showPassword1 = !showPassword1;
+    }
+    private void TogglePassword2()
+    {
+        showPassword2 = !showPassword2;
+    }
 
+    private void OpenChangePasswordModal()
+    {
+        showChangePasswordModal = true;
+        errorMessage = string.Empty;
+    }
 
+    private void CloseChangePasswordModal()
+    {
+        showChangePasswordModal = false;
+        currentPassword = newPassword = repeatPassword = string.Empty;
+        errorMessage = string.Empty;
+        showPassword = false;
+    }
+
+    private async Task SubmitChangePassword()
+    {
+        if (newPassword != repeatPassword)
+        {
+            errorMessage = "New password and Confirm password do not match.";
+            return;
+        }
+
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            errorMessage = "UserId not found in local storage.";
+            return;
+        }
+
+        var payload = new
+        {
+            id = userId,
+            currentPassword = currentPassword,
+            newPassword = newPassword,
+            repeatPassword = repeatPassword
+        };
+
+        var request = new HttpRequestMessage(HttpMethod.Post, "api/Applicant/ChangeUserPassword")
+        {
+            Content = JsonContent.Create(payload)
+        };
+
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        var response = await Http.SendAsync(request);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await JS.InvokeVoidAsync("alert", "Password changed successfully!");
+            currentPassword = string.Empty;
+            newPassword = string.Empty;
+            repeatPassword = string.Empty;
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            errorMessage = string.IsNullOrWhiteSpace(error)
+                ? "Password change failed. Please check your current password."
+                : error;
+        }
+    }
 
 }

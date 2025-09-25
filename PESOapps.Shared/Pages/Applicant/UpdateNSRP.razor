@@ -1,5 +1,6 @@
 ﻿@page "/UpdateNSRP/dash"
 @using PESOapps.Shared.Address
+@using System.Net.Http.Headers
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
 @inject HttpClient Http
@@ -427,6 +428,11 @@ else
                     </div>
 
                     <div class="changepassword-body">
+                        @if (!string.IsNullOrEmpty(errorMessage))
+                        {
+                            <div class="changepassword-error">@errorMessage</div>
+                        }
+
                         <div>
                             <label>Current Password</label>
                             <div style="display:flex; align-items:center; gap:8px; position:relative;">
@@ -440,23 +446,23 @@ else
                         </div>
                         <div>
                             <label>New Password</label>
-                             <div style="display:flex; align-items:center; gap:8px; position:relative;">
-                                <input type="@passwordInputType" class="changepassword-input" @bind="newPassword" />
+                            <div style="display:flex; align-items:center; gap:8px; position:relative;">
+                                <input type="@passwordInputType1" class="changepassword-input" @bind="newPassword" />
                                 <button style="height: 34px;" type="button"
                                         class="showpass"
-                                        @onclick="TogglePassword">
-                                    @(showPassword ? "🙈" : "👁")
+                                        @onclick="TogglePassword1">
+                                    @(showPassword1 ? "🙈" : "👁")
                                 </button>
                             </div>
                         </div>
                         <div>
                             <label>Confirm New Password</label>
                             <div style="display:flex; align-items:center; gap:8px; position:relative;">
-                                <input type="@passwordInputType" class="changepassword-input" @bind="repeatPassword" />
+                                <input type="@passwordInputType2" class="changepassword-input" @bind="repeatPassword" />
                                 <button style="height: 34px;" type="button"
                                         class="showpass"
-                                        @onclick="TogglePassword">
-                                    @(showPassword ? "🙈" : "👁")
+                                        @onclick="TogglePassword2">
+                                    @(showPassword2 ? "🙈" : "👁")
                                 </button>
                             </div>
                         </div>
@@ -469,6 +475,8 @@ else
                 </div>
             </div>
         }
+
+
         <div class="nsrp-header">
             <button class="nsrp-toggle" onclick="openNSRP()">View NSRP Form</button>
             <button class="nsrp-toggle" @onclick="OpenChangePasswordModal">Change Password</button>
@@ -1831,16 +1839,6 @@ else
         applicant.ApplicantOtherSkills.Remove(skill);
     }
 
-    // ********************************************************************** Show password **********************************************************************
-
-    private bool showPassword = false;
-    private string passwordInputType => showPassword ? "text" : "password";
-
-    private void TogglePassword()
-    {
-        showPassword = !showPassword;
-    }
-
     // ********************************************************************** Show NSRP **********************************************************************
 
     private bool showNSRPForm = false;
@@ -1893,32 +1891,62 @@ else
     }
     // ********************************************************************** Change password **********************************************************************
 
-
     private bool showChangePasswordModal = false;
     private string currentPassword = string.Empty;
     private string newPassword = string.Empty;
     private string repeatPassword = string.Empty;
+    private string errorMessage = string.Empty;
 
-    private void OpenChangePasswordModal() => showChangePasswordModal = true;
+    private bool showPassword = false;
+    private string passwordInputType => showPassword ? "text" : "password";
+
+    private bool showPassword1 = false;
+    private string passwordInputType1 => showPassword1 ? "text" : "password";
+
+    private bool showPassword2 = false;
+    private string passwordInputType2 => showPassword2 ? "text" : "password";
+
+    private void TogglePassword()
+    {
+        showPassword = !showPassword;
+    }
+    private void TogglePassword1()
+    {
+        showPassword1 = !showPassword1;
+    }
+    private void TogglePassword2()
+    {
+        showPassword2 = !showPassword2;
+    }
+
+    private void OpenChangePasswordModal()
+    {
+        showChangePasswordModal = true;
+        errorMessage = string.Empty;
+    }
+
     private void CloseChangePasswordModal()
     {
         showChangePasswordModal = false;
         currentPassword = newPassword = repeatPassword = string.Empty;
+        errorMessage = string.Empty;
+        showPassword = false;
     }
 
     private async Task SubmitChangePassword()
     {
         if (newPassword != repeatPassword)
         {
-            Console.WriteLine("New password and Repeat password do not match.");
+            errorMessage = "New password and Confirm password do not match.";
             return;
         }
 
         var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            Console.WriteLine("UserId not found in local storage.");
+            errorMessage = "UserId not found in local storage.";
             return;
         }
 
@@ -1930,28 +1958,35 @@ else
             repeatPassword = repeatPassword
         };
 
-        var response = await Http.PostAsJsonAsync("api/Applicant/ChangeUserPassword", payload);
+        var request = new HttpRequestMessage(HttpMethod.Post, "api/Applicant/ChangeUserPassword")
+        {
+            Content = JsonContent.Create(payload)
+        };
+
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        var response = await Http.SendAsync(request);
 
         if (response.IsSuccessStatusCode)
         {
-            Console.WriteLine("Password changed successfully!");
-            CloseChangePasswordModal();
+            await JS.InvokeVoidAsync("alert", "Password changed successfully!");
+            currentPassword = string.Empty;
+            newPassword = string.Empty;
+            repeatPassword = string.Empty;
         }
         else
         {
             var error = await response.Content.ReadAsStringAsync();
-            Console.WriteLine($"Failed: {error}");
-
-            // 🔹 Example: if the API says "invalid current password"
-            if (error.Contains("invalid", StringComparison.OrdinalIgnoreCase))
-            {
-                Console.WriteLine("Your current password is incorrect.");
-            }
+            errorMessage = string.IsNullOrWhiteSpace(error)
+                ? "Password change failed. Please check your current password."
+                : error;
         }
     }
-
-
 }
+
 <script>
         function scrollTabs(amount) {
         const tabs = document.querySelector(".nsrp-tabs");

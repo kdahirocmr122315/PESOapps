@@ -262,7 +262,7 @@ h1:focus {
 
 span.peso-log {
     font-size: 40px;
-/*    font-weight: 100;*/
+    /*    font-weight: 100;*/
     text-shadow: 1px 1px var(--text-shadow);
 }
 
@@ -313,7 +313,7 @@ span.misvis-header {
 }
 
 span.misvis-par {
-/*    font-weight: 100;*/
+    /*    font-weight: 100;*/
     line-height: 2;
     text-align: justify;
 }
@@ -604,7 +604,7 @@ th.center {
 }
 
 .org-logo {
-/*    margin-top: 10vh;*/
+    /*    margin-top: 10vh;*/
 }
 
 span.misor-log.wrap {
@@ -1229,6 +1229,10 @@ a:hover span {
 .job-board {
     display: flex;
     height: calc(100vh - 120px);
+}
+
+.no.job-board {
+    flex-direction: column;
 }
 
 .job-list {

@@ -7,12 +7,14 @@ using System.Threading.Tasks;
 
 namespace webapi_peso.ViewModels
 {
-    public class AppliedApplicantViewModel
+    public class 
+        AppliedApplicantViewModel
     {
         public ApplicantInformation Applicant { get; set; }
         public string FilePath { get; set; }
         public DateTime DateApplied { get; set; }
         public bool IsInterviewed { get; set; }
         public bool IsHired { get; set; }
+        public object Attachments { get; internal set; }
     }
 }

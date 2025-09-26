@@ -14,5 +14,7 @@ namespace webapi_peso.Model
         [Key]
         public string Id { get; set; }
         public string FileName { get; set; }
+        public string? JobApplicantionId { get; internal set; }
+        public object FilePath { get; internal set; }
     }
 }

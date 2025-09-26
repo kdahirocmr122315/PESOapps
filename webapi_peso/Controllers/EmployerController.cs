@@ -77,14 +77,14 @@ namespace webapi_peso.Controllers
                         DateApplied = i.DateCreated,
                         IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId),
                         IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId),
-                        Attachments = db.JobApplicantionAttachment
-                            .Where(a => a.JobApplicantionId == i.JobPostId)
-                            .Select(a => new
-                            {
-                                a.FileName,
-                                a.FilePath
-                            })
-                            .ToList()
+                        //Attachments = db.JobApplicantionAttachment
+                        //    .Where(a => a.JobApplicantionId == i.JobPostId)
+                        //    .Select(a => new
+                        //    {
+                        //        a.FileName,
+                        //        a.FilePath
+                        //    })
+                        //    .ToList()
                     }));
 
                     cache.Set($"GetApplicantsAppliedToJob/{jobPostId}", list, TimeSpan.FromSeconds(30));

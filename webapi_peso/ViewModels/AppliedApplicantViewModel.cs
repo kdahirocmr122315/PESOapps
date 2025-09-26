@@ -15,6 +15,6 @@ namespace webapi_peso.ViewModels
         public DateTime DateApplied { get; set; }
         public bool IsInterviewed { get; set; }
         public bool IsHired { get; set; }
-        public object Attachments { get; internal set; }
+        //public List<string> Attachments { get; set; }
     }
 }

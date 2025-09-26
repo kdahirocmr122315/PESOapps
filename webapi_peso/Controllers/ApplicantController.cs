@@ -58,7 +58,7 @@ namespace webapi_peso.Controllers
                     // ✅ Add this line to include EmployerDetails
                     model.EmpDetails = db.EmployerDetails.FirstOrDefault(e => e.Id == i.EmployerDetailsId);
                     if (model.EmpDetails == null)
-                        return NotFound();
+                        continue; // Skip this job post
 
                     // ✅ Optional: attach first image
                     var dir = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\files\\employers\\{i.EmployerDetailsId}");

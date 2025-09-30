@@ -13,9 +13,9 @@ namespace webapi_peso.Model
         public string CourseName { get; set; }
         public DateTime? DurationFrom { get; set; }
         public DateTime? DurationTo { get; set; }
-        public string TrainingInstitution { get; set; }
-        public string CertifcateReceived { get; set; }
-        public long DateLastUpdate { get; set; }
+        public string? TrainingInstitution { get; set; }
+        public string? CertifcateReceived { get; set; }
+        public long? DateLastUpdate { get; set; }
         public ApplicantTechnicalVocational()
         {
             DateLastUpdate = Helper.currentTimeMillis();

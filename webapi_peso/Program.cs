@@ -1,7 +1,9 @@
 using MainpesoRepository.Dbcontext;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PESOServerAPI.Services;
@@ -90,6 +92,20 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger(); // <!-- Add this line
     app.UseSwaggerUI(); // <!-- Add this line
 }
+var provider = new FileExtensionContentTypeProvider();
+provider.Mappings[".pdf"] = "application/pdf";
+provider.Mappings[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+provider.Mappings[".doc"] = "application/msword";
+provider.Mappings[".png"] = "image/png";
+provider.Mappings[".jpg"] = "image/jpeg";
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "files", "applications")),
+    RequestPath = "/files/applications",
+    ContentTypeProvider = provider
+});
 
 app.UseHttpsRedirection();
 

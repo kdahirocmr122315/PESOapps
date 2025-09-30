@@ -1240,7 +1240,8 @@ namespace webapi_peso.Controllers
                     // Save the filename in the JobApplicantionAttachment table
                     var attachment = new JobApplicantionAttachment
                     {
-                        FileName = fileName
+                        FileName = fileName,
+                        JobApplicantionId = folderName
                     };
                     db.JobApplicantionAttachment.Add(attachment);
                 }

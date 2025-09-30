@@ -16,5 +16,6 @@ namespace webapi_peso.ViewModels
         public bool IsInterviewed { get; set; }
         public bool IsHired { get; set; }
         //public List<string> Attachments { get; set; }
+        public List<AttachementsViewModel> Attachments { get; set; } = new();
     }
 }

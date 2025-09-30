@@ -348,6 +348,7 @@ else
                                     <th>Name</th>
                                     <th>Email</th>
                                     <th>Applied On</th>
+                                    <th>Attachments</th>
                                     <th>Interviewed</th>
                                 </tr>
                             </thead>
@@ -358,6 +359,23 @@ else
                                         <td data-label="Name">@a.Applicant?.FirstName @a.Applicant?.MiddleName @a.Applicant?.SurName @a.Applicant?.Suffix</td>
                                         <td data-label="Email">@a.Applicant?.Email</td>
                                         <td data-label="Applied On">@a.DateApplied.ToString("MMMM dd, yyyy")</td>
+                                        <td>
+                                            @if (a.Attachments?.Any() == true)
+                                            {
+                                                foreach (var att in a.Attachments)
+                                                {
+                                                    <a href="@($"files/applications/{att.FolderName}/{att.FileName}")" target="_blank">
+                                                        Attachment
+                                                    </a>
+                                                    <br />
+                                                }
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted fst-italic">No attachments</span>
+                                            }
+                                        </td>
+
                                         <td data-label="Interviewed">@(a.IsInterviewed ? "interviewed" : "Not yet")</td>
                                     </tr>
                                 }

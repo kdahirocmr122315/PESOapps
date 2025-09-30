@@ -66,7 +66,8 @@ namespace webapi_peso.Controllers
                 if (list == null)
                 {
                     list = new List<AppliedApplicantViewModel>();
-                    var jobPosts = db.JobApplicantion.Where(x => x.JobPostId == jobPostId)
+                    var jobPosts = db.JobApplicantion
+                        .Where(x => x.JobPostId == jobPostId)
                         .OrderByDescending(x => x.DateCreated)
                         .MyDistinctBy(x => x.ApplicantId)
                         .ToList();
@@ -75,16 +76,21 @@ namespace webapi_peso.Controllers
                     {
                         Applicant = db.ApplicantInformation.FirstOrDefault(x => x.AccountId == i.ApplicantId),
                         DateApplied = i.DateCreated,
-                        IsInterviewed = db.EmployerInterviewedApplicants.Any(x => x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId),
-                        IsHired = db.EmployerHiredApplicants.Any(x => x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId && x.ApplicantAccountId == i.ApplicantId),
-                        //Attachments = db.JobApplicantionAttachment
-                        //    .Where(a => a.JobApplicantionId == i.JobPostId)
-                        //    .Select(a => new
-                        //    {
-                        //        a.FileName,
-                        //        a.FilePath
-                        //    })
-                        //    .ToList()
+                        IsInterviewed = db.EmployerInterviewedApplicants.Any(x =>
+                            x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId &&
+                            x.ApplicantAccountId == i.ApplicantId),
+                        IsHired = db.EmployerHiredApplicants.Any(x =>
+                            x.EmployerId == db.EmployerJobPost.FirstOrDefault(e => e.Id == jobPostId).EmployerDetailsId &&
+                            x.ApplicantAccountId == i.ApplicantId),
+
+                        // ✅ Attachments linked to JobApplicationId
+                        Attachments = db.JobApplicantionAttachment
+                        .Where(att => att.JobApplicantionId == i.Id) // same Id as application
+                        .Select(att => new AttachementsViewModel
+                        {
+                            FileName = att.FileName,
+                            FolderName = i.Id
+                        }).ToList()
                     }));
 
                     cache.Set($"GetApplicantsAppliedToJob/{jobPostId}", list, TimeSpan.FromSeconds(30));
@@ -92,6 +98,7 @@ namespace webapi_peso.Controllers
                 return Ok(list);
             }
         }
+
 
         [HttpGet("GetApplicantsByEmployer/{employerDetailsId}")]
         public IActionResult GetApplicantsByEmployer(string employerDetailsId)

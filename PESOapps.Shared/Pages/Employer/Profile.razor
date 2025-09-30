@@ -196,7 +196,7 @@ else
                         Console.WriteLine($"Profile call failed: {profileResponse.StatusCode}");
                     }
                     var appsResponse =
-                         await Http.GetAsync($"api/ Employer/GetApplicantsByEmployer/{userId}");
+                         await Http.GetAsync($"api/Employer/GetApplicantsByEmployer/{userId}");
 
                     if (appsResponse.IsSuccessStatusCode)
                     {

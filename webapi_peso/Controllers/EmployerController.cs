@@ -538,7 +538,7 @@ namespace webapi_peso.Controllers
                 System.IO.Directory.CreateDirectory(folderDestination);
             foreach (var f in data.ListOfAttachments)
             {
-                var filepath = System.IO.Path.Combine(env.WebRootPath, "file_temp", f.FolderName, f.FileName);
+                var filepath = System.IO.Path.Combine(env.ContentRootPath, "file_temp", f.FolderName, f.FileName);
                 if (System.IO.File.Exists(filepath))
                     System.IO.File.Move(filepath, System.IO.Path.Combine(folderDestination, f.FileName));
             }

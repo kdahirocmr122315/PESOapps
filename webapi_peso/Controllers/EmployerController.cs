@@ -545,6 +545,105 @@ namespace webapi_peso.Controllers
             return db.EmployerDetails.Include(x => x.JobPosts).Where(x => x.Id == data.EmployerDetails.Id).FirstOrDefault();
         }
 
+        //added controllers (cuebee)
+        //added controllers (cuebee)
+        //added controllers (cuebee)
+        //added controllers (cuebee)
+
+        [HttpGet("GetEmployerDetailsByUserId/{userId}")]
+        public IActionResult GetEmployerDetailsByUserId(string userId)
+        {
+            using var db = dbFactory.CreateDbContext();
+
+            // Find the user account first
+            var account = db.UserAccounts.FirstOrDefault(u => u.Id == userId);
+            if (account == null)
+                return NotFound();
+
+            // EmployerDetails doesn't have UserId property - match by contact email address
+            var employer = db.EmployerDetails.FirstOrDefault(e => e.ContactEmailAddress == account.Email);
+
+            if (employer == null)
+                return NotFound();
+
+            return Ok(employer);
+        }
+
+        [HttpPost("UploadEmployerFile")]
+        public async Task<IActionResult> UploadEmployerFile([FromForm] string employerId, [FromForm] List<IFormFile> files)
+        {
+            if (files == null || files.Count == 0)
+                return BadRequest("No files uploaded.");
+
+            var folderPath = Path.Combine(env.ContentRootPath, "files", "employers", employerId);
+
+            if (!Directory.Exists(folderPath))
+                Directory.CreateDirectory(folderPath);
+
+            var results = new List<AttachementsViewModel>();
+
+            foreach (var file in files)
+            {
+                var filePath = Path.Combine(folderPath, file.FileName);
+                using var stream = new FileStream(filePath, FileMode.Create);
+                await file.CopyToAsync(stream);
+
+                results.Add(new AttachementsViewModel
+                {
+                    Id = "0",
+                    FolderName = employerId, // since folder is tied to employerId
+                    FileName = file.FileName,
+                    FileSize = $"{Math.Round(file.Length / 1024.0, 2)} KB",
+                    IsAlreadyUploaded = 0
+                });
+            }
+
+            return Ok(results);
+        }
+
+
+        [HttpGet("GetEmployerFiles/{employerId}")]
+        public IActionResult GetEmployerFiles(string employerId)
+        {
+            var folderPath = Path.Combine(env.ContentRootPath, "files", "employers", employerId);
+            if (!Directory.Exists(folderPath))
+                return Ok(new List<AttachementsViewModel>());
+
+            var files = Directory.GetFiles(folderPath)
+                .Select(f => new FileInfo(f))
+                .Select(fi => new AttachementsViewModel
+                {
+                    Id = "0",
+                    FileName = fi.Name,
+                    FileSize = $"{Math.Round(fi.Length / 1024.0, 2)} KB",
+                    FolderName = employerId,
+                    IsAlreadyUploaded = 1
+                })
+                .ToList();
+
+            return Ok(files);
+        }
+
+        [HttpDelete("DeleteEmployerFile/{employerId}/{fileName}")]
+        public IActionResult DeleteEmployerFile(string employerId, string fileName)
+        {
+            var folderPath = Path.Combine(env.ContentRootPath, "files", "employers", employerId);
+            var filePath = Path.Combine(folderPath, fileName);
+
+            if (System.IO.File.Exists(filePath))
+            {
+                System.IO.File.Delete(filePath);
+                return Ok();
+            }
+
+            return NotFound("File not found.");
+        }
+
+        //added controllers (cuebee)
+        //added controllers (cuebee)
+        //added controllers (cuebee)
+        //added controllers (cuebee
+
         [HttpPost("AddJobPost")]
         public IActionResult AddJobPost(EmployerJobPost jobPost)
         {
@@ -553,5 +652,7 @@ namespace webapi_peso.Controllers
             db.SaveChanges();
             return Ok(jobPost);
         }
+
+
     }
 }

@@ -107,6 +107,14 @@ app.UseStaticFiles(new StaticFileOptions
     ContentTypeProvider = provider
 });
 
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(
+        Path.Combine(builder.Environment.ContentRootPath, "files", "employers")),
+    RequestPath = "/files/employers",
+    ContentTypeProvider = provider
+});
+
 app.UseHttpsRedirection();
 
 app.UseAuthorization();

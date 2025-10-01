@@ -3,6 +3,7 @@
 @inject NavigationManager Navigation
 @inject HttpClient Http
 @inject IJSRuntime JS
+@using PESOapps.Shared.Address
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
 
@@ -276,6 +277,9 @@ else
             <!-- 🔍 Search Bar -->
             <div class="filter-bars">
                 <button class="nsrp-toggle" @onclick="() => showAddJobModal = true">+ Post a Job</button>
+                <button type="button" class="nsrp-toggle" @onclick="GoToInterviewed">
+                    Interviewed
+                </button>
             </div>
             @foreach (var post in jobPosts.OrderByDescending(p => p.DatePosted))
             {
@@ -342,12 +346,12 @@ else
                     }
                     else if (applicants?.Any() == true)
                     {
-                        <table class="table table-bordered table-striped">
+                        <table class="table table-bordered table-striped table-hover">
                             <thead class="table-light">
                                 <tr>
                                     <th>Name</th>
                                     <th>Email</th>
-                                    <th>Applied On</th>
+                                    <th>Applied On</th>
                                     <th>Attachments</th>
                                     <th>Interviewed</th>
                                 </tr>
@@ -355,7 +359,7 @@ else
                             <tbody>
                                 @foreach (var a in applicants!)
                                 {
-                                    <tr>
+                                    <tr @onclick="() => HandleRowClick(a)" style="cursor:pointer">
                                         <td data-label="Name">@a.Applicant?.FirstName @a.Applicant?.MiddleName @a.Applicant?.SurName @a.Applicant?.Suffix</td>
                                         <td data-label="Email">@a.Applicant?.Email</td>
                                         <td data-label="Applied On">@a.DateApplied.ToString("MMMM dd, yyyy")</td>
@@ -364,9 +368,7 @@ else
                                             {
                                                 foreach (var att in a.Attachments)
                                                 {
-                                                    <a href="@($"http://localhost:5167/files/applications/{att.FolderName}/{att.FileName}")" target="_blank">
-                                                        Attachment
-                                                    </a>
+                                                    <a href="@($"http://localhost:5167/files/applications/{att.FolderName}/{att.FileName}")" target="_blank">Attachment</a>
                                                     <br />
                                                 }
                                             }
@@ -375,8 +377,7 @@ else
                                                 <span class="text-muted fst-italic">No attachments</span>
                                             }
                                         </td>
-
-                                        <td data-label="Interviewed">@(a.IsInterviewed ? "interviewed" : "Not yet")</td>
+                                        <td data-label="Interviewed">@(a.IsInterviewed ? "Interviewed" : "Not yet")</td>
                                     </tr>
                                 }
                             </tbody>
@@ -386,9 +387,415 @@ else
                     {
                         <p class="fst-italic">No applicants for this job yet.</p>
                     }
+
                 </div>
             </div>
         </div>
+
+        @if (isModalOpen && selectedApplicant != null)
+        {
+            <!-- Modal -->
+            <div class="modal-overlay">
+                <div class="modal-container">
+                    <div class="modal-body">
+                        <!-- Tabs -->
+                        <div class="tabs">
+                            <button class="tab-btn active" onclick="openTab(event, 'frontPage')">Front Page</button>
+                            <button class="tab-btn" onclick="openTab(event, 'backPage')">Back Page</button>
+                        </div>
+
+                        <!-- Front Page -->
+                        <div id="frontPage" class="tab-content active">
+                            <div style="overflow-y: auto; padding: 5px;">
+
+                                <p><strong>Reference#:</strong> @selectedApplicant.ApplicantInformation.JobFairReferenceCode</p>
+                                <!-- Header -->
+                                <table border="1" style="width:100%">
+                                    <tr>
+                                        <td style="text-align:center; padding:5px;">
+                                            <p><b>NSRP Form 1</b></p>
+                                            <p><b>January 2017</b></p>
+                                        </td>
+                                        <td style="text-align:center; padding:5px;">
+                                            <p>Republic of the Philippines</p>
+                                            <p>Department of Labor and Employment</p>
+                                            <p><b>PESO EMPLOYMENT INFORMATION SYSTEM</b></p>
+                                            <p><b>REGISTRATION FORM</b></p>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- Personal Information -->
+                                <table border="1" style="width:100%; margin-top:5px;">
+                                    <tr>
+                                        <td colspan="4"><b>I. PERSONAL INFORMATION</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">@selectedApplicant.ApplicantInformation.SurName</td>
+                                        <td class="text-center">@selectedApplicant.ApplicantInformation.FirstName</td>
+                                        <td class="text-center">@selectedApplicant.ApplicantInformation.MiddleName</td>
+                                        <td class="text-center">@selectedApplicant.ApplicantInformation.Suffix</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center"><b>SURNAME</b></td>
+                                        <td class="text-center"><b>FIRST NAME</b></td>
+                                        <td class="text-center"><b>MIDDLE NAME</b></td>
+                                        <td class="text-center"><b>SUFFIX</b> (Ex: Sr., Jr., III, etc)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>DATE OF BIRTH (mm/dd/yyyy)</b></td>
+                                        <td>@DateOfBirthValueModal?.ToString("MM/dd/yyyy")</td>
+                                        <td><b>PLACE OF BIRTH</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.PlaceOfBirth</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>SEX</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.Gender</td>
+                                        <td colspan="2"><b>PRESENT ADDRESS</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>RELIGION</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.Religion</td>
+                                        <td>House No./Street Village</td>
+                                        <td>@selectedApplicant.ApplicantInformation.PresentHouseNoOrStreetVillage</td>
+                                    </tr>
+                                    <tr>
+                                        <td rowspan="3"><b>CIVIL STATUS</b></td>
+                                        <td rowspan="3">Married</td>
+                                        <td><small>Barangay</small></td>
+                                        <td>
+                                            <small>
+                                                @{
+                                                    var barangayName = FilteredBarangaysPresent
+                                                    .FirstOrDefault(b => b.brgyCode == selectedApplicant.ApplicantInformation.PresentBarangay)?.brgyDesc;
+
+                                                    @barangayName
+                                                }
+                                            </small>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <td><small>Municipality</small></td>
+                                        <td>
+                                            <small>
+                                                @{
+                                                    var cityName = FilteredCitiesPresent
+                                                    .FirstOrDefault(c => c.citymunCode == selectedApplicant.ApplicantInformation.PresentMunicipalityCity)?.citymunDesc;
+
+                                                    @cityName
+                                                }
+                                            </small>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><small>Province</small></td>
+                                        <td>
+                                            <small>
+                                                @{
+                                                    var provinceName = FilteredProvincesPresent
+                                                    .FirstOrDefault(p => p.provCode == selectedApplicant.ApplicantInformation.PresentProvince)?.provDesc;
+
+                                                    @provinceName
+                                                }
+                                            </small>
+                                        </td>
+
+                                    </tr>
+                                    <tr>
+                                        <td><b>TIN</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.TIN</td>
+                                        <td><b>HEIGHT</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.Height</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>GSIS/SSS ID NO.</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.GSISORSSS</td>
+                                        <td><b>EMAIL ADDRESS</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.Email</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>PAG-IBIG NO.</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.PAGIBIG</td>
+                                        <td><b>LANDLINE NUMBER</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.LandlineNumber</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>PHILHEALTH NO.</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.PHILHEALTH</td>
+                                        <td><b>CELLPHONE NUMBER</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.CellphoneNumber</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>DISABILITY</b></td>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>EMPLOYMENT STATUS</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.EmpStatus</td>
+                                        <td><b>EMPLOYMENT TYPE</b></td>
+                                        <td>@selectedApplicant.ApplicantInformation.EmpStatusChild</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Are you actively looking for work?</td>
+                                        <td>@(selectedApplicant.ApplicantInformation.ActivelyLookingForWork == 1 ? "Yes" : "No")</td>
+                                        <td>How long have you been looking for work?</td>
+                                        <td>@selectedApplicant.ApplicantInformation.HowLongLookingForWork</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Willing to work immediately?</td>
+                                        <td>@selectedApplicant.ApplicantInformation.WillingToWorkNow</td>
+                                        <td>If no, When?</td>
+                                        <td></td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="4">II. JOB PREFERENCE</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1"><b>PREFERRED OCCUPATION</b></td>
+                                        <td class="p-1" colspan="3"><b>PREFERRED WORK LOCATION</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1">
+                                            <ul>
+                                                @foreach (var jobPrefO in selectedApplicant.ApplicantJobPrefOccupation)
+                                                {
+
+                                                    <li>@jobPrefO.OccupationName</li>
+
+                                                }
+                                            </ul>
+                                        </td>
+                                        <td class="p-1" colspan="3">
+                                            <ul>
+                                                @foreach (var jobPrefW in selectedApplicant.ApplicantJobPrefWorkLocation ?? Enumerable.Empty<ApplicantJobPrefWorkLocation>()) 
+                                                {
+                                                    <li>@jobPrefW.WorkLocationName (@jobPrefW.WorkLocationType)</li>
+                                                }
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="2">
+                                            <b>Expected Salary (Range): </b>
+                                            ₱@(selectedApplicant.ApplicantExpectedSalary?.From ?? 0) - ₱@(selectedApplicant.ApplicantExpectedSalary?.To ?? 0)
+                                        </td>
+                                        <td><b>Passport No.: </b>@selectedApplicant.ApplicantInformation.PassportNumber</td>
+                                        <td><b>Expiry Date: </b>@selectedApplicant.ApplicantInformation.PassportExpiryDate</td>
+                                    </tr>
+                                    <!-- Add the rest of your fields as needed... -->
+                                </table>
+
+                                <!-- Language / Dialect Proficiency -->
+                                <table border="1" style="width:100%; margin-top:5px;">
+                                    <tr>
+                                        <td colspan="5"><b>III. LANGUAGE / DIALECT PROFICIENCY</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>LANGUAGE</b></td>
+                                        <td><b>READ</b></td>
+                                        <td><b>WRITE</b></td>
+                                        <td><b>SPEAK</b></td>
+                                        <td><b>UNDERSTAND</b></td>
+                                    </tr>
+
+                                    @foreach (var lang in selectedApplicant.ApplicantLanguageDialectProf ?? new List<ApplicantLanguageDialectProf>())
+                                    {
+                                        <tr>
+                                            <td>@lang.LanguageName</td>
+                                            <td>@(lang.Read == 1 ? "YES" : "NO")</td>
+                                            <td>@(lang.Write == 1 ? "YES" : "NO")</td>
+                                            <td>@(lang.Speak == 1 ? "YES" : "NO")</td>
+                                            <td>@(lang.Understand == 1 ? "YES" : "NO")</td>
+                                        </tr>
+                                    }
+                                </table>
+
+                            </div>
+                        </div>
+
+                        <!-- Back Page -->
+                        <div id="backPage" class="tab-content">
+                            <div style="overflow-y: auto; padding: 5px;">
+                                <!-- Educational Background -->
+                                <table border="1" style="width:100%">
+                                    <tr>
+                                        <td class="p-1" colspan="7"><b>IV. EDUCATIONAL BACKGROUND</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center" rowspan="2"><b>LEVEL</b></td>
+                                        <td class="text-center" rowspan="2"><b>SCHOOL</b></td>
+                                        <td class="text-center" rowspan="2"><b>COURSE</b></td>
+                                        <td class="text-center" rowspan="2"><b>YEAR GRAD.</b></td>
+                                        <td class="text-center" colspan="2"><b>If undergraduate</b></td>
+                                        <td class="text-center" rowspan="2"><b>AWARDS RECEIVED.</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="text-center">what level?</td>
+                                        <td class="text-center">year last attended</td>
+                                    </tr>
+                                    @foreach (var EduBack in selectedApplicant.ApplicantEducationalBackground ?? new List<ApplicantEducationalBackground>())
+                                    {
+                                        <tr>
+                                            <td class="text-center">@EduBack.LevelName</td>
+                                            <td class="text-center">@EduBack.School</td>
+                                            <td class="text-center">@EduBack.Course</td>
+                                            <td class="text-center">@EduBack.YearGraduated</td>
+                                            <td class="text-center">@EduBack.UndergradLevel</td>
+                                            <td class="text-center">@EduBack.YearLastAttended</td>
+                                            <td class="text-center">@EduBack.AwardsReceived</td>
+                                        </tr>
+                                    }
+                                </table>
+
+                                <!-- Technical/Vocational -->
+                                <table border="1" style="width:100%; margin-top:5px;">
+                                    <tr>
+                                        <td class="p-1" colspan="7">
+                                            <b>V. TECHNICAL/VOCATIONAL AND OTHER TRAINING</b> <small>(Include courses takens as part of college education)</small>
+                                        </td>
+                                    </tr>
+
+                                    <tr>
+                                        <td class="text-center" colspan="2"><b>TRAINING/VOCATIONAL COURSE</b></td>
+                                        <td class="text-center">
+                                            <p><b>Duration</b></p>
+                                            <small>(mm/dd/yyyy to mm/dd/yyyy)</small>
+                                        </td>
+                                        <td class="text-center"><b>Training Institution</b></td>
+                                        <td class="text-center">
+                                            <p><b>Certificates Received</b></p>
+                                            <small>(NC I, NC II, NC IV, etc)</small>
+                                        </td>
+                                    </tr>
+                                    @{
+                                        var count = 1;
+                                        var counts = 1;
+                                        var countss = 1;
+                                    }
+                                    @foreach (var Voca in selectedApplicant.ApplicantTechnicalVocational ?? new List<ApplicantTechnicalVocational>())
+                                    {
+                                        <tr>
+                                            <td class="text-center" style="width:1%"><b>@count.</b></td>
+                                            <td class="text-center">@Voca.CourseName</td>
+                                            <td class="text-center">@Voca.DurationFrom?.ToString("MM/dd/yyyy") to @Voca.DurationTo?.ToString("MM/dd/yyyy")</td>
+                                            <td class="text-center">@Voca.TrainingInstitution</td>
+                                            <td class="text-center">@Voca.CertifcateReceived</td>
+                                        </tr>
+                                        count++;
+                                    }
+
+                                </table>
+
+                                <!-- Eligibility -->
+                                <table border="1" style="width:100%; margin-top:5px;">
+
+                                    <tr><td class="border border-dark" colspan="2"><b>VI. ELIGIBILITY/PROFESSIONAL LICENSE</b></td></tr>
+                                    <tr>
+                                        <td>
+                                            <table style="width:100%">
+                                                @foreach (var Eli in selectedApplicant.ApplicantEligibility ?? new List<ApplicantEligibility>())
+                                                {
+
+                                                    <tr>
+                                                        <td class="text-center" colspan="2"><b>ELIGIBILITY (Civil Service)</b></td>
+                                                        <td class="text-center"><b>Rating</b></td>
+                                                        <td class="text-center"><b>Date of examination</b></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-center" style="width:1%">@counts.</td>
+                                                        <td class="text-center">@Eli.EligibilityName</td>
+                                                        <td class="text-center">@Eli.Rating%</td>
+                                                        <td class="text-center">@Eli.DateOfExamination?.ToString("MMM dd, yyyy")</td>
+                                                    </tr>
+                                                    counts++;
+                                                }
+                                            </table>
+                                        </td>
+                                        <td>
+                                            <table style="width:100%">
+                                                @foreach (var Prc in selectedApplicant.ApplicantProfessionalLicense ?? new List<ApplicantProfessionalLicense>())
+                                                {
+
+                                                    <tr>
+                                                        <td class="text-center" colspan="2"><b>PROFESSIONAL LICENSE (PRC)</b></td>
+                                                        <td class="text-center"><b>Valid Until</b></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="text-center" style="width:1%">@countss.</td>
+                                                        <td class="text-center">@Prc.ProfName</td>
+                                                        <td class="text-center">@Prc.Validity?.ToString("MMM dd, yyyy")</td>
+                                                    </tr>
+                                                    countss++;
+                                                }
+                                            </table>
+                                        </td>
+                                    </tr>
+                                </table>
+
+                                <!-- Work Experience -->
+                                <table border="1" style="width:100%; margin-top:5px;">
+                                    <tr>
+                                        <td colspan="5"><b>VII. WORK EXPERIENCE</b> (Limit to 10 year period, start with the most recent employment)</td>
+                                    </tr>
+                                    <tr>
+                                        <td><b>Company Name</b></td>
+                                        <td>
+                                            <p><b>Address</b></p>
+                                            <small>(City/Municipality)</small>
+                                        </td>
+                                        <td><b>Position</b></td>
+                                        <td>
+                                            <p><b>Date</b></p>
+                                            <small>(mm/yyyy to mm/yyyy)</small>
+                                        </td>
+                                        <td>
+                                            <p><b>Status</b></p>
+                                            <small>(Permanent, Contractual, Part-time, Probationary)</small>
+                                        </td>
+                                    </tr>
+                                    @foreach (var Workep in selectedApplicant.ApplicantWorkExperience ?? new List<ApplicantWorkExperience>())
+                                    {
+                                        <tr>
+                                            <td>@Workep.CompanyName</td>
+                                            <td>@Workep.CompanyAddress</td>
+                                            <td>@Workep.Position</td>
+                                            <td>@Workep.InclusiveDateFrom?.ToString("MM/yyyy") to @Workep.InclusiveDateTo?.ToString("MM/yyyy")</td>
+                                            <td>@Workep.Status</td>
+                                        </tr>
+                                    }
+                                </table>
+
+                                <!-- Other Skills -->
+                                <table border="1" style="width:100%; margin-top:5px;">
+                                    <tr>
+                                        <td class="p-1"><b>VIII. OTHER SKILLS ACQUIRED WITHOUT FORMAL TRAINING</b></td>
+                                    </tr>
+                                    <tr>
+                                        <td class="p-1">
+                                            <ul>
+                                                @foreach (var Oth in selectedApplicant.ApplicantOtherSkills ?? new List<ApplicantOtherSkills>())
+                                                {
+                                                    <li>@Oth.SkillName</li>
+                                                }
+                                            </ul>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button class="nsrp-toggle" @onclick="MarkAsInterviewed">Mark as Interviewed?</button>
+                        <button class="nsrp-toggle" @onclick="CloseModal">Close</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- END Modal -->
+        }
+
     </div>
 }
 
@@ -596,5 +1003,173 @@ else
         }
     }
 
+    // ────────────────────────── Modal ──────────────────────────
+    private ApplicantDataViewModel selectedApplicant = new();
 
+    private bool isModalOpen = false;
+
+    private List<Region> Regions = new();
+    private List<Province> AllProvinces = new();
+    private List<CityMunicipality> AllCities = new();
+    private List<Barangay> AllBarangays = new();
+
+    private string? accountId;
+
+    // Filtering Present Address
+    private IEnumerable<Province> FilteredProvincesPresent =>
+        AllProvinces.Where(p => p.regCode == selectedApplicant.ApplicantInformation.PresentRegion);
+
+    private IEnumerable<CityMunicipality> FilteredCitiesPresent =>
+        AllCities.Where(c => c.provCode == selectedApplicant.ApplicantInformation.PresentProvince);
+
+    private IEnumerable<Barangay> FilteredBarangaysPresent =>
+        AllBarangays.Where(b => b.citymunCode == selectedApplicant.ApplicantInformation.PresentMunicipalityCity);
+
+    // Filtering Permanent Address
+    private IEnumerable<Province> FilteredProvincesPermanent =>
+        AllProvinces.Where(p => p.regCode == selectedApplicant.ApplicantInformation.ProvincialRegion);
+
+    private IEnumerable<CityMunicipality> FilteredCitiesPermanent =>
+        AllCities.Where(c => c.provCode == selectedApplicant.ApplicantInformation.ProvincialProvince);
+
+    private IEnumerable<Barangay> FilteredBarangaysPermanent =>
+        AllBarangays.Where(b => b.citymunCode == selectedApplicant.ApplicantInformation.ProvincialMunicipalityCity);
+
+    private AppliedApplicantViewModel? selectedAppliedApplicant;
+
+    private async Task OpenApplicantModal(AppliedApplicantViewModel applicant)
+    {
+        if (applicant?.Applicant.AccountId == null)
+            return;
+
+        try
+        {
+            // Fetch the full applicant data
+            selectedApplicant = await Http.GetFromJsonAsync<ApplicantDataViewModel>(
+                $"api/Employer/ApplicantDataViewModel/{applicant.Applicant.AccountId}"
+            ) ?? new ApplicantDataViewModel();
+
+            if (selectedApplicant != null)
+            {
+                isModalOpen = true;
+                await InvokeAsync(StateHasChanged);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to load applicant data.");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("Error loading applicant: " + ex.Message);
+            await JS.InvokeVoidAsync("alert", "Error loading applicant data.");
+        }
+    }
+
+    private void CloseModal()
+    {
+        selectedAppliedApplicant = null;
+        isModalOpen = false;
+    }
+
+    private string activeTab = "frontPage";
+
+    private void OpenTab(string tabId)
+    {
+        activeTab = tabId;
+    }
+
+    private string TabClass(string tabId) => activeTab == tabId ? "tab-content active" : "tab-content";
+
+    // Converts between long timestamp <-> DateTime for binding
+
+    private DateTime? DateOfBirthValueModal
+    {
+        get
+        {
+            if (selectedApplicant?.ApplicantInformation == null || selectedApplicant.ApplicantInformation.DateOfBirth == 0)
+                return null;
+
+            return DateTimeOffset.FromUnixTimeMilliseconds(selectedApplicant.ApplicantInformation.DateOfBirth).DateTime;
+        }
+    }
+
+    private async Task MarkAsInterviewed()
+    {
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+
+        if (selectedApplicant == null || selectedApplicant.ApplicantAccount == null)
+        {
+            await JS.InvokeVoidAsync("alert", "No applicant selected.");
+            return;
+        }
+
+        var employerId = employerDetails?.Id ?? userId;
+
+        string? applicantAccountId = selectedApplicant.ApplicantAccount.Id
+                                     ?? selectedApplicant.ApplicantAccount.AppAccountId?.ToString();
+
+        if (string.IsNullOrEmpty(employerId) || string.IsNullOrEmpty(applicantAccountId))
+        {
+            await JS.InvokeVoidAsync("alert", "Employer or Applicant ID is missing.");
+            return;
+        }
+
+        var url = $"api/Employer/SetAsInterviewed/{employerId}/{applicantAccountId}";
+        Console.WriteLine($"📡 Calling API: {url}");
+
+        try
+        {
+            // ✅ Use GET because your API is decorated with [HttpGet]
+            var response = await Http.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                await JS.InvokeVoidAsync("alert", "Applicant marked as interviewed.");
+                isModalOpen = false;
+
+                // update UI: either reload list or set flag on selected applicant
+                if (applicants != null && selectedApplicant?.ApplicantAccount?.Id != null)
+                {
+                    var applied = applicants.FirstOrDefault(a => a.Applicant?.AccountId == selectedApplicant.ApplicantAccount.Id);
+                    if (applied != null)
+                    {
+                        applied.IsInterviewed = true;
+                    }
+                }
+                await LoadApplicantsAsync(selectedJobPost!.Id);
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Failed: {response.StatusCode} - {error}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
+    // your existing modal logic here
+
+    private void HandleRowClick(AppliedApplicantViewModel applicant)
+    {
+        if (applicant.IsInterviewed)
+        {
+            // ✅ Go to Interviewed applicants page
+            Navigation.NavigateTo("/pesobeta/InterviewedApplicants/employer");
+        }
+        else
+        {
+            // ✅ Open modal for non-interviewed
+            _ = OpenApplicantModal(applicant); // call the async version
+        }
+    }
+    // Go to Interview
+    private void GoToInterviewed()
+    {
+        Navigation.NavigateTo("/pesobeta/InterviewedApplicants/employer");
+    }
 }
+   

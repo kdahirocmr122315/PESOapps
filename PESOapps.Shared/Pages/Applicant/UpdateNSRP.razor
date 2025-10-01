@@ -71,7 +71,7 @@ else
                                 </tr>
                                 <tr>
                                     <td><b>DATE OF BIRTH (mm/dd/yyyy)</b></td>
-                                    <td>@applicant.ApplicantInformation.DateOfBirth</td>
+                                    <td>@DateOfBirthValueModal?.ToString("MM/dd/yyyy")</td>
                                     <td><b>PLACE OF BIRTH</b></td>
                                     <td>@applicant.ApplicantInformation.PlaceOfBirth</td>
                                 </tr>
@@ -165,7 +165,7 @@ else
                                 </tr>
                                 <tr>
                                     <td>Are you actively looking for work?</td>
-                                    <td>@applicant.ApplicantInformation.ActivelyLookingForWork</td>
+                                    <td>@(applicant.ApplicantInformation.ActivelyLookingForWork == 1 ? "Yes" : "No")</td>
                                     <td>How long have you been looking for work?</td>
                                     <td>@applicant.ApplicantInformation.HowLongLookingForWork</td>
                                 </tr>
@@ -1513,6 +1513,16 @@ else
             {
                 applicant.ApplicantInformation.DateOfBirth = 0;
             }
+        }
+    }
+    private DateTime? DateOfBirthValueModal
+    {
+        get
+        {
+            if (applicant?.ApplicantInformation == null || applicant.ApplicantInformation.DateOfBirth == 0)
+                return null;
+
+            return DateTimeOffset.FromUnixTimeMilliseconds(applicant.ApplicantInformation.DateOfBirth).DateTime;
         }
     }
 

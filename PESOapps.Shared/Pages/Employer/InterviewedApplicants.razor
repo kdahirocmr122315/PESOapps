@@ -1,0 +1,142 @@
+﻿@page "/InterviewedApplicants/employer"
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@using System.Text.Json
+
+<h3>Interviewed Applicants</h3>
+
+@if (isLoading)
+{
+    <div class="custom-loader"></div>
+}
+else if (interviewedApplicants == null || !interviewedApplicants.Any())
+{
+    <p class="text-muted">No interviewed applicants found.</p>
+}
+else
+{
+    <table class="table table-bordered table-striped">
+        <thead class="table-light">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Age</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var applicant in interviewedApplicants)
+            {
+                <tr>
+                    <td>@applicant.Applicant?.FirstName @applicant.Applicant?.SurName</td>
+                    <td>@applicant.Applicant?.Email</td>
+                    <td>@(GetAgeFromUnix(applicant.Applicant?.DateOfBirth ?? 0))</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+<button class="nsrp-toggle" @onclick="GoBack">⬅ Back</button>
+
+@code {
+    private bool isLoading = true;
+    private List<AppliedApplicantViewModel>? interviewedApplicants;
+    private string? pendingErrorMessage;
+
+    private EmployerDetails? employerDetails;
+    private string? employerId;
+    private string? userId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // 1️⃣ Get UserId from localStorage
+            userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                pendingErrorMessage = "UserId is null or not found in localStorage.";
+                return;
+            }
+
+            // 2️⃣ Fetch EmployerDetails using UserId
+            var jobResponse = await Http.GetAsync($"api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
+            if (jobResponse.IsSuccessStatusCode)
+            {
+                var rawJson = await jobResponse.Content.ReadAsStringAsync();
+                var employerData = JsonSerializer.Deserialize<EmployerRegistrationViewModel>(rawJson, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (employerData != null)
+                {
+                    employerDetails = employerData.EmployerDetails;
+                    employerId = employerDetails?.Id;
+                }
+            }
+
+            if (string.IsNullOrEmpty(employerId))
+            {
+                pendingErrorMessage = "EmployerId not found for current user.";
+                return;
+            }
+
+            // 3️⃣ Fetch Interviewed Applicants using EmployerId
+            var url = $"api/Employer/GetInterViewedApplicants/{employerId}";
+            var response = await Http.GetAsync(url);
+
+            if (response.IsSuccessStatusCode)
+            {
+                interviewedApplicants = await response.Content
+                    .ReadFromJsonAsync<List<AppliedApplicantViewModel>>();
+            }
+            else
+            {
+                var err = await response.Content.ReadAsStringAsync();
+                pendingErrorMessage = $"Failed to load: {response.StatusCode} - {err}";
+            }
+        }
+        catch (Exception ex)
+        {
+            pendingErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrEmpty(pendingErrorMessage))
+        {
+            await JS.InvokeVoidAsync("alert", pendingErrorMessage);
+            pendingErrorMessage = null;
+        }
+    }
+
+    //---------------------------------------------- AGE ------------------
+    private int? GetAgeFromUnix(long dobUnix)
+    {
+        if (dobUnix == 0)
+            return null;
+
+        var dob = DateTimeOffset.FromUnixTimeMilliseconds(dobUnix).DateTime.Date;
+        var today = DateTime.Today;
+
+        var age = today.Year - dob.Year;
+        if (dob > today.AddYears(-age)) age--;
+
+        return age;
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/pesobeta/Joblist/employer");
+    }
+}

@@ -1225,6 +1225,10 @@ a:hover span {
 }
 
 /* -------------- Job List ------------ */
+.table-hover > tbody > tr:hover > * {
+    border: 1px solid var(--maincolor);
+    background-color: #e9f2ff;
+}
 
 .job-board {
     display: flex;

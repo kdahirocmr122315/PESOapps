@@ -697,7 +697,7 @@ namespace webapi_peso.Controllers
         public IActionResult GetInterViewedApplicants(string Id)
         {
             using var db = dbFactory.CreateDbContext();
-            var list = db.EmployerInterviewedApplicants.Where(x => x.EmployerId == Id).OrderByDescending(x => x.DateInterviewed);
+            var list = db.EmployerInterviewedApplicants.Where(x => x.EmployerId == Id).OrderByDescending(x => x.DateInterviewed).ToList();
             var result = new List<ApplicantInformation>();
             foreach (var i in list)
             {

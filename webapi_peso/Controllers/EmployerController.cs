@@ -652,5 +652,23 @@ namespace webapi_peso.Controllers
             db.SaveChanges();
             return Ok(jobPost);
         }
+
+        [HttpGet("SetAsInterviewed/{EmId}/{ApId}")]
+        public IActionResult SetAsInterviewed(string EmId, string ApId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var data = db.EmployerInterviewedApplicants.Where(x => x.EmployerId == EmId && x.ApplicantAccountId == ApId).FirstOrDefault();
+            if (data == null)
+            {
+                data = new();
+                data.EmployerId = EmId;
+                data.ApplicantAccountId = ApId;
+                data.DateInterviewed = DateTime.Now;
+                db.EmployerInterviewedApplicants.Add(data);
+                db.SaveChanges();
+            }
+            return Ok();
+        }
+
     }
 }

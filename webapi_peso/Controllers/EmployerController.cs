@@ -670,5 +670,28 @@ namespace webapi_peso.Controllers
             return Ok();
         }
 
+        [HttpGet("SaveActiveStatus/{EmpId}")]
+        public async Task SaveActiveStatus(string EmpId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var a = db.EmployerActiveStatus.Where(x => x.EmployerId == EmpId).FirstOrDefault();
+            if (a == null)
+            {
+                a = new();
+                a.EmployerId = EmpId;
+                a.Count = 1;
+                a.Date = DateTime.Now;
+                await db.EmployerActiveStatus.AddAsync(a);
+                await db.SaveChangesAsync();
+            }
+            else
+            {
+                a.Count += 1;
+                a.Date = DateTime.Now;
+                db.EmployerActiveStatus.Update(a);
+                await db.SaveChangesAsync();
+            }
+        }
+
     }
 }

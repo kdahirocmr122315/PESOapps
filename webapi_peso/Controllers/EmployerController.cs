@@ -652,7 +652,5 @@ namespace webapi_peso.Controllers
             db.SaveChanges();
             return Ok(jobPost);
         }
-
-
     }
 }

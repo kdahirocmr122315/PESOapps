@@ -724,6 +724,14 @@ namespace webapi_peso.Controllers
             return Ok(result);
         }
 
+        [HttpPost("CreateScheduleInterview")]
+        public IActionResult CreateScheduleInterview(EmployerScheduledInterview data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            db.EmployerScheduledInterviews.Add(data);
+            db.SaveChanges();
+            return Ok(data);
+        }
 
     }
 }

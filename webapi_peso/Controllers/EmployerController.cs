@@ -693,5 +693,21 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetInterViewedApplicants/{Id}")]
+        public IActionResult GetInterViewedApplicants(string Id)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var list = db.EmployerInterviewedApplicants.Where(x => x.EmployerId == Id).OrderByDescending(x => x.DateInterviewed);
+            var result = new List<ApplicantInformation>();
+            foreach (var i in list)
+            {
+                var a = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantAccountId).OrderByDescending(x => x.DateLastUpdate).MyDistinctBy(x => x.AccountId).FirstOrDefault();
+                var IsHired = db.EmployerHiredApplicants.Any(x => x.ApplicantAccountId == i.ApplicantAccountId && x.EmployerId == Id);
+                if (a != null && !IsHired)
+                    result.Add(a);
+            }
+            return Ok(result);
+        }
+
     }
 }

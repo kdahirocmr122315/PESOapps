@@ -775,5 +775,36 @@ namespace webapi_peso.Controllers
             return Ok(result);
         }
 
+        [HttpGet("GetApplicantsToBeInterviewed/{employerId}")]
+        public IActionResult GetApplicantsToBeInterviewed(string employerId)
+        {
+            using var db = dbFactory.CreateDbContext();
+
+            // Get all applicant IDs scheduled for interview for this employer
+            var scheduledApplicantIds = db.EmployerScheduledInterviews
+                .Where(x => x.EmployerId == employerId)
+                .Select(x => x.ApplicantId)
+                .ToList();
+
+            // Get all applicant IDs already interviewed for this employer
+            var interviewedApplicantIds = db.EmployerInterviewedApplicants
+                .Where(x => x.EmployerId == employerId)
+                .Select(x => x.ApplicantAccountId)
+                .ToList();
+
+            // Applicants scheduled but not yet interviewed
+            var toBeInterviewedIds = scheduledApplicantIds
+                .Where(id => !interviewedApplicantIds.Contains(id))
+                .ToList();
+
+            // Get applicant details
+            var applicants = db.ApplicantInformation
+                .Where(x => toBeInterviewedIds.Contains(x.AccountId))
+                .OrderByDescending(x => x.DateLastUpdate)
+                .ToList();
+
+            return Ok(applicants);
+        }
+
     }
 }

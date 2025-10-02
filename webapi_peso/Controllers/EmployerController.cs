@@ -718,5 +718,21 @@ namespace webapi_peso.Controllers
             return Ok(data);
         }
 
+        [HttpGet("RemoveInterviewed/{emId}/{AccountId}")]
+        public IActionResult RemoveInterviewed(string emId, string AccountId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var a = db.EmployerInterviewedApplicants.Where(x => x.EmployerId == emId && x.ApplicantAccountId == AccountId).FirstOrDefault();
+            if (a != null)
+            {
+                db.EmployerInterviewedApplicants.Remove(a);
+                db.SaveChanges();
+                var appInfo = db.ApplicantInformation.Where(x => x.AccountId == AccountId).OrderByDescending(x => x.DateLastUpdate).MyDistinctBy(x => x.AccountId).FirstOrDefault();
+                if (appInfo != null)
+                    return Ok(appInfo);
+            }
+            return BadRequest();
+        }
+
     }
 }

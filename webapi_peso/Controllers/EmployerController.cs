@@ -764,7 +764,7 @@ namespace webapi_peso.Controllers
         public IActionResult GetHiredApplicants(string Id)
         {
             using var db = dbFactory.CreateDbContext();
-            var list = db.EmployerHiredApplicants.Where(x => x.EmployerId == Id).OrderByDescending(x => x.DateHired);
+            var list = db.EmployerHiredApplicants.Where(x => x.EmployerId == Id).OrderByDescending(x => x.DateHired).ToList();
             var result = new List<ApplicantInformation>();
             foreach (var i in list)
             {

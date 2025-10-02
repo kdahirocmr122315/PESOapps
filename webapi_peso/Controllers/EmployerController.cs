@@ -749,5 +749,30 @@ namespace webapi_peso.Controllers
             return BadRequest();
         }
 
+        [HttpPost("SetAsHired")]
+        public IActionResult SetAsHired(EmployerHiredApplicant data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var existing = db.EmployerHiredApplicants.Where(x => x.EmployerId == data.EmployerId && x.ApplicantAccountId == data.ApplicantAccountId).FirstOrDefault();
+            if (existing == null)
+            {
+                db.EmployerHiredApplicants.Add(data);
+                db.SaveChanges();
+                var emDetails = db.EmployerDetails.Find(data.EmployerId);
+                if (emDetails != null)
+                {
+                    emDetails.NumberOfHiredApplicants += 1;
+                    db.EmployerDetails.Update(emDetails);
+                    db.SaveChanges();
+                }
+
+                var appInfo = db.ApplicantInformation.Where(x => x.AccountId == data.ApplicantAccountId).OrderByDescending(x => x.DateLastUpdate).MyDistinctBy(x => x.AccountId).FirstOrDefault();
+                if (appInfo != null)
+                    return Ok(appInfo);
+            }
+
+            return BadRequest();
+        }
+
     }
 }

@@ -15,7 +15,7 @@ namespace webapi_peso.Model
         public string Id { get; set; }
         public string EmployerId { get; set; }
         public string ApplicantAccountId { get; set; }
-        public string HiredPosition { get; set; }
+        public string? HiredPosition { get; set; }
         public DateTime DateHired { get; set; }
         public EmployerHiredApplicant()
         {

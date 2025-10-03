@@ -779,16 +779,57 @@ namespace webapi_peso.Controllers
         public IActionResult GetHiredApplicants(string Id)
         {
             using var db = dbFactory.CreateDbContext();
-            var list = db.EmployerHiredApplicants.Where(x => x.EmployerId == Id).OrderByDescending(x => x.DateHired).ToList();
-            var result = new List<ApplicantInformation>();
+            var list = db.EmployerHiredApplicants
+                .Where(x => x.EmployerId == Id)
+                .OrderByDescending(x => x.DateHired)
+                .ToList();
+
+            var result = new List<dynamic>();
             foreach (var i in list)
             {
-                var a = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantAccountId).OrderByDescending(x => x.DateLastUpdate).MyDistinctBy(x => x.AccountId).FirstOrDefault();
-                if (a != null)
-                    result.Add(a);
+                var applicantInfo = db.ApplicantInformation
+                    .Where(x => x.AccountId == i.ApplicantAccountId)
+                    .OrderByDescending(x => x.DateLastUpdate)
+                    .MyDistinctBy(x => x.AccountId)
+                    .FirstOrDefault();
+
+                if (applicantInfo != null)
+                {
+                    result.Add(new
+                    {
+                        ApplicantInformation = applicantInfo,
+                        EmployerHiredApplicant = i
+                    });
+                }
             }
+
             return Ok(result);
         }
 
+        [HttpGet("GetApplicantsToBeInterviewed/{employerId}")]
+        public IActionResult GetApplicantsToBeInterviewed(string employerId)
+        {
+            using var db = dbFactory.CreateDbContext();
+
+            var interviewedIds = db.EmployerInterviewedApplicants
+                .Where(x => x.EmployerId == employerId)
+                .Select(x => x.ApplicantAccountId);
+
+            var applicants = db.ApplicantInformation
+                .Where(app => app.AccountId != null)
+                .Where(app =>
+                    db.EmployerScheduledInterviews.Any(s =>
+                        s.EmployerId == employerId &&
+                        s.ApplicantId == app.AccountId
+                    )
+                    && !interviewedIds.Contains(app.AccountId)
+                )
+                .OrderByDescending(app => app.DateLastUpdate)
+                .AsNoTracking()
+                .ToList();
+            return Ok(applicants);
+        }
+
+
+        }
     }
-}

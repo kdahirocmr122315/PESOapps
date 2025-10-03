@@ -764,14 +764,30 @@ namespace webapi_peso.Controllers
         public IActionResult GetHiredApplicants(string Id)
         {
             using var db = dbFactory.CreateDbContext();
-            var list = db.EmployerHiredApplicants.Where(x => x.EmployerId == Id).OrderByDescending(x => x.DateHired).ToList();
-            var result = new List<ApplicantInformation>();
+            var list = db.EmployerHiredApplicants
+                .Where(x => x.EmployerId == Id)
+                .OrderByDescending(x => x.DateHired)
+                .ToList();
+
+            var result = new List<dynamic>();
             foreach (var i in list)
             {
-                var a = db.ApplicantInformation.Where(x => x.AccountId == i.ApplicantAccountId).OrderByDescending(x => x.DateLastUpdate).MyDistinctBy(x => x.AccountId).FirstOrDefault();
-                if (a != null)
-                    result.Add(a);
+                var applicantInfo = db.ApplicantInformation
+                    .Where(x => x.AccountId == i.ApplicantAccountId)
+                    .OrderByDescending(x => x.DateLastUpdate)
+                    .MyDistinctBy(x => x.AccountId)
+                    .FirstOrDefault();
+
+                if (applicantInfo != null)
+                {
+                    result.Add(new
+                    {
+                        ApplicantInformation = applicantInfo,
+                        EmployerHiredApplicant = i
+                    });
+                }
             }
+
             return Ok(result);
         }
 

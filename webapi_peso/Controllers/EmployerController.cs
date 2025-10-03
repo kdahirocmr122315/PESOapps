@@ -780,31 +780,25 @@ namespace webapi_peso.Controllers
         {
             using var db = dbFactory.CreateDbContext();
 
-            // Get all applicant IDs scheduled for interview for this employer
-            var scheduledApplicantIds = db.EmployerScheduledInterviews
+            var interviewedIds = db.EmployerInterviewedApplicants
                 .Where(x => x.EmployerId == employerId)
-                .Select(x => x.ApplicantId)
-                .ToList();
+                .Select(x => x.ApplicantAccountId);
 
-            // Get all applicant IDs already interviewed for this employer
-            var interviewedApplicantIds = db.EmployerInterviewedApplicants
-                .Where(x => x.EmployerId == employerId)
-                .Select(x => x.ApplicantAccountId)
-                .ToList();
-
-            // Applicants scheduled but not yet interviewed
-            var toBeInterviewedIds = scheduledApplicantIds
-                .Where(id => !interviewedApplicantIds.Contains(id))
-                .ToList();
-
-            // Get applicant details
             var applicants = db.ApplicantInformation
-                .Where(x => toBeInterviewedIds.Contains(x.AccountId))
-                .OrderByDescending(x => x.DateLastUpdate)
+                .Where(app => app.AccountId != null)
+                .Where(app =>
+                    db.EmployerScheduledInterviews.Any(s =>
+                        s.EmployerId == employerId &&
+                        s.ApplicantId == app.AccountId
+                    )
+                    && !interviewedIds.Contains(app.AccountId)
+                )
+                .OrderByDescending(app => app.DateLastUpdate)
+                .AsNoTracking()
                 .ToList();
-
             return Ok(applicants);
         }
 
+
+        }
     }
-}

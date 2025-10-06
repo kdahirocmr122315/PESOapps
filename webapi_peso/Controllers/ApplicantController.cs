@@ -21,6 +21,8 @@ namespace webapi_peso.Controllers
         private readonly IMemoryCache cache;
         private readonly IWebHostEnvironment env;
         private readonly IGmailServices gmail;
+        private bool EnableEmailAndText = true;
+        private static readonly string EMAIL_FOOTER = "<br /><br /><center style='color:red'>**********  This is a system generated email. Please do not reply.  **********</center><hr /><center><h1>Contact us</h1></center><center>pesomisamisoriental@gmail.com</center><center>(+63) 909 503 6246</center><center>(088)72-57-19</center><center>Opens: Monday - Friday</center><center>From 8:00AM - 5:00PM only</center><center><a href='https://pesomisor.com'>www.pesomisor.com</a> - <a href='https://www.misamisoriental.gov.ph'>Misamis Oriental</a></center>";
 
         public ApplicantController(IDbContextFactory<ApplicationDbContext> _dbFactory, IMemoryCache _cache, IWebHostEnvironment _env, IGmailServices gmail)
         {
@@ -1327,5 +1329,58 @@ namespace webapi_peso.Controllers
             return Ok(false);
         }
 
+        [HttpPost("SendEmailVerified")]
+        public async Task<IActionResult> SendEmailVerified(MailContent mail)
+        {
+            if (!EnableEmailAndText)
+                return BadRequest("Email and text functionality is disabled.");
+
+            using var db = dbFactory.CreateDbContext();
+            var appInfo = db.ApplicantInformation.FirstOrDefault(x => x.Email == mail.MailTo);
+            var userAccount = db.UserAccounts.FirstOrDefault(x => x.Email == mail.MailTo);
+
+            if (appInfo == null || userAccount == null)
+                return NotFound("Applicant information or user account not found.");
+
+            if (ProjectConfig.JobFairEnabled)
+            {
+                if (string.IsNullOrEmpty(appInfo.JobFairReferenceCode))
+                {
+                    var refCode = Helper.Random6digitNumbers();
+                    while (db.ApplicantInformation.Any(x => x.JobFairReferenceCode == refCode))
+                    {
+                        refCode = Helper.Random6digitNumbers();
+                    }
+                    appInfo.JobFairReferenceCode = refCode;
+                    db.ApplicantInformation.Update(appInfo);
+                    db.SaveChanges();
+                }
+
+                var jobFairMessage = $"<p>Hi {appInfo.FirstName},</p>" +
+                                     $"<p>Kindly take note of your reference number and present it to our PESO personnel during the job fair.</p><br/><br/>" +
+                                     $"REFERENCE #: <b>{appInfo.JobFairReferenceCode}</b>";
+
+                await gmail.SendEmail(mail.MailTo, jobFairMessage);
+            }
+            else
+            {
+                var registrationMessage = $"<div style='padding-left:20px;padding-right:20px'>" +
+                                          $"<h2 style='font-family:Century Gothic;font-weight:300'>Hello {appInfo.FirstName},</h2>" +
+                                          $"<h2 style='font-family:Century Gothic;font-weight:300'>Good day!</h2>" +
+                                          "<b style='font-family:Century Gothic;margin-top:10px'>Use this account to sign in to our website.</b>" +
+                                          $"<p style='font-family:Century Gothic'>Username: <code>{userAccount.Email}</code></p>" +
+                                          $"<p style='font-family:Century Gothic;margin-bottom:10px'>Password: <code>{userAccount.Password}</code></p>" +
+                                          "<h2 style='font-family:Century Gothic;font-weight:300'>We have referred you to one of the registered establishments/companies in our system, as your application is replete with the needed information.</h2>" +
+                                          "<h2 style='font-family:Century Gothic;font-weight:300'>An HR from a potential employer will be in touch with you for the next steps. <i>(Be sure to keep an active mobile number and email address)</i>.</h2>" +
+                                          "<h2 style='font-family:Century Gothic;font-weight:300'>Good luck and sell yourself, so as to be considered for your preferred job/any open position.</h2>" +
+                                          "<h2 style='font-family:Century Gothic;font-weight:300'>Have a great day ahead!!!</h2>" +
+                                          $"{EMAIL_FOOTER}" +
+                                          "</div>";
+
+                await gmail.SendEmail(mail.MailTo, registrationMessage);
+            }
+
+            return Ok("Email sent successfully.");
+        }
     }
 }

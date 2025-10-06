@@ -8,7 +8,7 @@
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
 @using Microsoft.AspNetCore.Components.Forms
-
+<PageTitle>Job Portal</PageTitle>
 @if (!isUserLoggedIn)
 {
 
@@ -465,13 +465,17 @@ else
                         return;
                     }
 
-                    var ms = new System.IO.MemoryStream();
+                    var ms = new MemoryStream();
                     await file.OpenReadStream(maxFileSize).CopyToAsync(ms);
                     ms.Position = 0;
-                    streams.Add(ms); // keep reference
+                    streams.Add(ms);
 
-                    content.Add(CreateFileContent(ms, file.Name, file.ContentType ?? "application/octet-stream"), "files", file.Name);
+                    // ✅ Sanitize file name
+                    var safeFileName = SanitizeFileName(file.Name);
+
+                    content.Add(CreateFileContent(ms, safeFileName, file.ContentType ?? "application/octet-stream"), "files", safeFileName);
                 }
+
 
                 var uploadResponse = await Http.PostAsync("api/Applicant/UploadApplicantResume", content);
                 if (!uploadResponse.IsSuccessStatusCode)
@@ -539,6 +543,28 @@ else
         }
         catch { }
         return fileContent;
+    }
+
+    private static string SanitizeFileName(string fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return Guid.NewGuid().ToString("N");
+
+        // Replace spaces with underscores
+        fileName = fileName.Replace(" ", "_");
+
+        // Remove invalid chars
+        var invalid = Path.GetInvalidFileNameChars().ToHashSet();
+        var safeName = new string(fileName.Where(c => !invalid.Contains(c)).ToArray());
+
+        // Optionally add uniqueness
+        // safeName = $"{Guid.NewGuid()}_{safeName}";
+
+        // Trim if too long
+        if (safeName.Length > 100)
+            safeName = safeName.Substring(0, 100);
+
+        return safeName;
     }
 
 }

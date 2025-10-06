@@ -294,6 +294,8 @@ namespace webapi_peso.Controllers
                 userAccount.Name = $"{data.ApplicantInformation.FirstName} {data.ApplicantInformation.SurName}";
                 userAccount.DateCreated = DateTime.Now;
                 userAccount.UserType = ProjectConfig.USER_TYPE.APPLICANT;
+                userAccount.InActive = 0;
+                userAccount.LastLoggedIn = DateTime.Now;
                 db.UserAccounts.Add(userAccount);
                 db.SaveChanges();
             }
@@ -305,9 +307,11 @@ namespace webapi_peso.Controllers
                 account.Username = userAccount.Email;
                 account.Password = userAccount.Password;
                 account.Email = userAccount.Email;
+                account.IsEmailVerified = 0;
                 account.IsReviewedReturned = 1;
                 account.DateRegistered = Helper.currentTimeMillis();
                 account.DateLastUpdate = Helper.currentTimeMillis();
+                account.IsRemoved = 0;
                 db.ApplicantAccount.Add(account);
                 db.SaveChanges();
             }
@@ -1204,16 +1208,12 @@ namespace webapi_peso.Controllers
         {
             var files = Request.Form.Files;
             var result = new List<AttachementsViewModel>();
-            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString();
-            var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "applications", folderName);
+            var folderName = Request.Headers.Where(x => x.Key == "f").Select(x => x.Value).FirstOrDefault().ToString() ?? "";
 
-            if (!System.IO.Directory.Exists(dir)) System.IO.Directory.CreateDirectory(dir);
+            var dir = Path.Combine(env.ContentRootPath, "files", "applications", folderName);
 
-            foreach (var f in System.IO.Directory.GetFiles(dir))
-            {
-                if (System.IO.File.Exists(f))
-                    System.IO.File.Delete(f);
-            }
+            // ✅ Only create if not exists
+            if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
 
             using var db = dbFactory.CreateDbContext();
 
@@ -1222,34 +1222,48 @@ namespace webapi_peso.Controllers
                 if (file.Length > 0)
                 {
                     var origFileName = ContentDispositionHeaderValue.Parse(file.ContentDisposition).FileName.Trim('"');
-                    var fileName = $"{origFileName}";
-                    fileName = WebUtility.HtmlEncode(fileName);
-                    var fullPath = System.IO.Path.Combine(dir, fileName);
+                    var fileName = WebUtility.HtmlEncode(origFileName);
+                    var fullPath = Path.Combine(dir, fileName);
 
+                    // ✅ Save (overwrite if exists)
                     using (var stream = new FileStream(fullPath, FileMode.Create))
                     {
-                        result.Add(new AttachementsViewModel()
-                        {
-                            FileName = fileName,
-                            FileSize = Helper.SizeSuffix(file.Length),
-                            FolderName = folderName
-                        });
                         file.CopyTo(stream);
                     }
 
-                    // Save the filename in the JobApplicantionAttachment table
-                    var attachment = new JobApplicantionAttachment
+                    // ✅ Check if record already exists in DB
+                    var existing = db.JobApplicantionAttachment
+                        .FirstOrDefault(x => x.JobApplicantionId == folderName && x.FileName == fileName);
+
+                    if (existing == null)
+                    {
+                        // Insert new record
+                        var attachment = new JobApplicantionAttachment
+                        {
+                            FileName = fileName,
+                            JobApplicantionId = folderName
+                        };
+                        db.JobApplicantionAttachment.Add(attachment);
+                    }
+                    else
+                    {
+                        // Optionally update existing record (e.g., timestamp if you have it)
+                        existing.FileName = fileName;
+                    }
+
+                    result.Add(new AttachementsViewModel()
                     {
                         FileName = fileName,
-                        JobApplicantionId = folderName
-                    };
-                    db.JobApplicantionAttachment.Add(attachment);
+                        FileSize = Helper.SizeSuffix(file.Length),
+                        FolderName = folderName
+                    });
                 }
             }
 
             db.SaveChanges();
             return Ok(result);
         }
+
 
         [HttpGet("CheckIfAlreadyApplied/{applicantId}/{jobpostId}")]
         public IActionResult CheckIfAlreadyApplied(string applicantId, string jobpostId)

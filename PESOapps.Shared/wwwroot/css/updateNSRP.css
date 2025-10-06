@@ -9,6 +9,11 @@
     height: calc(100vh - 120px);
 }
 
+.registrations-container {
+    padding: 1rem;
+    height: auto;
+}
+
 .nsrp-container form {
     display: block;
 }
@@ -34,6 +39,29 @@
 
 .nsrp-toggle:hover {
     background: #07522Dd4;
+}
+
+button.nsrp-toggle[disabled],
+button.nsrp-toggle:hover[disabled] {
+    background: #e1e1e1;
+}
+
+.bg-red {
+    background: #970a1a;
+}
+
+.bg-red:hover {
+    background: #970a1ad4;
+}
+
+.float-right {
+    float: right;
+}
+
+.go-back {
+    border: none;
+    background: #07522D;
+    font-size: 1em;
 }
 
 /* Tabs */
@@ -143,6 +171,11 @@
     padding: 1.2rem;
     background: #fafafa;
     border-radius: 0.6rem;
+}
+
+.registrations-container .nsrp-section {
+    margin-top: 0rem;
+    padding: 1rem;
 }
 
 .nsrp-insection {
@@ -410,7 +443,7 @@ body .modal-body-print {
 
 .filter-bars {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
     gap: 5px;
     margin-bottom: 10px;
 }
@@ -445,6 +478,11 @@ body .modal-body-print {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+.Schedules-modal .modal-content,
+.hires .modal-content {
+    max-width: 420px;
 }
 
 @media only screen and (max-width: 768px) {

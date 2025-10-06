@@ -1,0 +1,173 @@
+﻿@page "/HiredApplicants/employer"
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+<PageTitle>Hired</PageTitle>
+
+    @if (isLoading)
+    {
+        <div class="custom-loader"></div>
+    }
+    else if (hiredApplicants == null || !hiredApplicants.Any())
+    {
+        <div>
+        <button class="badge go-back" @onclick="GoBack">⬅ Back</button>
+            <h3>Hired</h3>
+            <p class="text-muted">No hired applicants found.</p>
+        </div>
+    }
+    else
+    {
+        <div class="nsrp-container">
+        <button class="badge go-back" @onclick="GoBack">⬅ Back</button>
+        <h3>Interviewed Applicants</h3>
+            <table class="table table-bordered table-striped">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Age</th>
+                        <th>Position</th>
+                        <th class="text-center">Date Hired</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in hiredApplicants)
+                    {
+                        <tr>
+                        <td>@item.ApplicantInformation.FirstName @item.ApplicantInformation.MiddleName @item.ApplicantInformation.SurName @(!string.IsNullOrWhiteSpace(item.ApplicantInformation.Suffix) ? $" {item.ApplicantInformation.Suffix}" : "")</td>
+                        <td>@item.ApplicantInformation.Email</td>
+                        <td>@(GetAgeFromUnix(item.ApplicantInformation.DateOfBirth))</td>
+                            <td>@item.EmployerHiredApplicant.HiredPosition</td>
+                        <td class="text-center">@FormatDateHired(item.EmployerHiredApplicant.DateHired)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+@code {
+    private bool isLoading = true;
+    private string? employerId;
+    private string? userId;
+    private string? pendingErrorMessage;
+
+    // model list
+    private List<HiredApplicantViewModel>? hiredApplicants;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+
+            if (string.IsNullOrEmpty(userId))
+            {
+                pendingErrorMessage = "UserId not found in localStorage.";
+                return;
+            }
+
+            // load employer details to get employerId (same pattern used elsewhere)
+            var jobResponse = await Http.GetAsync($"api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
+            if (jobResponse.IsSuccessStatusCode)
+            {
+                var rawJob = await jobResponse.Content.ReadAsStringAsync();
+                var employerData = JsonSerializer.Deserialize<EmployerRegistrationViewModel>(rawJob, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                employerId = employerData?.EmployerDetails?.Id;
+            }
+
+            if (string.IsNullOrEmpty(employerId))
+            {
+                pendingErrorMessage = "EmployerId not found for current user.";
+                return;
+            }
+
+            await LoadHiredApplicants();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            pendingErrorMessage = $"Error: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !string.IsNullOrEmpty(pendingErrorMessage))
+        {
+            await JS.InvokeVoidAsync("alert", pendingErrorMessage);
+            pendingErrorMessage = null;
+        }
+    }
+
+    private async Task LoadHiredApplicants()
+    {
+        if (string.IsNullOrEmpty(employerId)) return;
+
+        isLoading = true;
+        try
+        {
+            var resp = await Http.GetAsync($"api/Employer/GetHiredApplicants/{employerId}");
+            if (resp.IsSuccessStatusCode)
+            {
+                var rawJson = await resp.Content.ReadAsStringAsync();
+                Console.WriteLine("🔍 GetHiredApplicants JSON: " + rawJson);
+                hiredApplicants = JsonSerializer.Deserialize<List<HiredApplicantViewModel>>(rawJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            else
+            {
+                var err = await resp.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Failed to load hired applicants: {resp.StatusCode} - {err}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error loading hired applicants: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GoBack()
+    {
+        StateHasChanged();
+        Navigation.NavigateTo("/pesobeta/Joblist/employer");
+    }
+
+    private int? GetAgeFromUnix(long dobUnix)
+    {
+        if (dobUnix == 0) return null;
+        var dob = DateTimeOffset.FromUnixTimeMilliseconds(dobUnix).DateTime.Date;
+        var today = DateTime.Today;
+        var age = today.Year - dob.Year;
+        if (dob > today.AddYears(-age)) age--;
+        return age;
+    }
+
+    private string FormatDateHired(DateTime? dt)
+    {
+        if (dt == null) return "-";
+        // show local date/time in readable format
+        return dt.Value.ToLocalTime().ToString("MMMM dd, yyyy");
+
+    }
+
+    // ViewModel that matches expected JSON from GetHiredApplicants
+    public class HiredApplicantViewModel
+    {
+        public ApplicantInformation ApplicantInformation { get; set; }
+        public EmployerHiredApplicant EmployerHiredApplicant { get; set; }
+    }
+}

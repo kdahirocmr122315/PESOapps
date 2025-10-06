@@ -6,7 +6,7 @@
 @using PESOapps.Shared.Address
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
-
+<PageTitle>Job Portal</PageTitle>
 @if (!isUserLoggedIn)
 {
     <p>Redirecting to login...</p>
@@ -24,7 +24,7 @@ else if (!jobPosts.Any())
     <div class="no job-board">
         <p>No job postings available.</p>
         <div class="no-filter-bars">
-            <button type="button" class="nsrp-toggle" @onclick="() => showAddJobModal = true">+ Post a Job</button>
+            <button type="button" class="nsrp-toggle" @onclick="() => showAddJobModal = true">Post a Job</button>
         </div>
         @if (showAddJobModal)
         {
@@ -276,13 +276,12 @@ else
         <div class="job-list">
             <!-- 🔍 Search Bar -->
             <div class="filter-bars">
-                <button class="nsrp-toggle" @onclick="() => showAddJobModal = true">+ Post a Job</button>
-                <button type="button" class="nsrp-toggle" @onclick="GoToInterviewed">
-                    Interviewed
-                </button>
+                <button class="nsrp-toggle" @onclick="() => showAddJobModal = true">Post a Job</button>
+                <button type="button" class="nsrp-toggle" @onclick="GoToInterviewed">Interviewed</button>
+                <button type="button" class="nsrp-toggle" @onclick="GoToHired">Hired</button>
             </div>
             @foreach (var post in jobPosts.OrderByDescending(p => p.DatePosted))
-            {
+            { 
                 bool isExpired = post.Expiry < DateTime.Now;
 
                 <div class="job-card @(selectedJobPost?.Id == post.Id ? "selected" : "")"
@@ -308,7 +307,11 @@ else
                 @if (selectedJobPost != null)
                 {
                     bool isExpired = selectedJobPost.Expiry < DateTime.Now;
-
+                    <!-- ✅ Delete Button -->
+                    <button class="nsrp-toggle bg-red float-right"
+                            @onclick="() => ConfirmDelete(selectedJobPost.Id, selectedJobPost.EmployerDetailsId)">
+                        Delete Job Post
+                    </button>
                     <div class="card-name">@selectedJobPost.Description</div>
                     @if (isExpired)
                     {
@@ -322,14 +325,13 @@ else
                         <em>@(selectedJobPost.DatePosted.ToString("MMMM dd, yyyy"))</em>
                     </p>
                     <p class="card-details-sal">
-                        @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", selectedJobPost.Salary ?? 0)
+                        @string.Format(new System.Globalization.CultureInfo("en-PH"), "{0:C}", selectedJobPost.Salary ?? 0)1
                     </p>
                     <hr />
                     <div class="details-inner">
                         <strong>Description:</strong>
                         <p class="card-description">@selectedJobPost.Description2</p>
                     </div>
-
                 }
                 else
                 {
@@ -353,22 +355,23 @@ else
                                     <th>Email</th>
                                     <th>Applied On</th>
                                     <th>Attachments</th>
-                                    <th>Interviewed</th>
+                                    <th class="text-center">Interviewed</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @foreach (var a in applicants!)
                                 {
-                                    <tr @onclick="() => HandleRowClick(a)" style="cursor:pointer">
-                                        <td data-label="Name">@a.Applicant?.FirstName @a.Applicant?.MiddleName @a.Applicant?.SurName @a.Applicant?.Suffix</td>
-                                        <td data-label="Email">@a.Applicant?.Email</td>
-                                        <td data-label="Applied On">@a.DateApplied.ToString("MMMM dd, yyyy")</td>
-                                        <td>
+                                    <tr style="cursor:pointer" @onclick="() => HandleRowClick(a)">
+                                        <td class="align-middle" data-label="Name">@a.Applicant?.FirstName @a.Applicant?.MiddleName @a.Applicant?.SurName @a.Applicant?.Suffix</td>
+                                        <td class="align-middle" data-label="Email">@a.Applicant?.Email</td>
+                                        <td class="align-middle" data-label="Applied On">@a.DateApplied.ToString("MMMM dd, yyyy")</td>
+                                        <td class="align-middle">
                                             @if (a.Attachments?.Any() == true)
                                             {
                                                 foreach (var att in a.Attachments)
                                                 {
-                                                    <a href="@($"http://localhost:5167/files/applications/{att.FolderName}/{att.FileName}")" target="_blank">Attachment</a>
+                                                    var fileUrl = $"http://localhost:5167/files/applications/{att.FolderName}/{Uri.EscapeDataString(att.FileName)}";
+                                                    <a @onclick:stopPropagation="true" href="@fileUrl" target="_blank">Attachment</a>
                                                     <br />
                                                 }
                                             }
@@ -377,7 +380,23 @@ else
                                                 <span class="text-muted fst-italic">No attachments</span>
                                             }
                                         </td>
-                                        <td data-label="Interviewed">@(a.IsInterviewed ? "Interviewed" : "Not yet")</td>
+                                        <td class="text-center align-middle" data-label="Interviewed">
+                                            @if (a.IsHired)
+                                            {
+                                                <span class="badge bg-primary">Hired</span>
+                                            }
+                                            else if (a.IsInterviewed)
+                                            {
+                                                <span class="badge bg-success">Interviewed</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge nsrp-toggle" @onclick:stopPropagation="true"
+                                                      @onclick="() => OpenScheduleInterviewModal(a)">
+                                                    Schedule Interview
+                                                </span>
+                                            }
+                                        </td>
                                     </tr>
                                 }
                             </tbody>
@@ -387,8 +406,22 @@ else
                     {
                         <p class="fst-italic">No applicants for this job yet.</p>
                     }
-
                 </div>
+               @if (showScheduleModal && selectedApplicant != null)
+                     {
+                        <div class="modal-overlay Schedules-modal">
+                            <div class="modal-content">
+                                <h4>Schedule Interview for @selectedApplicant.ApplicantInformation.FirstName @selectedApplicant.ApplicantInformation.SurName</h4>
+                                <label>Date & Time</label>
+                                <p>Selected Date: @scheduleDate?.ToString("MMMM dd, yyyy")</p>
+                                <input type="date" @bind="scheduleDate" class="nsrp-input" />
+                                <div class="modal-actions">
+                                    <button class="nsrp-toggle" @onclick="CloseScheduleInterviewModal">Cancel</button>
+                                    <button class="nsrp-toggle" @onclick="SubmitScheduleInterview">Save</button>
+                                </div>
+                            </div>
+                        </div>
+                    }
             </div>
         </div>
 
@@ -853,6 +886,7 @@ else
                                 jobPosts = employerDetails?.JobPosts ?? new List<EmployerJobPost>();
                             }
                         }
+                        StateHasChanged();
                     }
                 }
                 catch (Exception ex)
@@ -878,6 +912,7 @@ else
         if (selectedJobPost?.Id == post.Id) return; // already showing
 
         selectedJobPost = post;
+        currentJobId = post.Id; // <-- set currentJobId here
         applicants = null;
         isApplicantsLoading = true;
         StateHasChanged();
@@ -891,6 +926,7 @@ else
         {
             applicants = await Http.GetFromJsonAsync<List<AppliedApplicantViewModel>>
                 ($"api/Employer/GetApplicantsByJobPost/{jobId}") ?? new();
+            StateHasChanged();
         }
         catch (Exception ex)
         {
@@ -968,7 +1004,7 @@ else
 
             // Ensure default values
             newJob.IsDeleted = false;
-            newJob.IsVacant = 1;
+            newJob.IsVacant = 0;
             newJob.ReasonExpansion = ReasonExpansion;
             newJob.ReasonReplaceMent = ReasonReplaceMent;
             newJob.ReasonOthers = ReasonOthers;
@@ -983,7 +1019,7 @@ else
                 newJob = new EmployerJobPost
                 {
                     IsDeleted = false,
-                    IsVacant = 1,
+                    IsVacant = 0,
                     ReasonExpansion = false,
                     ReasonReplaceMent = false,
                     ReasonOthers = false,
@@ -1000,6 +1036,40 @@ else
         catch (Exception ex)
         {
             await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
+    // ────────────────────────── Delete Job Post ──────────────────────────
+    private async Task ConfirmDelete(string jobPostId, string userId)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm",
+            $"Are you sure you want to delete this job post?");
+        if (confirmed)
+        {
+            await DeleteJobPost(jobPostId, userId);
+        }
+    }
+
+    private async Task DeleteJobPost(string jobPostId, string userId)
+    {
+        var response = await Http.GetAsync(
+            $"api/Employer/DeleteEmpJobPost/{jobPostId}/{userId}");
+
+        if (response.IsSuccessStatusCode)
+        {
+            // Remove from list
+            var job = jobPosts.FirstOrDefault(j => j.Id == jobPostId);
+            if (job != null) jobPosts.Remove(job);
+
+            selectedJobPost = null; // clear details panel
+            StateHasChanged();
+
+            await JS.InvokeVoidAsync("alert", "Job post deleted successfully.");
+        }
+        else
+        {
+            var msg = await response.Content.ReadAsStringAsync();
+            await JS.InvokeVoidAsync("alert", $"Failed to delete job post: {msg}");
         }
     }
 
@@ -1138,16 +1208,19 @@ else
                     }
                 }
                 await LoadApplicantsAsync(selectedJobPost!.Id);
+                StateHasChanged();
             }
             else
             {
                 var error = await response.Content.ReadAsStringAsync();
                 await JS.InvokeVoidAsync("alert", $"Failed: {response.StatusCode} - {error}");
+                StateHasChanged();
             }
         }
         catch (Exception ex)
         {
             await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+            StateHasChanged();
         }
     }
 
@@ -1155,21 +1228,129 @@ else
 
     private void HandleRowClick(AppliedApplicantViewModel applicant)
     {
-        if (applicant.IsInterviewed)
+        if (applicant.IsHired)
+        {
+            // ✅ Go to Hired applicants page
+            Navigation.NavigateTo("/pesobeta/HiredApplicants/employer");
+        }
+        else if (applicant.IsInterviewed)
         {
             // ✅ Go to Interviewed applicants page
             Navigation.NavigateTo("/pesobeta/InterviewedApplicants/employer");
         }
         else
         {
-            // ✅ Open modal for non-interviewed
-            _ = OpenApplicantModal(applicant); // call the async version
+            // ✅ Open modal for non-interviewed applicants
+            _ = OpenApplicantModal(applicant); // async modal call
         }
     }
-    // Go to Interview
+
+    //  -----------------------------------  Go to Interview  -----------------------------------
     private void GoToInterviewed()
     {
         Navigation.NavigateTo("/pesobeta/InterviewedApplicants/employer");
     }
+    //  -----------------------------------  Go to Hired  -----------------------------------
+    private void GoToHired()
+    {
+        Navigation.NavigateTo("/pesobeta/HiredApplicants/employer");
+    }
+    // -----------------------------------  Schedule an Interview  -----------------------------------
+    private AppliedApplicantViewModel? scheduleApplicant;
+    private DateTime? scheduleDate { get; set; } = DateTime.Today;
+    private bool showScheduleModal = false;
+    public bool IsHired { get; set; }
+
+    private void OpenScheduleInterviewModal(AppliedApplicantViewModel applicant)
+    {
+        scheduleApplicant = applicant;
+        scheduleDate = DateTime.Today; // default today
+        showScheduleModal = true;
+    }
+
+    private void CloseScheduleInterviewModal()
+    {
+        showScheduleModal = false;
+    }
+
+    private async Task SubmitScheduleInterview()
+    {
+        if (scheduleApplicant == null)
+        {
+            await JS.InvokeVoidAsync("alert", "No applicant selected for scheduling.");
+            return;
+        }
+
+        if (scheduleDate == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Please select a schedule date.");
+            return;
+        }
+
+        var scheduleData = new
+        {
+            id = Guid.NewGuid().ToString(),
+            employerId = employerDetails?.Id,
+            applicantId = scheduleApplicant.Applicant?.AccountId,
+            dateSchedule = scheduleDate.Value,
+            dateCreated = DateTime.UtcNow
+        };
+
+        Console.WriteLine($"Posting: {JsonSerializer.Serialize(scheduleData)}");
+
+        var response = await Http.PostAsJsonAsync("api/Employer/CreateScheduleInterview", scheduleData);
+
+        if (response.IsSuccessStatusCode)
+        {
+            await JS.InvokeVoidAsync("alert", "Interview scheduled successfully!");
+            showScheduleModal = false;
+            scheduleApplicant = null;
+
+            // 🔄 Refresh applicants list
+            await ReloadApplicants();
+            StateHasChanged();
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            await JS.InvokeVoidAsync("alert", $"Error scheduling interview: {error}");
+        }
+    }
+
+    // Helper method for refreshing applicants
+    private string? currentJobId;
+
+    private async Task ReloadApplicants()
+    {
+        isApplicantsLoading = true;
+        StateHasChanged(); // show loader
+
+        try
+        {
+            if (!string.IsNullOrEmpty(currentJobId)) // make sure you keep jobId somewhere in your component
+            {
+                await LoadApplicantsAsync(currentJobId);
+            }
+        }
+        finally
+        {
+            isApplicantsLoading = false;
+            StateHasChanged(); // refresh UI
+        }
+    }
+
+
+    private string scheduleDateString
+    {
+        get => scheduleDate?.ToString("yyyy-MM-dd") ?? "";
+        set
+        {
+            if (DateTime.TryParse(value, out var dt))
+                scheduleDate = dt;
+            else
+                scheduleDate = null;
+        }
+    }
+    
 }
    

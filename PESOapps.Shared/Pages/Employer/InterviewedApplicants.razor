@@ -1,12 +1,15 @@
 ﻿@page "/InterviewedApplicants/employer"
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
+@using System.Linq
+@using System.Text.Json
+@using System.Text.Json.Serialization
 @inject HttpClient Http
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
-@using System.Text.Json
 
-<h3>Interviewed Applicants</h3>
+<PageTitle>Interviewed</PageTitle>
+
 
 @if (isLoading)
 {
@@ -14,47 +17,92 @@
 }
 else if (interviewedApplicants == null || !interviewedApplicants.Any())
 {
-    <p class="text-muted">No interviewed applicants found.</p>
+    <div class="nsrp-container">
+        <button class="badge go-back" @onclick="GoBack">⬅ Back</button>
+        <h3>Interviewed Applicants</h3>
+        <p class="text-muted">No interviewed applicants found.</p>
+    </div>
 }
 else
 {
-    <table class="table table-bordered table-striped">
-        <thead class="table-light">
-            <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Age</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var applicant in interviewedApplicants)
-            {
+    <div class="nsrp-container">
+        <button class="badge go-back" @onclick="GoBack">⬅ Back</button>
+        <h3>Interviewed Applicants</h3>
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
                 <tr>
-                    <td>@applicant.Applicant?.FirstName @applicant.Applicant?.SurName</td>
-                    <td>@applicant.Applicant?.Email</td>
-                    <td>@(GetAgeFromUnix(applicant.Applicant?.DateOfBirth ?? 0))</td>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Age</th>
+                    <th class="text-center">Actions</th>
                 </tr>
-            }
-        </tbody>
-    </table>
+            </thead>
+            <tbody>
+                @foreach (var item in interviewedApplicants)
+                {
+                    <tr>
+                        <td>@item.FirstName @item.SurName</td>
+                        <td>@item.Email</td>
+                        <td>@(GetAgeFromUnix(item.DateOfBirth))</td>
+                        <td class="text-center">
+                            <button class="badge nsrp-toggle bg-red" @onclick="() => DeleteApplicant(item)">Remove</button>
+                            <button class="badge nsrp-toggle" @onclick="() => OpenHireModal(item)">Hire</button>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 
-<button class="nsrp-toggle" @onclick="GoBack">⬅ Back</button>
+@if (showHireModal && selectedApplicant != null)
+{
+    <div class="job-board hires">
+        <div class="modal-overlay">
+            <div class="modal-content">
+                <h4>Hire @selectedApplicant.FirstName @selectedApplicant.SurName</h4>
+
+                <label>Position</label>
+                <select @bind="selectedPosition" class="nsrp-input">
+                    <option value="">-- Select Position --</option>
+                    @foreach (var pos in availablePositions)
+                    {
+                        <option value="@pos">@pos</option>
+                    }
+                </select>
+
+                <label>Date Hired</label>
+                <InputDate class="nsrp-input" @bind-Value="hireDate" />
+
+                <div class="modal-actions">
+                    <button class="nsrp-toggle" @onclick="CloseHireModal">Cancel</button>
+                    <button class="nsrp-toggle" @onclick="SubmitHire">Confirm Hire</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private bool isLoading = true;
-    private List<AppliedApplicantViewModel>? interviewedApplicants;
+    private List<InterviewedApplicantViewModel>? interviewedApplicants;
     private string? pendingErrorMessage;
 
     private EmployerDetails? employerDetails;
     private string? employerId;
     private string? userId;
 
+    // Hire Modal state
+    private bool showHireModal = false;
+    private InterviewedApplicantViewModel? selectedApplicant;
+    private string? selectedPosition;
+    private List<string> availablePositions = new();
+    private DateTime? hireDate = DateTime.Today;
+
     protected override async Task OnInitializedAsync()
     {
         try
         {
-            // 1️⃣ Get UserId from localStorage
             userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
 
             if (string.IsNullOrEmpty(userId))
@@ -63,7 +111,6 @@ else
                 return;
             }
 
-            // 2️⃣ Fetch EmployerDetails using UserId
             var jobResponse = await Http.GetAsync($"api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
             if (jobResponse.IsSuccessStatusCode)
             {
@@ -77,6 +124,16 @@ else
                 {
                     employerDetails = employerData.EmployerDetails;
                     employerId = employerDetails?.Id;
+
+                    // load positions from employerDetails.JobPosts if available
+                    if (employerDetails?.JobPosts != null && employerDetails.JobPosts.Any())
+                    {
+                        // Ensure null-safe projection to List<string>
+                        availablePositions = employerDetails.JobPosts
+                            .Select(j => j.Description ?? j.Description2)
+                            .Where(s => !string.IsNullOrWhiteSpace(s))
+                            .ToList()!;
+                    }
                 }
             }
 
@@ -86,14 +143,17 @@ else
                 return;
             }
 
-            // 3️⃣ Fetch Interviewed Applicants using EmployerId
             var url = $"api/Employer/GetInterViewedApplicants/{employerId}";
             var response = await Http.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
             {
-                interviewedApplicants = await response.Content
-                    .ReadFromJsonAsync<List<AppliedApplicantViewModel>>();
+                var rawJson = await response.Content.ReadAsStringAsync();
+                Console.WriteLine("🔍 JSON Response: " + rawJson);
+                interviewedApplicants = JsonSerializer.Deserialize<List<InterviewedApplicantViewModel>>(
+                    rawJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
             }
             else
             {
@@ -120,6 +180,158 @@ else
         }
     }
 
+    //---------------------------------------------- MODELS ------------------
+    public class InterviewedApplicantViewModel
+    {
+        public string? Id { get; set; }
+        public string? JobFairReferenceCode { get; set; }
+
+        [JsonPropertyName("accountId")]
+        public string? AccountId { get; set; }   // maps explicitly to JSON "accountId"
+
+        public string? Email { get; set; }
+        public string? SurName { get; set; }
+        public string? FirstName { get; set; }
+        public string? MiddleName { get; set; }
+        public string? Suffix { get; set; }
+
+        [JsonPropertyName("dateOfBirth")]
+        public long DateOfBirth { get; set; }
+
+        public string? PlaceOfBirth { get; set; }
+        public string? Gender { get; set; }
+    }
+
+    //---------------------------------------------- ACTIONS ------------------
+    private async Task DeleteApplicant(InterviewedApplicantViewModel item)
+    {
+        if (string.IsNullOrEmpty(employerId))
+            return;
+
+        // Debug output to help trace why AccountId might be empty
+        Console.WriteLine($"DeleteApplicant invoked. employerId='{employerId}', AccountId='{item?.AccountId}'");
+
+        if (string.IsNullOrEmpty(item?.AccountId))
+        {
+            await JS.InvokeVoidAsync("alert", "Applicant AccountId is missing and cannot be deleted.");
+            return;
+        }
+
+        var confirm = await JS.InvokeAsync<bool>("confirm", $"Are you sure you want to Remove {item.FirstName} {item.SurName}?");
+        if (!confirm) return;
+
+        // URL-encode account id to avoid invalid URL characters
+        var accountIdEncoded = Uri.EscapeDataString(item.AccountId);
+        var response = await Http.GetAsync($"api/Employer/RemoveInterviewed/{employerId}/{accountIdEncoded}");
+        if (response.IsSuccessStatusCode)
+        {
+            interviewedApplicants?.Remove(item);
+            await JS.InvokeVoidAsync("alert", "Applicant removed successfully.");
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            await JS.InvokeVoidAsync("alert", $"Failed to remove applicant: {error}");
+        }
+        StateHasChanged();
+    }
+
+    private void OpenHireModal(InterviewedApplicantViewModel item)
+    {
+        selectedApplicant = item;
+        showHireModal = true;
+        hireDate = DateTime.Today;
+        selectedPosition = "";
+    }
+
+    private void CloseHireModal()
+    {
+        showHireModal = false;
+        selectedApplicant = null;
+        selectedPosition = "";
+        hireDate = null;
+    }
+
+    private async Task SubmitHire()
+    {
+        if (selectedApplicant == null || string.IsNullOrEmpty(selectedApplicant.AccountId))
+        {
+            await JS.InvokeVoidAsync("alert", "No applicant selected.");
+            return;
+        }
+
+        if (string.IsNullOrEmpty(selectedPosition))
+        {
+            await JS.InvokeVoidAsync("alert", "Please select a position.");
+            return;
+        }
+
+        if (hireDate == null)
+        {
+            await JS.InvokeVoidAsync("alert", "Please select a hire date.");
+            return;
+        }
+
+        var payload = new
+        {
+            id = Guid.NewGuid().ToString(),
+            employerId = employerId,
+            applicantAccountId = selectedApplicant.AccountId,
+            hiredPosition = selectedPosition,
+            dateHired = hireDate.Value
+        };
+
+        var response = await Http.PostAsJsonAsync("api/Employer/SetAsHired", payload);
+        if (response.IsSuccessStatusCode)
+        {
+            await JS.InvokeVoidAsync("alert", "Applicant hired successfully!");
+
+            // ✅ Refresh interviewed applicants list
+            await ReloadInterviewedApplicants();
+
+            // close modal
+            showHireModal = false;
+            selectedApplicant = null;
+            selectedPosition = "";
+            hireDate = DateTime.Today;
+        }
+        else
+        {
+            var error = await response.Content.ReadAsStringAsync();
+            await JS.InvokeVoidAsync("alert", $"Error hiring applicant: {error}");
+        }
+        StateHasChanged();
+    }
+
+    private async Task ReloadInterviewedApplicants()
+    {
+        if (string.IsNullOrEmpty(employerId))
+            return;
+
+        isLoading = true;
+        try
+        {
+            var response = await Http.GetAsync($"api/Employer/GetInterViewedApplicants/{employerId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var rawJson = await response.Content.ReadAsStringAsync();
+                interviewedApplicants = JsonSerializer.Deserialize<List<InterviewedApplicantViewModel>>(
+                    rawJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error refreshing applicants: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
     //---------------------------------------------- AGE ------------------
     private int? GetAgeFromUnix(long dobUnix)
     {
@@ -137,6 +349,7 @@ else
 
     private void GoBack()
     {
+        StateHasChanged();
         Navigation.NavigateTo("/pesobeta/Joblist/employer");
     }
 }

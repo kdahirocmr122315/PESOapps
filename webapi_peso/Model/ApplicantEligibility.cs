@@ -9,7 +9,7 @@ namespace webapi_peso.Model
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         [Key]
         public string Id { get; set; }
-        public string AccountId { get; set; }
+        public string? AccountId { get; set; }
         public string EligibilityName { get; set; }
         public int Rating { get; set; }
         public DateTime? DateOfExamination { get; set; }

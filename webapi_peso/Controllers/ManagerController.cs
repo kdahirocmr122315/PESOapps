@@ -784,7 +784,7 @@ namespace webapi_peso.Controllers
         }
 
         [HttpPost("SetJobFairStatus")]
-        public async Task<IActionResult> SetJobFairStatus([FromBody] string accountId)
+        public async Task<IActionResult> SetJobFairStatus([FromBody] JobFairEnableLogViewModel accountId)
         {
             using var db = dbFactory.CreateDbContext();
 
@@ -803,7 +803,7 @@ namespace webapi_peso.Controllers
             {
                 Id = Guid.NewGuid().ToString(),
                 JobFairStatus = newStatus,
-                AccountId = accountId,
+                AccountId = accountId.AccountId,
                 DateUpdate = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
             db.JobFairEnableLog.Add(log);

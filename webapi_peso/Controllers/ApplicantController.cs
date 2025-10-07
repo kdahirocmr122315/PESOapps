@@ -1342,7 +1342,8 @@ namespace webapi_peso.Controllers
             if (appInfo == null || userAccount == null)
                 return NotFound("Applicant information or user account not found.");
 
-            if (ProjectConfig.JobFairEnabled)
+            var jobFairEnable = db.JobFairEnable.FirstOrDefault();
+            if (jobFairEnable != null && jobFairEnable.JobFairStatus == 1)
             {
                 if (string.IsNullOrEmpty(appInfo.JobFairReferenceCode))
                 {

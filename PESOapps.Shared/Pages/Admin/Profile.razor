@@ -2,7 +2,6 @@
 @inject HttpClient Http
 @inject NavigationManager Navigation
 @inject IJSRuntime JS
-@using webapi_peso.ViewModels
 @using System.Text.Json
 @using PESOapps.Shared.Pages.Shared
 
@@ -41,15 +40,17 @@ else
         {
             if (_isJobFairActive != value)
             {
-                _isJobFairActive = value;
-                _ = ToggleStatusAsync(); // automatically call when toggled
+                _ = ConfirmAndToggleAsync(value); // confirm before toggling
             }
         }
     }
 
-    protected override async Task OnInitializedAsync()
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        await InitializeProfileAsync();
+        if (firstRender)
+        {
+            await InitializeProfileAsync();
+        }
     }
 
     private async Task InitializeProfileAsync()
@@ -75,6 +76,7 @@ else
         finally
         {
             isLoading = false;
+            StateHasChanged();
         }
     }
 
@@ -85,9 +87,12 @@ else
             var response = await Http.GetAsync("api/Manager/GetJobFairStatus");
             if (response.IsSuccessStatusCode)
             {
-                var result = await response.Content.ReadAsStringAsync();
-                IsJobFairActive = result.Trim() == "1";
+                var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+                var statusValue = json.RootElement.GetProperty("jobFairStatus").GetInt32();
+
+                _isJobFairActive = statusValue == 1;
                 UpdateStatusText();
+                StateHasChanged();
             }
             else
             {
@@ -98,7 +103,36 @@ else
         {
             await JS.InvokeVoidAsync("alert", $"Error loading status: {ex.Message}");
         }
+        UpdateStatusText();
     }
+
+    private async Task ConfirmAndToggleAsync(bool newValue)
+    {
+        bool confirmed = await JS.InvokeAsync<bool>("confirm",
+            $"Are you sure you want to turn {(newValue ? "ON" : "OFF")} the Job Fair?");
+
+        if (confirmed)
+        {
+            // ✅ Only update if confirmed
+            _isJobFairActive = newValue;
+
+            // ✅ Update the text immediately
+            UpdateStatusText();
+
+            // ✅ Refresh the UI before calling API
+            StateHasChanged();
+
+            await ToggleStatusAsync();
+        }
+        else
+        {
+            // ❌ Do nothing (revert visual state)
+            StateHasChanged();
+        }
+    }
+
+
+
 
     private async Task ToggleStatusAsync()
     {
@@ -110,7 +144,7 @@ else
         try
         {
             var content = new StringContent(
-                JsonSerializer.Serialize(new { UserId = userId }),
+                JsonSerializer.Serialize(new { accountId = userId }),
                 System.Text.Encoding.UTF8,
                 "application/json"
             );
@@ -125,10 +159,11 @@ else
         {
             await JS.InvokeVoidAsync("alert", $"Error updating status: {ex.Message}");
         }
+        UpdateStatusText();
     }
 
     private void UpdateStatusText()
     {
-        statusText = IsJobFairActive ? "Job Fair is ON" : "Job Fair is OFF";
+        statusText = _isJobFairActive ? "Job Fair is ON" : "Job Fair is OFF";
     }
 }

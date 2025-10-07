@@ -38,6 +38,7 @@
 
   <ItemGroup>
     <Folder Include="Model\" />
+    <Folder Include="Pages\Admin\" />
     <Folder Include="wwwroot\glb\" />
   </ItemGroup>
 

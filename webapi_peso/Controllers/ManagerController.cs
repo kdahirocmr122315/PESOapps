@@ -784,7 +784,7 @@ namespace webapi_peso.Controllers
         }
 
         [HttpPost("SetJobFairStatus")]
-        public async Task<IActionResult> SetJobFairStatus([FromBody] JobFairEnableLogViewModel request)
+        public async Task<IActionResult> SetJobFairStatus([FromBody] string accountId)
         {
             using var db = dbFactory.CreateDbContext();
 
@@ -793,16 +793,17 @@ namespace webapi_peso.Controllers
             if (jobFair == null)
                 return NotFound("JobFairEnable record not found.");
 
-            // Update the status
-            jobFair.JobFairStatus = request.JobFairStatus;
+            // Toggle the status (assuming 0 = disabled, 1 = enabled)
+            int newStatus = jobFair.JobFairStatus == 1 ? 0 : 1;
+            jobFair.JobFairStatus = newStatus;
             db.JobFairEnable.Update(jobFair);
 
             // Log the action
             var log = new JobFairEnableLog
             {
                 Id = Guid.NewGuid().ToString(),
-                JobFairStatus = request.JobFairStatus,
-                AccountId = request.AccountId,
+                JobFairStatus = newStatus,
+                AccountId = accountId,
                 DateUpdate = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
             };
             db.JobFairEnableLog.Add(log);

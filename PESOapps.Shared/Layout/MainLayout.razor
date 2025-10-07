@@ -77,6 +77,14 @@
             </article>
         </main>
     }
+        else if (Navigation.Uri.EndsWith("/admin", StringComparison.OrdinalIgnoreCase))
+        {
+            <main class="main-content dboard">
+                <article class="main-container">
+                    @Body
+                </article>
+            </main>
+        }
     else
     {
         <main>

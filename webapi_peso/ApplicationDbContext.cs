@@ -47,5 +47,7 @@ namespace webapi_peso
         public DbSet<JobApplicantsPlaced> JobApplicantsPlaced { get; set; }
         public DbSet<JobApplicantsReferred> JobApplicantsReferred { get; set; }
         public DbSet<PESOManualReport> PESOManualReport { get; set; }
+        public DbSet<JobFairEnable> JobFairEnable { get; set; }
+        public DbSet<JobFairEnableLog> JobFairEnableLog { get; set; }
     }
 }

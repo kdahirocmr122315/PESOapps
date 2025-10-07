@@ -783,6 +783,35 @@ namespace webapi_peso.Controllers
             return Ok(rs);
         }
 
+        [HttpPost("SetJobFairStatus")]
+        public async Task<IActionResult> SetJobFairStatus([FromBody] JobFairEnableLogViewModel request)
+        {
+            using var db = dbFactory.CreateDbContext();
+
+            // Find the JobFairEnable record with Id = "2025"
+            var jobFair = db.JobFairEnable.FirstOrDefault(x => x.Id == "2025");
+            if (jobFair == null)
+                return NotFound("JobFairEnable record not found.");
+
+            // Update the status
+            jobFair.JobFairStatus = request.JobFairStatus;
+            db.JobFairEnable.Update(jobFair);
+
+            // Log the action
+            var log = new JobFairEnableLog
+            {
+                Id = Guid.NewGuid().ToString(),
+                JobFairStatus = request.JobFairStatus,
+                AccountId = request.AccountId,
+                DateUpdate = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+            db.JobFairEnableLog.Add(log);
+
+            await db.SaveChangesAsync();
+
+            return Ok(new { jobFair.JobFairStatus });
+        }
+
         //GetAddress -----------------------------------------
 
         [HttpGet("FindRegion/{code}")]

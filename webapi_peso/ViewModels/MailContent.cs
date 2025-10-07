@@ -9,6 +9,6 @@ namespace webapi_peso.ViewModels
     public class MailContent
     {
         public string MailTo { get; set; }
-        public string BaseUri { get; set; }
+        public string? BaseUri { get; set; }
     }
 }

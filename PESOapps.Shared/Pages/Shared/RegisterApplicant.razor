@@ -1233,16 +1233,11 @@
             // 🧹 CLEANUP STEP – Filter out empty lists
             // ========================================
             applicant.ApplicantEducationalBackground = applicant.ApplicantEducationalBackground?
-                .Where(x =>
-                    !string.IsNullOrWhiteSpace(x.LevelName) ||
-                    !string.IsNullOrWhiteSpace(x.School) ||
-                    !string.IsNullOrWhiteSpace(x.Course))
+                .Where(x => !string.IsNullOrWhiteSpace(x.LevelName) || !string.IsNullOrWhiteSpace(x.School) || !string.IsNullOrWhiteSpace(x.Course))
                 .ToList() ?? new();
 
             applicant.ApplicantEligibility = applicant.ApplicantEligibility?
-                .Where(x =>
-                    !string.IsNullOrWhiteSpace(x.EligibilityName) ||
-                    x.Rating > 0)
+                .Where(x => !string.IsNullOrWhiteSpace(x.EligibilityName) || x.Rating > 0)
                 .ToList() ?? new();
 
             applicant.ApplicantOtherSkills = applicant.ApplicantOtherSkills?
@@ -1270,57 +1265,53 @@
                 .ToList() ?? new();
 
             applicant.ApplicantWorkExperience = applicant.ApplicantWorkExperience?
-                .Where(x =>
-                    !string.IsNullOrWhiteSpace(x.CompanyName) ||
-                    !string.IsNullOrWhiteSpace(x.Position))
+                .Where(x => !string.IsNullOrWhiteSpace(x.CompanyName) || !string.IsNullOrWhiteSpace(x.Position))
                 .ToList() ?? new();
 
             // ========================================
             // 🚀 SUBMIT TO API
             // ========================================
-            var response = await Http.PostAsJsonAsync("/api/Applicant/SaveNSRP", applicant);
+            var response = await Http.PostAsJsonAsync("api/Applicant/SaveNSRP", applicant);
 
             if (response.IsSuccessStatusCode)
             {
-                // Read and trim applicant ID if needed
                 var applicantId = (await response.Content.ReadAsStringAsync()).Trim();
 
-                // Make sure applicant info is valid
-                if (string.IsNullOrEmpty(applicant?.ApplicantInformation?.Email))
+                if (string.IsNullOrWhiteSpace(applicantId))
                 {
-                    await JS.InvokeVoidAsync("alert", "Email sending skipped — applicant email not found.");
+                    await JS.InvokeVoidAsync("alert", "Failed to retrieve applicant ID from server.");
                     return;
                 }
 
-                // Send verification email
-                var mail = new MailContent
+                // ========================================
+                // ✉️ SEND EMAIL VERIFICATION
+                // ========================================
+                if (!string.IsNullOrEmpty(applicant?.ApplicantInformation?.Email))
                 {
-                    MailTo = applicant.ApplicantInformation.Email
-                };
-
-                var sendEmailResponse = await Http.PostAsJsonAsync("/api/Manager/SendEmailVerified", mail);
-
-                if (sendEmailResponse.IsSuccessStatusCode)
-                {
-                    // 🟢 Re-fetch updated applicant info to get the Job Fair Reference Code
-                    var infoResponse = await Http.GetAsync($"/api/Applicant/GetApplicantInformation/{applicantId}");
-                    if (infoResponse.IsSuccessStatusCode)
+                    var mail = new
                     {
-                        var updatedInfo = await infoResponse.Content.ReadFromJsonAsync<AccountAndInformationViewModel>();
-                        jobFairReferenceCode = updatedInfo?.ApplicantInformation?.JobFairReferenceCode;
-                    }
+                        mailTo = applicant.ApplicantInformation.Email,
+                        baseUri = (string?)null
+                    };
 
-                    // ✅ Show success modal
-                    showSuccessModal = true;
-                    StateHasChanged();
+                    var sendEmailResponse = await Http.PostAsJsonAsync("api/Applicant/SendEmailVerified", mail);
+
+                    if (sendEmailResponse.IsSuccessStatusCode)
+                    {
+                        showSuccessModal = true;
+                        StateHasChanged();
+                    }
+                    else
+                    {
+                        var errorMsg = await sendEmailResponse.Content.ReadAsStringAsync();
+                        await JS.InvokeVoidAsync("alert", $"Registration succeeded, but sending email failed.\n\nServer says:\n{errorMsg}");
+                    }
                 }
                 else
                 {
-                    await JS.InvokeVoidAsync("alert", "Registration succeeded, but sending email failed.");
+                    await JS.InvokeVoidAsync("alert", "Registration succeeded, but email not found — skipping email send.");
                 }
             }
-
-
             else
             {
                 var errorMsg = await response.Content.ReadAsStringAsync();
@@ -1332,6 +1323,7 @@
             await JS.InvokeVoidAsync("alert", $"An unexpected error occurred:\n{ex.Message}");
         }
     }
+
     private void CloseModal()
     {
         showSuccessModal = false;

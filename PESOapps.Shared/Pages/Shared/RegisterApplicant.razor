@@ -1087,6 +1087,27 @@
                     @message
                 </div>
             }
+            @if (showSuccessModal)
+            {
+                <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content rounded-3 shadow-lg">
+                            <div class="modal-header bg-success text-white">
+                                <h5 class="modal-title">✅ Registration Successful</h5>
+                            </div>
+                            <div class="modal-body text-center">
+                                <p>Your Job Fair Reference Code:</p>
+                                <h4 class="fw-bold text-primary">@jobFairReferenceCode</h4>
+                                <p class="mt-3">Please save this code for verification.</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button class="btn btn-success w-100" @onclick="CloseModal">OK</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+
         </EditForm>
     }
 
@@ -1153,7 +1174,8 @@
     }
 
 
-    
+    private bool showSuccessModal = false;
+    private string jobFairReferenceCode = string.Empty;
     private List<string> _errors = new();
 
     private async Task HandleValidSubmit()
@@ -1260,16 +1282,49 @@
 
             if (response.IsSuccessStatusCode)
             {
-                await JS.InvokeVoidAsync("alert", "Applicant registered successfully!");
-                Navigation.NavigateTo("/pesobeta/", true);
+                // Read and trim applicant ID if needed
+                var applicantId = (await response.Content.ReadAsStringAsync()).Trim();
+
+                // Make sure applicant info is valid
+                if (string.IsNullOrEmpty(applicant?.ApplicantInformation?.Email))
+                {
+                    await JS.InvokeVoidAsync("alert", "Email sending skipped — applicant email not found.");
+                    return;
+                }
+
+                // Send verification email
+                var mail = new MailContent
+                {
+                    MailTo = applicant.ApplicantInformation.Email
+                };
+
+                var sendEmailResponse = await Http.PostAsJsonAsync("/api/Manager/SendEmailVerified", mail);
+
+                if (sendEmailResponse.IsSuccessStatusCode)
+                {
+                    // 🟢 Re-fetch updated applicant info to get the Job Fair Reference Code
+                    var infoResponse = await Http.GetAsync($"/api/Applicant/GetApplicantInformation/{applicantId}");
+                    if (infoResponse.IsSuccessStatusCode)
+                    {
+                        var updatedInfo = await infoResponse.Content.ReadFromJsonAsync<AccountAndInformationViewModel>();
+                        jobFairReferenceCode = updatedInfo?.ApplicantInformation?.JobFairReferenceCode;
+                    }
+
+                    // ✅ Show success modal
+                    showSuccessModal = true;
+                    StateHasChanged();
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("alert", "Registration succeeded, but sending email failed.");
+                }
             }
+
+
             else
             {
                 var errorMsg = await response.Content.ReadAsStringAsync();
                 await JS.InvokeVoidAsync("alert", $"Failed to register applicant.\n\n{errorMsg}");
-
-                message = $"Failed to register applicant: {errorMsg}";
-                messageType = "error";
             }
         }
         catch (Exception ex)
@@ -1277,8 +1332,11 @@
             await JS.InvokeVoidAsync("alert", $"An unexpected error occurred:\n{ex.Message}");
         }
     }
-
-
+    private void CloseModal()
+    {
+        showSuccessModal = false;
+        Navigation.NavigateTo("/pesobeta/", true);
+    }
     // Converts between long timestamp <-> DateTime for binding
     private DateTime? DateOfBirthValue
     {

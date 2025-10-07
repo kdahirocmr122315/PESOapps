@@ -813,6 +813,16 @@ namespace webapi_peso.Controllers
             return Ok(new { jobFair.JobFairStatus });
         }
 
+        [HttpGet("GetJobFairStatus")]
+        public IActionResult GetJobFairStatus()
+        {
+            using var db = dbFactory.CreateDbContext();
+            var jobFair = db.JobFairEnable.FirstOrDefault(x => x.Id == "2025");
+            if (jobFair == null)
+                return NotFound("JobFairEnable record not found.");
+            return Ok(new { jobFair.JobFairStatus });
+        }
+
         //GetAddress -----------------------------------------
 
         [HttpGet("FindRegion/{code}")]
@@ -985,7 +995,7 @@ namespace webapi_peso.Controllers
             }
             return data;
         }
-
+        
 
     }
 }

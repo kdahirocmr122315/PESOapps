@@ -29,6 +29,12 @@
                 <NavMenuDashMunicipality />
             </div>
         }
+        else if (Navigation.Uri.EndsWith("/Admin", StringComparison.OrdinalIgnoreCase))
+        {
+            <div class="navigation-section dboard">
+                <NavMenuDashAdmin />
+            </div>
+        }
         else
         {
             <div class="navigation-section">

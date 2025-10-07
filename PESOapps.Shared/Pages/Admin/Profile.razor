@@ -1,0 +1,97 @@
+﻿@page "/Profile/Admin"
+@inject HttpClient Http
+@inject NavigationManager Navigation
+@inject IJSRuntime JS
+@using webapi_peso.ViewModels
+@using System.Text.Json
+@using PESOapps.Shared.Pages.Shared
+@if (!isUserLoggedIn)
+{
+    <Loading IsLoading="@isLoading" Message="Loading..." />
+}
+else
+{
+    <div class="municipality-profile">
+ 
+    </div>
+}
+
+@code {
+    private bool isUserLoggedIn;
+    private bool isLoading = true;
+    private PESOManagerAccountViewModel? profile;
+    private int numberOfEmployers;
+    private int numberOfApplicants;
+    private bool loaded;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !loaded)
+        {
+            loaded = true;
+            await InitializeProfileAsync();
+        }
+    }
+
+    private async Task InitializeProfileAsync()
+    {
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+        var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+
+        if (string.IsNullOrWhiteSpace(userId) || isLoggedIn != "true" || string.IsNullOrWhiteSpace(token))
+        {
+            Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            return;
+        }
+
+        isUserLoggedIn = true;
+        Http.DefaultRequestHeaders.Authorization =
+            new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
+
+        try
+        {
+            await LoadProfileAsync(userId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error fetching data: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task LoadProfileAsync(string userId)
+    {
+        // ✅ Try cache first
+        var cachedProfile = await JS.InvokeAsync<string>("localStorage.getItem", "PESOProfile");
+        if (!string.IsNullOrEmpty(cachedProfile))
+        {
+            profile = JsonSerializer.Deserialize<PESOManagerAccountViewModel>(cachedProfile,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            return;
+        }
+
+        // ✅ Fetch from API if not cached
+        var response = await Http.GetAsync($"api/Manager/GetPESOManagerAccount/{userId}");
+        if (response.StatusCode == System.Net.HttpStatusCode.Unauthorized)
+        {
+            Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+            return;
+        }
+
+        if (response.IsSuccessStatusCode)
+        {
+            var json = await response.Content.ReadAsStringAsync();
+            profile = JsonSerializer.Deserialize<PESOManagerAccountViewModel>(
+                json,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            // ✅ Save to cache
+            await JS.InvokeVoidAsync("localStorage.setItem", "PESOProfile", json);
+        }
+    }
+}

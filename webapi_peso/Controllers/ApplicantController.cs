@@ -114,7 +114,8 @@ namespace webapi_peso.Controllers
                 if (information != null)
                 {
                     // FOR JOBFAIR ONLY
-                    if (ProjectConfig.JobFairEnabled)
+                    var jobFairEnable = db.JobFairEnable.FirstOrDefault();
+                    if (jobFairEnable != null && jobFairEnable.JobFairStatus == 1)
                     {
                         if (string.IsNullOrEmpty(information.JobFairReferenceCode))
                         {
@@ -541,7 +542,8 @@ namespace webapi_peso.Controllers
             if (information != null)
             {
                 // FOR JOB FAIR ONLY
-                if (ProjectConfig.JobFairEnabled)
+                var jobFairEnable = db.JobFairEnable.FirstOrDefault();
+                if (jobFairEnable != null && jobFairEnable.JobFairStatus == 1)
                 {
                     if (string.IsNullOrEmpty(information.JobFairReferenceCode))
                     {

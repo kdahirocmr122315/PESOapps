@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Components.ProtectedBrowserStorage;
+﻿using Microsoft.AspNetCore.Components.ProtectedBrowserStorage;
 using Microsoft.AspNetCore.StaticFiles;
 using PESOapps.Shared.Address;
 using PESOapps.Shared.Services;
@@ -23,6 +23,7 @@ builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri("http://localhost:5167/")
 });
+
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

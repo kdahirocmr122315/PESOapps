@@ -19,9 +19,9 @@
     <PackageReference Include="ClosedXML" Version="0.105.0-rc" />
     <PackageReference Include="iTextSharp.LGPLv2.Core" Version="3.7.1" />
     <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="6.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Forms" Version="9.0.9" />
     <PackageReference Include="Microsoft.AspNetCore.Components.ProtectedBrowserStorage" Version="5.0.0-rc.1.20451.17" />
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="9.0.9" />
     <PackageReference Include="System.Drawing.Common" Version="10.0.0-preview.1.25080.3" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="Tewr.Blazor.FileReader" Version="3.4.0.24340" />
@@ -39,6 +39,31 @@
   <ItemGroup>
     <Folder Include="Model\" />
     <Folder Include="wwwroot\glb\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\images\award-1.png" />
+    <None Include="wwwroot\images\award-2.png" />
+    <None Include="wwwroot\images\award-3.png" />
+    <None Include="wwwroot\images\award-4.png" />
+    <None Include="wwwroot\images\award-5.png" />
+    <None Include="wwwroot\images\award-6.png" />
+    <None Include="wwwroot\images\award-7.png" />
+    <None Include="wwwroot\images\banner_img.png" />
+    <None Include="wwwroot\images\capitolyo.jpg" />
+    <None Include="wwwroot\images\capitolyonoflag.jpg" />
+    <None Include="wwwroot\images\debug.log" />
+    <None Include="wwwroot\images\gov.png" />
+    <None Include="wwwroot\images\gov2.png" />
+    <None Include="wwwroot\images\gov_unabia.png" />
+    <None Include="wwwroot\images\gov_Uy.png" />
+    <None Include="wwwroot\images\misorlogo.png" />
+    <None Include="wwwroot\images\paglaum.png" />
+    <None Include="wwwroot\images\paglaum_small.png" />
+    <None Include="wwwroot\images\peso.png" />
+    <None Include="wwwroot\images\peso_logo.png" />
+    <None Include="wwwroot\images\pmis.png" />
+    <None Include="wwwroot\images\profile_placeholder.png" />
   </ItemGroup>
 
   <ItemGroup>

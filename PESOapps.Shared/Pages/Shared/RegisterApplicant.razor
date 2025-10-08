@@ -7,6 +7,7 @@
 @inject IJSRuntime JS
 @inject NavigationManager Navigation
 @inject AddressService AddressService
+@using System.Text.Json
 
 <PageTitle>Registration</PageTitle>
 <div class="nsrp-container registrations-container">
@@ -170,7 +171,10 @@
                             </div>
                             <div>
                                 <label>Date of Birth</label>
-                                <input type="date" class="nsrp-input" @bind="DateOfBirthValue" @bind:format="yyyy-MM-dd" />
+                                <input id="DateOfBirth"
+                                       class="jf-fromto nsrp-input"
+                                       type="text"
+                                       placeholder="Select date" />
                             </div>
                             <div>
                                 <label>Place of Birth</label>
@@ -327,9 +331,16 @@
                                 <label>Cellphone Number</label>
                                 <div class="nsrp-phone">
                                     <span class="nsrp-phone-prefix">+63</span>
-                                    <input @bind="applicant.ApplicantInformation.CellphoneNumber" />
+                                    <input type="text"
+                                           class="nsrp-input"
+                                           maxlength="10"
+                                           inputmode="numeric"
+                                           pattern="[0-9]*"
+                                           @bind="applicant.ApplicantInformation.CellphoneNumber"
+                                           @oninput="ValidateCellphoneInput" />
                                 </div>
                             </div>
+
 
                             <div class="form-group">
                                 <label>Landline Number</label>
@@ -1096,9 +1107,16 @@
                                 <h5 class="modal-title">✅ Registration Successful</h5>
                             </div>
                             <div class="modal-body text-center">
-                                <p>Your Job Fair Reference Code:</p>
-                                <h4 class="fw-bold text-primary">@jobFairReferenceCode</h4>
-                                <p class="mt-3">Please save this code for verification.</p>
+                                @if (!string.IsNullOrEmpty(jobFairReferenceCode))
+                                {
+                                    <p>Your Job Fair Reference Code:</p>
+                                    <h4 class="fw-bold text-primary">@jobFairReferenceCode</h4>
+                                    <p class="mt-3">Please save this code for verification.</p>
+                                }
+                                else
+                                {
+                                    <p>Please check your Email for account credentials.</p>
+                                }
                             </div>
                             <div class="modal-footer">
                                 <button class="btn btn-success w-100" @onclick="CloseModal">OK</button>
@@ -1107,6 +1125,7 @@
                     </div>
                 </div>
             }
+
 
         </EditForm>
     }
@@ -1291,13 +1310,21 @@
                     var mail = new
                     {
                         mailTo = applicant.ApplicantInformation.Email,
-                        baseUri = (string?)null
+                        baseUri = string.Empty // ✅ use empty string instead of null
                     };
 
                     var sendEmailResponse = await Http.PostAsJsonAsync("api/Applicant/SendEmailVerified", mail);
 
                     if (sendEmailResponse.IsSuccessStatusCode)
                     {
+                        // ✅ Fetch updated applicant info to get JobFairReferenceCode
+                        var infoResponse = await Http.GetAsync($"api/Applicant/GetApplicantInformation/{applicantId}");
+                        if (infoResponse.IsSuccessStatusCode)
+                        {
+                            var updatedInfo = await infoResponse.Content.ReadFromJsonAsync<AccountAndInformationViewModel>();
+                            jobFairReferenceCode = updatedInfo?.ApplicantInformation?.JobFairReferenceCode ?? string.Empty;
+                        }
+
                         showSuccessModal = true;
                         StateHasChanged();
                     }
@@ -1311,6 +1338,7 @@
                 {
                     await JS.InvokeVoidAsync("alert", "Registration succeeded, but email not found — skipping email send.");
                 }
+
             }
             else
             {
@@ -1334,24 +1362,26 @@
     {
         get
         {
-            if (applicant.ApplicantInformation.DateOfBirth == 0)
+            if (applicant?.ApplicantInformation == null || applicant.ApplicantInformation.DateOfBirth == 0)
                 return null;
 
-            return DateTimeOffset.FromUnixTimeMilliseconds(applicant.ApplicantInformation.DateOfBirth).DateTime;
+            return DateTimeOffset
+                .FromUnixTimeMilliseconds(applicant.ApplicantInformation.DateOfBirth)
+                .DateTime;
         }
         set
         {
-            if (value.HasValue)
-            {
-                applicant.ApplicantInformation.DateOfBirth =
-                    new DateTimeOffset(value.Value).ToUnixTimeMilliseconds();
-            }
-            else
-            {
-                applicant.ApplicantInformation.DateOfBirth = 0;
-            }
+            if (applicant?.ApplicantInformation == null) return;
+
+            applicant.ApplicantInformation.DateOfBirth =
+                value.HasValue
+                    ? new DateTimeOffset(value.Value).ToUnixTimeMilliseconds()
+                    : 0;
         }
     }
+
+
+
     private DateTime? DateOfBirthValueModal
     {
         get
@@ -1400,7 +1430,27 @@
             AllProvinces = await AddressService.GetProvincesAsync();
             AllCities = await AddressService.GetCitiesAsync();
             AllBarangays = await AddressService.GetBarangaysAsync();
+            await Task.Delay(100);
+            await JS.InvokeVoidAsync("initDateOfBirthPicker", "#DateOfBirth", DotNetObjectReference.Create(this), "UpdateDateOfBirth");
+
         }
+    }
+    [JSInvokable]
+    public void UpdateDateOfBirth(string date)
+    {
+        if (!string.IsNullOrWhiteSpace(date))
+        {
+            if (DateTime.TryParse(date, out var parsedDate))
+            {
+                DateOfBirthValue = parsedDate;
+            }
+        }
+        else
+        {
+            DateOfBirthValue = null; // or DateTime.MinValue if your property is non-nullable
+        }
+
+        InvokeAsync(StateHasChanged); // ✅ Refresh UI safely
     }
 
     // ********************************************************************** Add Expected Salary **********************************************************************
@@ -1787,15 +1837,20 @@
         Navigation.NavigateTo("/pesobeta/", false);
     }
 
-    private void Next()
+    private async Task Next()
     {
         if (AllConsentsChecked)
         {
             showConsentSection = false;       // 👈 Hide consent section
             showRegistrationForm = true;      // 👈 Show registration form
-        }
-    }   
 
+            // Wait a moment to let the registration form render before initializing flatpickr
+            await Task.Delay(100);
+
+            // Initialize the Flatpickr for Date of Birth
+            await JS.InvokeVoidAsync("initDateOfBirthPicker", DotNetObjectReference.Create(this));
+        }
+    }
 
     // ********************************************************************** Tab Next/Prev **********************************************************************
 
@@ -1893,6 +1948,7 @@
         {
             case "personal":
                 if (string.IsNullOrWhiteSpace(applicant.ApplicantInformation.FirstName))
+
                     _errors.Add("First Name is required.");
                 if (string.IsNullOrWhiteSpace(applicant.ApplicantInformation.SurName))
                     _errors.Add("Last Name is required.");
@@ -1950,6 +2006,17 @@
     }
     private string? message;
     private string messageType = ""; // "success" or "error"
+
+    // ----------------------------------------- Cellphone number only ----------------
+
+    private void ValidateCellphoneInput(ChangeEventArgs e)
+    {
+        var value = new string(e.Value?.ToString()?.Where(char.IsDigit).ToArray() ?? []);
+        if (value.Length > 10)
+            value = value.Substring(0, 10);
+
+        applicant.ApplicantInformation.CellphoneNumber = value;
+    }
 
 }
 

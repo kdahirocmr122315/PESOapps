@@ -1360,6 +1360,9 @@ namespace webapi_peso.Controllers
                 }
 
                 var jobFairMessage = $"<p>Hi {appInfo.FirstName},</p>" +
+                                     "<b style='font-family:Century Gothic;margin-top:10px'>Use this account to sign in to our website.</b>" +
+                                     $"<p style='font-family:Century Gothic'>Username: <code>{userAccount.Email}</code></p>" +
+                                     $"<p style='font-family:Century Gothic;margin-bottom:10px'>Password: <code>{userAccount.Password}</code></p>" +
                                      $"<p>Kindly take note of your reference number and present it to our PESO personnel during the job fair.</p><br/><br/>" +
                                      $"REFERENCE #: <b>{appInfo.JobFairReferenceCode}</b>";
 
@@ -1373,9 +1376,6 @@ namespace webapi_peso.Controllers
                                           "<b style='font-family:Century Gothic;margin-top:10px'>Use this account to sign in to our website.</b>" +
                                           $"<p style='font-family:Century Gothic'>Username: <code>{userAccount.Email}</code></p>" +
                                           $"<p style='font-family:Century Gothic;margin-bottom:10px'>Password: <code>{userAccount.Password}</code></p>" +
-                                          "<h2 style='font-family:Century Gothic;font-weight:300'>We have referred you to one of the registered establishments/companies in our system, as your application is replete with the needed information.</h2>" +
-                                          "<h2 style='font-family:Century Gothic;font-weight:300'>An HR from a potential employer will be in touch with you for the next steps. <i>(Be sure to keep an active mobile number and email address)</i>.</h2>" +
-                                          "<h2 style='font-family:Century Gothic;font-weight:300'>Good luck and sell yourself, so as to be considered for your preferred job/any open position.</h2>" +
                                           "<h2 style='font-family:Century Gothic;font-weight:300'>Have a great day ahead!!!</h2>" +
                                           $"{EMAIL_FOOTER}" +
                                           "</div>";

@@ -286,6 +286,14 @@ namespace webapi_peso.Controllers
         {
             using var db = dbFactory.CreateDbContext();
 
+            // Prevent double registration by checking UserAccount for the email
+            var existingUser = db.UserAccounts
+                .FirstOrDefault(x => x.Email.ToLower() == data.ApplicantInformation.Email.ToLower());
+            if (existingUser != null)
+            {
+                return BadRequest("A user with this email is already registered.");
+            }
+
             var userAccount = db.UserAccounts.Where(x => x.Email == data.ApplicantInformation.Email).FirstOrDefault();
             if (userAccount == null)
             {

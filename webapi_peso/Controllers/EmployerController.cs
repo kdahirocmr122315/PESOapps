@@ -830,6 +830,54 @@ namespace webapi_peso.Controllers
             return Ok(applicants);
         }
 
+        [HttpPost("RegisterEmployer")]
+        [AllowAnonymous]
+        public PostResultViewModel RegisterEmployer(EmployerRegistrationViewModel data)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var rs = new PostResultViewModel();
+            rs.StatusCode = 0;
+            var isExist = db.EmployerDetails.Any(x => x.EstablishmentName == data.EmployerDetails.EstablishmentName && x.AcronymAbbreviation == data.EmployerDetails.AcronymAbbreviation);
+            if (!isExist)
+            {
+                var d = data.EmployerDetails;
+                d.DateCreated = DateTime.Now;
+                db.EmployerDetails.Add(d);
+                if (db.SaveChanges() > 0)
+                {
+                    var folderDestination = System.IO.Path.Combine(env.WebRootPath, "files", "employers", d.Id);
+                    if (!System.IO.Directory.Exists(folderDestination))
+                        System.IO.Directory.CreateDirectory(folderDestination);
+                    //var origDest = string.Empty;
+                    foreach (var f in data.ListOfAttachments)
+                    {
+                        var filepath = System.IO.Path.Combine(env.WebRootPath, "file_temp", f.FolderName, f.FileName);
+                        if (System.IO.File.Exists(filepath))
+                            System.IO.File.Move(filepath, System.IO.Path.Combine(folderDestination, f.FileName));
+                        //origDest = System.IO.Path.Combine(env.WebRootPath, "file_temp", f.FolderName);
+                    }
 
+                    /* if (System.IO.Directory.GetFiles(origDest).Length == 0)
+                         System.IO.Directory.Delete(origDest);*/
+                    rs.StatusCode = 1;
+                }
+
+            }
+            else
+            {
+                rs.StatusCode = 999;
+            }
+            return rs;
         }
+
+        [HttpGet("CopyFiles")]
+        public IActionResult CopyFiles()
+        {
+            var filesFolder = System.IO.Path.Combine(env.WebRootPath, "files");
+            var files = Directory.GetFiles(filesFolder, "*", SearchOption.AllDirectories);
+
+            return Ok();
+        }
+
+    }
     }

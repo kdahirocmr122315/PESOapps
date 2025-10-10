@@ -1371,6 +1371,7 @@ namespace webapi_peso.Controllers
                                      "<b style='font-family:Century Gothic;margin-top:10px'>Use this account to sign in to our website.</b>" +
                                      $"<p style='font-family:Century Gothic'>Username: <code>{userAccount.Email}</code></p>" +
                                      $"<p style='font-family:Century Gothic;margin-bottom:10px'>Password: <code>{userAccount.Password}</code></p>" +
+                                     "<h2 style='font-family:Century Gothic;font-weight:300'>Have a great day ahead!!!</h2>" +
                                      $"<p>Kindly take note of your reference number and present it to our PESO personnel during the job fair.</p><br/><br/>" +
                                      $"REFERENCE #: <b>{appInfo.JobFairReferenceCode}</b>";
 

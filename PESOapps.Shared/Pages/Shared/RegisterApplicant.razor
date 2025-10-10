@@ -52,7 +52,7 @@
     @if (showRegistrationForm)
     {
 
-<EditForm Model="@applicant" OnValidSubmit="HandleValidSubmit">
+        <EditForm Model="@applicant" OnValidSubmit="HandleValidSubmit">
     <DataAnnotationsValidator />
     <ValidationSummary />
             <!-- Tab Navigation -->
@@ -138,11 +138,11 @@
                         <h4>Personal Information</h4>
                         <div class="nsrp-grid">
                             <div>
-                                <label>Email</label>
+                                <label>Email<span class="text-danger">*</span></label>
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.Email" />
                             </div>
                             <div>
-                                <label>First Name</label>
+                                <label>First Name<span class="text-danger">*</span></label>
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.FirstName" />
                             </div>
                             <div>
@@ -150,7 +150,7 @@
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.MiddleName" />
                             </div>
                             <div>
-                                <label>Last Name</label>
+                                <label>Last Name<span class="text-danger">*</span></label>
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.SurName" />
                             </div>
                             <div>
@@ -158,7 +158,7 @@
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.Suffix" />
                             </div>
                             <div>
-                                <label>Sex</label>
+                                <label>Gender<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.Gender">
                                     <option value="">Select</option>
                                     <option value="Male">Male</option>
@@ -170,19 +170,22 @@
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.Religion" />
                             </div>
                             <div>
-                                <label>Date of Birth</label>
+                                <label>Date of Birth<span class="text-danger">*</span></label>
                                 <input id="DateOfBirth"
+                                       type="date"
                                        class="jf-fromto nsrp-input"
-                                       type="text"
-                                       placeholder="Select date" />
+                                       @bind="DateOfBirthValue"
+                                       max="@DateTime.Now.ToString("yyyy-MM-dd")" 
+                                       placeholder="Select Date"/>
                             </div>
                             <div>
-                                <label>Place of Birth</label>
+                                <label>Place of Birth<span class="text-danger">*</span></label>
                                 <input class="nsrp-input" @bind="applicant.ApplicantInformation.PlaceOfBirth" />
                             </div>
                             <div>
-                                <label>Civil Status</label>
+                                <label>Civil Status<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.CivilStatus">
+                                    <option value="">Select</option>
                                     <option value="Single">Single</option>
                                     <option value="Married">Married</option>
                                     <option value="Widowed">Widowed</option>
@@ -194,7 +197,7 @@
                         <h4>Present Address</h4>
                         <div class="nsrp-grid">
                             <div>
-                                <label>Region</label>
+                                <label>Region<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.PresentRegion">
                                     <option value="">Select</option>
                                     @foreach (var r in Regions)
@@ -204,7 +207,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label>Province</label>
+                                <label>Province<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.PresentProvince">
                                     <option value="">Select</option>
                                     @foreach (var p in FilteredProvincesPresent)
@@ -214,7 +217,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label>City/Municipality</label>
+                                <label>City/Municipality<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.PresentMunicipalityCity">
                                     <option value="">Select</option>
                                     @foreach (var c in FilteredCitiesPresent)
@@ -224,7 +227,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label>Barangay</label>
+                                <label>Barangay<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.PresentBarangay">
                                     <option value="">Select</option>
                                     @foreach (var b in FilteredBarangaysPresent)
@@ -242,7 +245,7 @@
                         <h4>Permanent Address</h4>
                         <div class="nsrp-grid">
                             <div>
-                                <label>Region</label>
+                                <label>Region<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialRegion">
                                     <option value="">Select</option>
                                     @foreach (var r in Regions)
@@ -252,7 +255,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label>Province</label>
+                                <label>Province<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialProvince">
                                     <option value="">Select</option>
                                     @foreach (var p in FilteredProvincesPermanent)
@@ -262,7 +265,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label>City/Municipality</label>
+                                <label>City/Municipality<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialMunicipalityCity">
                                     <option value="">Select</option>
                                     @foreach (var c in FilteredCitiesPermanent)
@@ -272,7 +275,7 @@
                                 </select>
                             </div>
                             <div>
-                                <label>Barangay</label>
+                                <label>Barangay<span class="text-danger">*</span></label>
                                 <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialBarangay">
                                     <option value="">Select</option>
                                     @foreach (var b in FilteredBarangaysPermanent)
@@ -297,9 +300,10 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Employment Status</label>
+                                <label>Employment Status<span class="text-danger">*</span></label>
                                 <select class="nsrp-input"
                                         @bind="applicant.ApplicantInformation.EmpStatus">
+                                    <option value="">Select</option>
                                     <option value="Employed">Employed</option>
                                     <option value="Unemployed">Unemployed</option>
                                 </select>
@@ -328,7 +332,7 @@
                             </div>
 
                             <div class="form-group">
-                                <label>Cellphone Number</label>
+                                <label>Cellphone Number<span class="text-danger">*</span></label>
                                 <div class="nsrp-phone">
                                     <span class="nsrp-phone-prefix">+63</span>
                                     <input type="text"
@@ -351,6 +355,7 @@
                                 <label>Are you actively looking for work?</label>
                                 <select class="nsrp-input"
                                         @bind="applicant.ApplicantInformation.ActivelyLookingForWork">
+                                    <option value="">Select</option>
                                     <option value="1">Yes</option>
                                     <option value="0">No</option>
                                 </select>
@@ -360,6 +365,7 @@
                                 <label>Willing to work immediately?</label>
                                 <select class="nsrp-input"
                                         @bind="applicant.ApplicantInformation.WillingToWorkNow">
+                                    <option value="">Select</option>
                                     <option value="Yes">Yes</option>
                                     <option value="No">No</option>
                                 </select>
@@ -402,7 +408,7 @@
                 else if (activeTab == "jobpref")
                 {
                     <div class="nsrp-section">
-                        <h4>Job Preferences</h4>
+                        <h4>Job Preferences<span class="text-danger">*</span></h4>
                         <div class="nsrp-insection">
                             <!-- ===== Occupations ===== -->
                             <div class="nsrp-subsection">
@@ -440,7 +446,7 @@
 
                             <!-- ===== Work Locations ===== -->
                             <div class="nsrp-subsection">
-                                <h5>Preferred Work Locations</h5>
+                                <h5>Preferred Work Locations<span class="text-danger">*</span></h5>
                                 <div class="nsrp-input-group">
                                     <input class="nsrp-input" placeholder="Enter location"
                                            @bind="newWorkLocationName" />
@@ -532,7 +538,7 @@
                 else if (activeTab == "language")
                 {
                     <div class="nsrp-section">
-                        <h4>Language Proficiency</h4>
+                        <h4>Language Proficiency<span class="text-danger">*</span></h4>
 
                         <!-- Add New Language -->
                         <div class="nsrp-input-group">
@@ -605,7 +611,7 @@
                 else if (activeTab == "education")
                 {
                     <div class="nsrp-section">
-                        <h4>Educational Background</h4>
+                        <h4>Educational Background<span class="text-danger">*</span></h4>
 
                         <!-- Add New Education -->
                         <div class="nsrp-input-group">
@@ -1000,7 +1006,7 @@
                 else if (activeTab == "Other")
                 {
                     <div class="nsrp-section">
-                        <h4>Other Skills</h4>
+                        <h4>Other Skills<span class="text-danger">*</span></h4>
 
                         <!-- Add New Skill -->
                         <div class="nsrp-input-group">
@@ -1072,8 +1078,8 @@
                             <button type="button" class="nsrp-toggle" @onclick="PreviousTabAsync">
                                 ← Back
                             </button>
-                            <button type="button" class="nsrp-toggle" @onclick="NextTabAsync">
-                                Submit
+                            <button type="button" class="nsrp-toggle" @onclick="NextTabAsync" disabled="@isSubmitting">
+                                @(isSubmitting ? "Submitting..." : "Submit")
                             </button>
                         </div>
                     </div>
@@ -1107,19 +1113,10 @@
                                 <h5 class="modal-title">✅ Registration Successful</h5>
                             </div>
                             <div class="modal-body text-center">
-                                @if (!string.IsNullOrEmpty(jobFairReferenceCode))
-                                {
-                                    <p>Your Job Fair Reference Code:</p>
-                                    <h4 class="fw-bold text-primary">@jobFairReferenceCode</h4>
-                                    <p class="mt-3">Please save this code for verification.</p>
-                                }
-                                else
-                                {
-                                    <p>Please check your Email for account credentials.</p>
-                                }
+                                 <p>Please check your Email for account credentials.</p>
                             </div>
                             <div class="modal-footer">
-                                <button class="btn btn-success w-100" @onclick="CloseModal">OK</button>
+                                <button class="nsrp-toggle" @onclick="CloseModal">OK</button>
                             </div>
                         </div>
                     </div>
@@ -1196,9 +1193,11 @@
     private bool showSuccessModal = false;
     private string jobFairReferenceCode = string.Empty;
     private List<string> _errors = new();
-
+    private bool isSubmitting = false;
     private async Task HandleValidSubmit()
     {
+        if (isSubmitting) return; // Prevent double submission
+        isSubmitting = true;
         _errors.Clear();
 
         try
@@ -1222,25 +1221,22 @@
                 _errors.Add("Gender is required.");
             if (string.IsNullOrEmpty(applicant.ApplicantInformation.CivilStatus))
                 _errors.Add("Civil status is required.");
-
             if (string.IsNullOrEmpty(applicant.ApplicantInformation.PresentProvince))
                 _errors.Add("Present province is required.");
             if (string.IsNullOrEmpty(applicant.ApplicantInformation.PresentMunicipalityCity))
                 _errors.Add("Present city/municipality is required.");
             if (string.IsNullOrEmpty(applicant.ApplicantInformation.PresentBarangay))
                 _errors.Add("Present barangay is required.");
-
             if (string.IsNullOrEmpty(applicant.ApplicantInformation.ProvincialProvince))
                 _errors.Add("Permanent province is required.");
             if (string.IsNullOrEmpty(applicant.ApplicantInformation.ProvincialMunicipalityCity))
                 _errors.Add("Permanent city/municipality is required.");
             if (string.IsNullOrEmpty(applicant.ApplicantInformation.ProvincialBarangay))
                 _errors.Add("Permanent barangay is required.");
-
             if (string.IsNullOrEmpty(applicant.ApplicantInformation.EmpStatus))
                 _errors.Add("Employment status is required.");
 
-            // ✅ Stop here if validation failed
+            // Stop if any validation error
             if (_errors.Count > 0)
             {
                 var allErrors = string.Join("\n", _errors);
@@ -1248,9 +1244,9 @@
                 return;
             }
 
-            // ========================================
-            // 🧹 CLEANUP STEP – Filter out empty lists
-            // ========================================
+            // =========================
+            // 🧹 CLEANUP EMPTY LISTS
+            // =========================
             applicant.ApplicantEducationalBackground = applicant.ApplicantEducationalBackground?
                 .Where(x => !string.IsNullOrWhiteSpace(x.LevelName) || !string.IsNullOrWhiteSpace(x.School) || !string.IsNullOrWhiteSpace(x.Course))
                 .ToList() ?? new();
@@ -1287,13 +1283,13 @@
                 .Where(x => !string.IsNullOrWhiteSpace(x.CompanyName) || !string.IsNullOrWhiteSpace(x.Position))
                 .ToList() ?? new();
 
-            // ========================================
+            // =========================
             // 🚀 SUBMIT TO API
-            // ========================================
+            // =========================
             var response = await Http.PostAsJsonAsync("api/Applicant/SaveNSRP", applicant);
 
             if (response.IsSuccessStatusCode)
-            {
+            {   
                 var applicantId = (await response.Content.ReadAsStringAsync()).Trim();
 
                 if (string.IsNullOrWhiteSpace(applicantId))
@@ -1302,31 +1298,27 @@
                     return;
                 }
 
-                // ========================================
+                // =========================
                 // ✉️ SEND EMAIL VERIFICATION
-                // ========================================
+                // =========================
                 if (!string.IsNullOrEmpty(applicant?.ApplicantInformation?.Email))
                 {
                     var mail = new
                     {
                         mailTo = applicant.ApplicantInformation.Email,
-                        baseUri = string.Empty // ✅ use empty string instead of null
+                        baseUri = string.Empty
                     };
 
                     var sendEmailResponse = await Http.PostAsJsonAsync("api/Applicant/SendEmailVerified", mail);
 
+                    // ✅ Always show popup after success (no alert)
                     if (sendEmailResponse.IsSuccessStatusCode)
                     {
-                        // ✅ Fetch updated applicant info to get JobFairReferenceCode
-                        var infoResponse = await Http.GetAsync($"api/Applicant/GetApplicantInformation/{applicantId}");
-                        if (infoResponse.IsSuccessStatusCode)
-                        {
-                            var updatedInfo = await infoResponse.Content.ReadFromJsonAsync<AccountAndInformationViewModel>();
-                            jobFairReferenceCode = updatedInfo?.ApplicantInformation?.JobFairReferenceCode ?? string.Empty;
-                        }
-
                         showSuccessModal = true;
-                    
+
+                        // Clear validation state so no alerts appear after close
+                        _errors.Clear();
+                        applicant = new();
                     }
                     else
                     {
@@ -1334,29 +1326,60 @@
                         await JS.InvokeVoidAsync("alert", $"Registration succeeded, but sending email failed.\n\nServer says:\n{errorMsg}");
                     }
                 }
-                else
+                else    
                 {
                     await JS.InvokeVoidAsync("alert", "Registration succeeded, but email not found — skipping email send.");
                 }
-
             }
             else
             {
                 var errorMsg = await response.Content.ReadAsStringAsync();
-                await JS.InvokeVoidAsync("alert", $"Failed to register applicant.\n\n{errorMsg}");
+                if (errorMsg.Contains("already registered", StringComparison.OrdinalIgnoreCase))
+                {
+                    await JS.InvokeVoidAsync("alert", "Email is already registered. Please use a different email.");
+                }
+                else
+                {
+                    await JS.InvokeVoidAsync("alert", $"Failed to register applicant.\n\n{errorMsg}");
+                }
             }
         }
         catch (Exception ex)
         {
             await JS.InvokeVoidAsync("alert", $"An unexpected error occurred:\n{ex.Message}");
         }
+        finally
+        {
+            isSubmitting = false;
+        }
     }
 
     private void CloseModal()
     {
         showSuccessModal = false;
-        Navigation.NavigateTo("/pesobeta/", true);
+
+        // ✅ Temporarily disable form submission logic
+        isSubmitting = true;
+
+        // ✅ Clear any validation errors
+        _errors.Clear();
+
+        // ✅ Reset the form model
+        applicant = new();
+
+        // ✅ Small delay to allow UI to rerender cleanly before re-enabling submit
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(200);
+            isSubmitting = false;
+        });
+
+        // ✅ Navigate silently
+        Navigation.NavigateTo("/pesobeta", forceLoad: false);
     }
+
+
+
     // Converts between long timestamp <-> DateTime for binding
     private DateTime? DateOfBirthValue
     {
@@ -1365,9 +1388,7 @@
             if (applicant?.ApplicantInformation == null || applicant.ApplicantInformation.DateOfBirth == 0)
                 return null;
 
-            return DateTimeOffset
-                .FromUnixTimeMilliseconds(applicant.ApplicantInformation.DateOfBirth)
-                .DateTime;
+            return DateTimeOffset.FromUnixTimeMilliseconds(applicant.ApplicantInformation.DateOfBirth).DateTime;
         }
         set
         {
@@ -1379,8 +1400,6 @@
                     : 0;
         }
     }
-
-
 
     private DateTime? DateOfBirthValueModal
     {
@@ -1430,9 +1449,6 @@
             AllProvinces = await AddressService.GetProvincesAsync();
             AllCities = await AddressService.GetCitiesAsync();
             AllBarangays = await AddressService.GetBarangaysAsync();
-            await Task.Delay(100);
-            await JS.InvokeVoidAsync("initDateOfBirthPicker", "#DateOfBirth", DotNetObjectReference.Create(this), "UpdateDateOfBirth");
-
         }
     }
     [JSInvokable]
@@ -1847,8 +1863,6 @@
             // Wait a moment to let the registration form render before initializing flatpickr
             await Task.Delay(100);
 
-            // Initialize the Flatpickr for Date of Birth
-            await JS.InvokeVoidAsync("initDateOfBirthPicker", DotNetObjectReference.Create(this));
         }
     }
 

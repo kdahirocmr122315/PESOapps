@@ -199,7 +199,7 @@ namespace webapi_peso.Controllers
         [HttpGet("GetAllApplicationsByApplicant/{applicantId}")]
         public async Task<IActionResult> GetAllApplicationsByApplicant(string applicantId)
         {
-            using (var db = dbFactory.CreateDbContext()) 
+            using (var db = dbFactory.CreateDbContext())
             {
                 var list = cache.Get<List<AppliedJobsViewModel>>($"GetAllApplicationsByApplicant/{applicantId}");
                 if (list == null)
@@ -212,7 +212,7 @@ namespace webapi_peso.Controllers
                     {
                         var model = new AppliedJobsViewModel();
                         var jobInfo = db.EmployerJobPost.Where(x => x.Id == jobPost.JobPostId).FirstOrDefault();
-                        var employerDetails = db.EmployerDetails.Where( x => x.Id == jobInfo.EmployerDetailsId).FirstOrDefault();
+                        var employerDetails = db.EmployerDetails.Where(x => x.Id == jobInfo.EmployerDetailsId).FirstOrDefault();
                         model.Post = jobInfo;
                         model.EmployerDetails = employerDetails;
                         model.ApplicantId = applicantId;
@@ -935,7 +935,7 @@ namespace webapi_peso.Controllers
                 };
 
                 db.UserAccounts.Add(userAccount);
-                db.SaveChanges();  
+                db.SaveChanges();
             }
 
             var IsExist = db.ApplicantAccount.Any(x => x.Email.ToLower() == account.Email.ToLower());
@@ -1198,6 +1198,35 @@ namespace webapi_peso.Controllers
             } while (db.UserAccounts.Any(x => x.Id == base64Guid));
 
             return Ok(base64Guid);
+        }
+
+        [HttpPost]
+        [Route("GenerateReferenceCode/{accountId}")]
+        public IActionResult GenerateReferenceCode(string accountId)
+        {
+            using var db = dbFactory.CreateDbContext();
+            var jobFairStatus = db.JobFairEnable.FirstOrDefault(x => x.Id == "2025");
+            if (jobFairStatus == null || jobFairStatus.JobFairStatus != 0)
+            {
+                var appInfo = db.ApplicantInformation.FirstOrDefault(x => x.AccountId == accountId);
+                if (appInfo == null)
+                    return NotFound("Applicant information not found.");
+                if (!string.IsNullOrEmpty(appInfo.JobFairReferenceCode))
+                    return BadRequest("Already has JobFair Reference Code.");
+                
+                var refCode = Helper.Random6digitNumbers();
+                while (db.ApplicantInformation.Any(x => x.JobFairReferenceCode == refCode))
+                {
+                    refCode = Helper.Random6digitNumbers();
+                }
+                appInfo.JobFairReferenceCode = refCode;
+                db.ApplicantInformation.Update(appInfo);
+                db.SaveChanges();
+                return Ok(appInfo.JobFairReferenceCode);
+            }
+
+            return BadRequest("Job Fair is not active!");
+
         }
 
         [HttpPost("SaveJobApplication")]

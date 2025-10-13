@@ -1213,7 +1213,7 @@ namespace webapi_peso.Controllers
                     return NotFound("Applicant information not found.");
                 if (!string.IsNullOrEmpty(appInfo.JobFairReferenceCode))
                     return BadRequest("Already has JobFair Reference Code.");
-                
+
                 var refCode = Helper.Random6digitNumbers();
                 while (db.ApplicantInformation.Any(x => x.JobFairReferenceCode == refCode))
                 {
@@ -1224,8 +1224,10 @@ namespace webapi_peso.Controllers
                 db.SaveChanges();
                 return Ok(appInfo.JobFairReferenceCode);
             }
-
-            return BadRequest("Job Fair is not active!");
+            else
+            {
+                return BadRequest("Job Fair is not active!");
+            }
 
         }
 

@@ -1,6 +1,7 @@
 ﻿@page "/UpdateNSRP/dash"
 @using PESOapps.Shared.Address
 @using System.Net.Http.Headers
+@using System.Text.Json.Serialization
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
 @inject HttpClient Http
@@ -480,14 +481,12 @@ else
         <div class="nsrp-header">
             <button class="nsrp-toggle" onclick="openNSRP()">View NSRP Form</button>
             <button class="nsrp-toggle" @onclick="OpenChangePasswordModal">Change Password</button>
-            @if (JobFairStatus == 0)
-            {
-                <button class="nsrp-toggle" @onclick="GenerateJobReference">Get Reference Code</button>
-            }
-            else if (JobFairStatus == 1)
-            {
-                <button class="nsrp-toggle" @onclick="GenerateJobReferenceFromApi">Get Reference Code</button>
-            }
+            @if (JobFairStatus == 1)
+                {
+                    <button class="nsrp-toggle" @onclick="GenerateJobReference">
+                        Get Reference Code
+                    </button>
+                }
             <button class="nsrp-toggle" @onclick="ToggleEdit">
                 @(isEditing ? "Disable Update" : "Enable Update")
             </button>
@@ -1480,6 +1479,11 @@ else
 
                 isUserLoggedIn = true;
 
+                // ✅ Fetch JobFairStatus here (after JS interop is available)
+                var jobFairResponse = await Http.GetFromJsonAsync<JobFairStatusResponse>("api/Manager/GetJobFairStatus");
+                JobFairStatus = jobFairResponse?.JobFairStatus ?? 0;
+
+                // ✅ Now load applicant data and address info
                 Regions = await AddressService.GetRegionsAsync();
                 AllProvinces = await AddressService.GetProvincesAsync();
                 AllCities = await AddressService.GetCitiesAsync();
@@ -1490,7 +1494,6 @@ else
                 ) ?? new ApplicantDataViewModel();
 
                 loaded = true;
-
                 StateHasChanged(); // refresh UI after load
             }
             catch (Exception ex)
@@ -1499,6 +1502,7 @@ else
             }
         }
     }
+
 
     // Converts between long timestamp <-> DateTime for binding
     private DateTime? DateOfBirthValue
@@ -1562,74 +1566,85 @@ else
     }
 
     // ********************************************************************** Job Fair Status **********************************************************************
-
-    private int JobFairStatus;
+    private int JobFairStatus = -1; // Default (not loaded)
     private string? AccountId;
 
     protected override async Task OnInitializedAsync()
     {
-        // Get AccountId from localStorage
-        AccountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
-
-        // Then load JobFairStatus
-        await LoadJobFairStatus();
-    }
-
-    private async Task LoadJobFairStatus()
-    {
         try
         {
-            var response = await Http.GetFromJsonAsync<JobFairEnable>("api/JobFairEnable/2025");
+            // ✅ Get the account ID from localStorage
+            AccountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+
+            // ✅ Fetch JobFairStatus from API
+            var response = await Http.GetFromJsonAsync<JobFairStatusResponse>("api/Manager/GetJobFairStatus");
+
             if (response != null)
             {
                 JobFairStatus = response.JobFairStatus;
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error loading JobFairStatus: {ex.Message}");
-        }
-    }
-
-    private async Task GenerateJobReference()
-    {
-        // Local logic for JobFairStatus = 0
-        await JS.InvokeVoidAsync("alert", "Generated job reference locally!");
-    }
-
-    private async Task GenerateJobReferenceFromApi()
-    {
-        if (string.IsNullOrEmpty(AccountId))
-        {
-            await JS.InvokeVoidAsync("alert", "Account ID not found in local storage!");
-            return;
-        }
-
-        try
-        {
-            var response = await Http.GetAsync($"api/Applicant/GenerateReferenceCode/{AccountId}");
-            if (response.IsSuccessStatusCode)
-            {
-                var code = await response.Content.ReadAsStringAsync();
-                await JS.InvokeVoidAsync("alert", $"Reference Code: {code}");
+                Console.WriteLine($"[DEBUG] JobFairStatus: {JobFairStatus}");
             }
             else
             {
-                await JS.InvokeVoidAsync("alert", "Failed to generate reference code from API.");
+                Console.WriteLine("Error: Empty JobFairStatus response.");
             }
         }
         catch (Exception ex)
         {
-            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+            Console.WriteLine($"Error fetching JobFairStatus: {ex.Message}");
         }
     }
 
-    public class JobFairEnable
+
+    private async Task GenerateJobReference()
+{
+    // ✅ Check if applicant and AccountId exist
+    if (string.IsNullOrEmpty(applicant?.ApplicantInformation?.AccountId))
     {
-        public string Id { get; set; } = string.Empty;
-        public int JobFairStatus { get; set; }
+        await JS.InvokeVoidAsync("alert", "Account ID not found!");
+        return;
     }
 
+    try
+    {
+        var accountId = applicant.ApplicantInformation.AccountId;
+
+        // ✅ Call the POST API
+        var response = await Http.PostAsync(
+            $"api/Applicant/GenerateReferenceCode/{accountId}",
+            null
+        );
+
+        // ✅ Read the response content
+        var message = await response.Content.ReadAsStringAsync();
+
+        if (response.IsSuccessStatusCode)
+        {
+            // ✅ Save the generated code in your model
+            applicant.ApplicantInformation.JobFairReferenceCode = message;
+
+            await JS.InvokeVoidAsync("alert", $"✅ Reference Code generated: {message}");
+        }
+        else
+        {
+            // ❌ Handle error messages from backend (400 / 404)
+            await JS.InvokeVoidAsync("alert", $"⚠️ {message}");
+        }
+    }
+    catch (Exception ex)
+    {
+        await JS.InvokeVoidAsync("alert", $"❌ Unexpected error: {ex.Message}");
+    }
+}
+
+
+
+    // ✅ Strongly typed response model
+    public class JobFairStatusResponse
+    {
+        public int JobFairStatus { get; set; }
+    }
+ 
     // ********************************************************************** Add Occupation **********************************************************************
     private string newOccupationName = string.Empty;
     private string newWorkLocationName = string.Empty;

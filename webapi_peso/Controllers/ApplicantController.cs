@@ -1206,29 +1206,25 @@ namespace webapi_peso.Controllers
         {
             using var db = dbFactory.CreateDbContext();
             var jobFairStatus = db.JobFairEnable.FirstOrDefault(x => x.Id == "2025");
-            if (jobFairStatus == null || jobFairStatus.JobFairStatus != 0)
-            {
-                var appInfo = db.ApplicantInformation.FirstOrDefault(x => x.AccountId == accountId);
-                if (appInfo == null)
-                    return NotFound("Applicant information not found.");
-                if (!string.IsNullOrEmpty(appInfo.JobFairReferenceCode))
-                    return BadRequest("Already has JobFair Reference Code.");
-
-                var refCode = Helper.Random6digitNumbers();
-                while (db.ApplicantInformation.Any(x => x.JobFairReferenceCode == refCode))
-                {
-                    refCode = Helper.Random6digitNumbers();
-                }
-                appInfo.JobFairReferenceCode = refCode;
-                db.ApplicantInformation.Update(appInfo);
-                db.SaveChanges();
-                return Ok(appInfo.JobFairReferenceCode);
-            }
-            else
-            {
+            if (jobFairStatus == null || jobFairStatus.JobFairStatus == 0)
                 return BadRequest("Job Fair is not active!");
-            }
 
+            var appInfo = db.ApplicantInformation.FirstOrDefault(x => x.AccountId == accountId);
+            if (appInfo == null)
+                return NotFound("Applicant information not found.");
+
+            if (!string.IsNullOrEmpty(appInfo.JobFairReferenceCode))
+                return BadRequest("Already has JobFair Reference Code.");
+
+            var refCode = Helper.Random6digitNumbers();
+            while (db.ApplicantInformation.Any(x => x.JobFairReferenceCode == refCode))
+            {
+                refCode = Helper.Random6digitNumbers();
+            }
+            appInfo.JobFairReferenceCode = refCode;
+            db.ApplicantInformation.Update(appInfo);
+            db.SaveChanges();
+            return Ok(appInfo.JobFairReferenceCode);
         }
 
         [HttpPost("SaveJobApplication")]

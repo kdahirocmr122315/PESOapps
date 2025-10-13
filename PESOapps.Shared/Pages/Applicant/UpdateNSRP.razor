@@ -480,6 +480,14 @@ else
         <div class="nsrp-header">
             <button class="nsrp-toggle" onclick="openNSRP()">View NSRP Form</button>
             <button class="nsrp-toggle" @onclick="OpenChangePasswordModal">Change Password</button>
+            @if (JobFairStatus == 0)
+            {
+                <button class="nsrp-toggle" @onclick="GenerateJobReference">Get Reference Code</button>
+            }
+            else if (JobFairStatus == 1)
+            {
+                <button class="nsrp-toggle" @onclick="GenerateJobReferenceFromApi">Get Reference Code</button>
+            }
             <button class="nsrp-toggle" @onclick="ToggleEdit">
                 @(isEditing ? "Disable Update" : "Enable Update")
             </button>
@@ -1552,6 +1560,76 @@ else
             }
         }
     }
+
+    // ********************************************************************** Job Fair Status **********************************************************************
+
+    private int JobFairStatus;
+    private string? AccountId;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Get AccountId from localStorage
+        AccountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+
+        // Then load JobFairStatus
+        await LoadJobFairStatus();
+    }
+
+    private async Task LoadJobFairStatus()
+    {
+        try
+        {
+            var response = await Http.GetFromJsonAsync<JobFairEnable>("api/JobFairEnable/2025");
+            if (response != null)
+            {
+                JobFairStatus = response.JobFairStatus;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading JobFairStatus: {ex.Message}");
+        }
+    }
+
+    private async Task GenerateJobReference()
+    {
+        // Local logic for JobFairStatus = 0
+        await JS.InvokeVoidAsync("alert", "Generated job reference locally!");
+    }
+
+    private async Task GenerateJobReferenceFromApi()
+    {
+        if (string.IsNullOrEmpty(AccountId))
+        {
+            await JS.InvokeVoidAsync("alert", "Account ID not found in local storage!");
+            return;
+        }
+
+        try
+        {
+            var response = await Http.GetAsync($"api/Applicant/GenerateReferenceCode/{AccountId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var code = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"Reference Code: {code}");
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "Failed to generate reference code from API.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
+    public class JobFairEnable
+    {
+        public string Id { get; set; } = string.Empty;
+        public int JobFairStatus { get; set; }
+    }
+
     // ********************************************************************** Add Occupation **********************************************************************
     private string newOccupationName = string.Empty;
     private string newWorkLocationName = string.Empty;

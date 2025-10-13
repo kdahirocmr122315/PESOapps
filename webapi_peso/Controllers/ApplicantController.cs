@@ -1224,9 +1224,7 @@ namespace webapi_peso.Controllers
                 db.SaveChanges();
                 return Ok(appInfo.JobFairReferenceCode);
             }
-
             return BadRequest("Job Fair is not active!");
-
         }
 
         [HttpPost("SaveJobApplication")]
@@ -1315,6 +1313,7 @@ namespace webapi_peso.Controllers
             return Ok(rs);
         }
 
+
         [HttpDelete("DeleteApplicantAttachment/{fileName}")]
         public IActionResult DeleteApplicantAttachment(string fileName)
         {
@@ -1338,6 +1337,7 @@ namespace webapi_peso.Controllers
 
             return NotFound(new { Message = "Attachment not found." });
         }
+
 
         [HttpPost("SendUserReplyEmail")]
         public async Task<IActionResult> SendUserReplyEmail(EmailViewModel data)

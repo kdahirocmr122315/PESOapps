@@ -1464,44 +1464,44 @@ else
     private void ToggleEdit() => isEditing = !isEditing;
 
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+   protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (firstRender && !loaded)
     {
-        if (firstRender && !loaded)
+        try
         {
-            try
+            accountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+            if (string.IsNullOrEmpty(accountId))
             {
-                accountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
-                if (string.IsNullOrEmpty(accountId))
-                {
-                    await JS.InvokeVoidAsync("alert", "No UserId found in local storage!");
-                    return;
-                }
-
-                isUserLoggedIn = true;
-
-                // ✅ Fetch JobFairStatus here (after JS interop is available)
-                var jobFairResponse = await Http.GetFromJsonAsync<JobFairStatusResponse>("api/Manager/GetJobFairStatus");
-                JobFairStatus = jobFairResponse?.JobFairStatus ?? 0;
-
-                // ✅ Now load applicant data and address info
-                Regions = await AddressService.GetRegionsAsync();
-                AllProvinces = await AddressService.GetProvincesAsync();
-                AllCities = await AddressService.GetCitiesAsync();
-                AllBarangays = await AddressService.GetBarangaysAsync();
-
-                applicant = await Http.GetFromJsonAsync<ApplicantDataViewModel>(
-                    $"api/Employer/ApplicantDataViewModel/{accountId}"
-                ) ?? new ApplicantDataViewModel();
-
-                loaded = true;
-                StateHasChanged(); // refresh UI after load
+                await JS.InvokeVoidAsync("alert", "No UserId found in local storage!");
+                return;
             }
-            catch (Exception ex)
-            {
-                await JS.InvokeVoidAsync("alert", $"Error loading applicant: {ex.Message}");
-            }
+
+            isUserLoggedIn = true;
+
+            // ✅ Fetch JobFairStatus here (after JS interop is available)
+            var jobFairResponse = await Http.GetFromJsonAsync<JobFairStatusResponse>("api/Manager/GetJobFairStatus");
+            JobFairStatus = jobFairResponse?.JobFairStatus ?? 0;
+
+            // ✅ Now load applicant data and address info
+            Regions = await AddressService.GetRegionsAsync();
+            AllProvinces = await AddressService.GetProvincesAsync();
+            AllCities = await AddressService.GetCitiesAsync();
+            AllBarangays = await AddressService.GetBarangaysAsync();
+
+            applicant = await Http.GetFromJsonAsync<ApplicantDataViewModel>(
+                $"api/Employer/ApplicantDataViewModel/{accountId}"
+            ) ?? new ApplicantDataViewModel();
+
+            loaded = true;
+            StateHasChanged(); // refresh UI after load
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error loading applicant: {ex.Message}");
         }
     }
+}
 
 
     // Converts between long timestamp <-> DateTime for binding
@@ -1597,45 +1597,45 @@ else
 
 
     private async Task GenerateJobReference()
-{
-    // ✅ Check if applicant and AccountId exist
-    if (string.IsNullOrEmpty(applicant?.ApplicantInformation?.AccountId))
     {
-        await JS.InvokeVoidAsync("alert", "Account ID not found!");
-        return;
-    }
-
-    try
-    {
-        var accountId = applicant.ApplicantInformation.AccountId;
-
-        // ✅ Call the POST API
-        var response = await Http.PostAsync(
-            $"api/Applicant/GenerateReferenceCode/{accountId}",
-            null
-        );
-
-        // ✅ Read the response content
-        var message = await response.Content.ReadAsStringAsync();
-
-        if (response.IsSuccessStatusCode)
+        // ✅ Check if applicant and AccountId exist
+        if (string.IsNullOrEmpty(applicant?.ApplicantInformation?.AccountId))
         {
-            // ✅ Save the generated code in your model
-            applicant.ApplicantInformation.JobFairReferenceCode = message;
+            await JS.InvokeVoidAsync("alert", "Account ID not found!");
+            return;
+        }
 
-            await JS.InvokeVoidAsync("alert", $"✅ Reference Code generated: {message}");
-        }
-        else
+        try
         {
-            // ❌ Handle error messages from backend (400 / 404)
-            await JS.InvokeVoidAsync("alert", $"⚠️ {message}");
+            var accountId = applicant.ApplicantInformation.AccountId;
+
+            // ✅ Call the POST API
+            var response = await Http.PostAsync(
+                $"api/Applicant/GenerateReferenceCode/{accountId}",
+                null
+            );
+
+            // ✅ Read the response content
+            var message = await response.Content.ReadAsStringAsync();
+
+            if (response.IsSuccessStatusCode)
+            {
+                // ✅ Save the generated code in your model
+                applicant.ApplicantInformation.JobFairReferenceCode = message;
+
+                await JS.InvokeVoidAsync("alert", $"✅ Reference Code generated: {message}");
+            }
+            else
+            {
+                // ❌ Handle error messages from backend (400 / 404)
+                await JS.InvokeVoidAsync("alert", $"⚠️ {message}");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"❌ Unexpected error: {ex.Message}");
         }
     }
-    catch (Exception ex)
-    {
-        await JS.InvokeVoidAsync("alert", $"❌ Unexpected error: {ex.Message}");
-    }
-}
 
 
 

@@ -94,10 +94,6 @@ else
             <h4>Establishment Details</h4>
             <div class="nsrp-grid">
                 <div>
-                    <label>Email</label>
-                    <input class="nsrp-input" @bind="employer.ContactEmailAddress" disabled />
-                </div>
-                <div>
                     <label>Establishment Name</label>
                     <input class="nsrp-input" @bind="employer.EstablishmentName" disabled="@(!isEditing)" />
                 </div>
@@ -228,7 +224,7 @@ else
                 </div>
                 <div>
                     <label>Email</label>
-                    <input class="nsrp-input" @bind="employer.ContactEmailAddress" disabled="@(!isEditing)" />
+                    <input class="nsrp-input" @bind="employer.ContactEmailAddress" disabled />
                 </div>
             </div>
 

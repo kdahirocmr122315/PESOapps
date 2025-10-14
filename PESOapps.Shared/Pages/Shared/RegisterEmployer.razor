@@ -1,0 +1,445 @@
+﻿@page "/Employers"
+@using PESOapps.Shared.Address
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject NavigationManager Navigation
+@inject AddressService AddressService
+
+<PageTitle>Employer Registration</PageTitle>
+
+<div class="nsrp-container registrations-container">
+    <h3>Employer Registration</h3>
+    <p>INSTRUCTIONS: Please fill out the form legibly and check all required fields.</p>
+
+    <EditForm Model="@employer.EmployerDetails" OnValidSubmit="SaveEmployer">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+
+        <div class="nsrp-section">
+            <!-- --- ESTABLISHMENT DETAILS --- -->
+            <h4>Establishment Details</h4>
+            <div class="nsrp-grid">
+                <div>
+                    <label>Establishment Name<span class="text-danger">*</span></label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.EstablishmentName" />
+                </div>
+                <div>
+                    <label>Acronym/Abbreviation</label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.AcronymAbbreviation" />
+                </div>
+                <div>
+                    <label>TIN<span class="text-danger">*</span></label>
+                    <input class="nsrp-input"
+                           type="text"
+                           inputmode="numeric"
+                           pattern="[0-9]*"
+                           maxlength="12"
+                           @bind="employer.EmployerDetails.TIN"
+                           oninput="this.value = this.value.replace(/[^0-9]/g,'')" />
+                </div>
+            </div>
+
+            <!-- --- EMPLOYER TYPE & WORKFORCE --- -->
+            <h4>Employer Type & Workforce</h4>
+            <div class="nsrp-grid">
+                <div>
+                    <label>Employer Type<span class="text-danger">*</span></label>
+                    <select class="nsrp-input" @bind="employer.EmployerDetails.EmployerType">
+                        <option value="">Select</option>
+                        <option value="Government">Government</option>
+                        <option value="Recruitment & Placement Agency (Local)">Recruitment & Placement Agency (Local)</option>
+                        <option value="DO 174-17, Subcontractor">DO 174-17, Subcontractor</option>
+                        <option value="Private">Private</option>
+                        <option value="Licensed Recruitment Agency (Overseas)">Licensed Recruitment Agency (Overseas)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Total Workforce<span class="text-danger">*</span></label>
+                    <select class="nsrp-input" @bind="employer.EmployerDetails.WorkForce">
+                        <option value="">Select</option>
+                        <option value="Micro (1-9)">Micro (1-9)</option>
+                        <option value="Small (10-99)">Small (10-99)</option>
+                        <option value="Medium (100-199)">Medium (100-199)</option>
+                        <option value="Large (200 and up)">Large (200 and up)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Line of Business<span class="text-danger">*</span></label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.LineOfBusiness" />
+                    <p class="text-muted">(Check BIR 2303)</p>
+                </div>
+            </div>
+
+            <!-- --- ADDRESS --- -->
+            <h4>Address</h4>
+            <div class="nsrp-grid">
+                <div>
+                    <label>Region<span class="text-danger">*</span></label>
+                    <select class="nsrp-input" @bind="employer.EmployerDetails.Region">
+                        <option value="">Select Region</option>
+                        @foreach (var r in Regions)
+                        {
+                            <option value="@r.RegCode">@r.RegDesc</option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label>Province<span class="text-danger">*</span></label>
+                    <select class="nsrp-input" @bind="employer.EmployerDetails.Province">
+                        <option value="">Select Province</option>
+                        @foreach (var p in FilteredProvinces)
+                        {
+                            <option value="@p.provCode">@p.provDesc</option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label>City / Municipality<span class="text-danger">*</span></label>
+                    <select class="nsrp-input" @bind="employer.EmployerDetails.CityMunicipality">
+                        <option value="">Select City / Municipality</option>
+                        @foreach (var c in FilteredCities)
+                        {
+                            <option value="@c.citymunCode">@c.citymunDesc</option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label>Barangay<span class="text-danger">*</span></label>
+                    <select class="nsrp-input" @bind="employer.EmployerDetails.Barangay">
+                        <option value="">Select Barangay</option>
+                        @foreach (var b in FilteredBarangays)
+                        {
+                            <option value="@b.brgyCode">@b.brgyDesc</option>
+                        }
+                    </select>
+                </div>
+
+                <div>
+                    <label>Street</label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.Address" />
+                </div>
+            </div>
+
+            <!-- --- CONTACT PERSON --- -->
+            <h4>Contact Person</h4>
+            <div class="nsrp-grid">
+                <div>
+                    <label>Prefix<span class="text-danger">*</span></label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.ContactPrependName" />
+                </div>
+                <div>
+                    <label>Full Name<span class="text-danger">*</span></label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.ContactFullName" />
+                </div>
+                <div>
+                    <label>Position<span class="text-danger">*</span></label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.ContactPosition" />
+                </div>
+                <div>
+                    <label>Telephone No.</label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.ContactTelephoneNo" />
+                </div>
+                <div class="form-group">
+                    <label>Mobile No.<span class="text-danger">*</span></label>
+                    <div class="nsrp-phone">
+                        <span class="nsrp-phone-prefix">+63</span>
+                        <input type="text" class="nsrp-input" maxlength="10"
+                               inputmode="numeric" pattern="[0-9]*"
+                               @bind="employer.EmployerDetails.ContactMobileNo"
+                               @oninput="ValidateCellphoneInput" />
+                    </div>
+                </div>
+                <div>
+                    <label>Fax No.</label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.ContactFaxNo" />
+                </div>
+                <div>
+                    <label>Email<span class="text-danger">*</span></label>
+                    <input class="nsrp-input" @bind="employer.EmployerDetails.ContactEmailAddress" type="email" />
+                </div>
+            </div>
+
+            <!-- --- ATTACHMENTS --- -->
+            <h4 class="mt-4 text-uppercase text-success fw-bold">Attach Documents</h4>
+
+            <div class="row mt-3">
+                <!-- For Overseas -->
+                <div class="col-md-6">
+                    <div class="notice-card mb-3">
+                        <div class="card-header text-center">
+                            For Overseas Manpower Agencies/Companies
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-bordered mb-0">
+                                <tbody>
+                                    <tr><td>Philippines Overseas and Employment Agency Accreditation Certificate (POEA)</td></tr>
+                                    <tr><td>Bureau of Internal Revenue Registration (BIR) Registration</td></tr>
+                                    <tr><td>Securities and Exchange Commission (SEC) Registration</td></tr>
+                                    <tr><td>Updated Business Permit</td></tr>
+                                    <tr><td>Job Postings / Job Order (to be posted on our Facebook page)</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- For Local -->
+                <div class="col-md-6">
+                    <div class="notice-card mb-3">
+                        <div class="card-header text-center">
+                            For Local Companies
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm table-bordered mb-0">
+                                <tbody>
+                                    <tr><td>PhilJobNet Online Registration</td></tr>
+                                    <tr><td>Submit print screen copy of online registration or scanned DOLE accreditation certificate</td></tr>
+                                    <tr><td>Bureau of Internal Revenue (BIR) Registration</td></tr>
+                                    <tr><td>Securities and Exchange Commission (SEC) Registration (for Corporations)</td></tr>
+                                    <tr><td>Department of Trade and Industry (DTI) Registration (for Small Enterprises)</td></tr>
+                                    <tr><td>Cooperative Development Authority (CDA) Registration (for Cooperatives)</td></tr>
+                                    <tr><td>Updated Business Permit</td></tr>
+                                    <tr><td>Job Postings</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- File Upload Area -->
+            <div class="text-center mt-3">
+                <InputFile OnChange="FileSelected" multiple accept=".pdf,.doc,.docx" />
+                <p class="text-muted mt-2"><small>10 MB maximum file size.</small></p>
+            </div>
+
+            @if (UploadedFiles?.Any() == true)
+            {
+                <div class="table-responsive mt-3">
+                    <table class="table table-bordered table-striped">
+                        <thead class="table-light">
+                            <tr>
+                                <th>File Name</th>
+                                <th>Size</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var file in UploadedFiles)
+                            {
+                                <tr>
+                                    <td>@file.FileName</td>
+                                    <td>@file.FileSize</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+
+
+            <h6 class="text-success fw-bold mt-4 text-uppercase">
+                Certification / Authorization
+            </h6>
+
+            <div class="consent-section border rounded p-3 mb-3 bg-light">
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="consent1" @bind="consent1">
+                    <label class="form-check-label" for="consent1">
+                        This is to certify that all data/information provided in this form are true to the best of my knowledge.
+                    </label>
+                </div>
+
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="consent2" @bind="consent2">
+                    <label class="form-check-label" for="consent2">
+                        This is also to authorize the PESO to include our company profile in the PESO MisOr Website.
+                    </label>
+                </div>
+
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" id="consent3" @bind="consent3">
+                    <label class="form-check-label" for="consent3">
+                        It is understood that relevant information provided therein shall be made available to those who have access to the PESO MisOr Website.
+                    </label>
+                </div>
+
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="consent4" @bind="consent4">
+                    <label class="form-check-label" for="consent4">
+                        I am also aware that PESO is not obliged to seek applicants on the company/agency’s behalf.
+                    </label>
+                </div>
+            </div>
+
+            <!-- Submit button -->
+            <div class="nsrp-footer mt-4">
+                <button type="submit" class="nsrp-toggle" disabled="@(!AllConsentsChecked)">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </EditForm>
+</div>
+
+@code {
+    private EmployerRegistrationViewModel employer = new()
+    {
+        EmployerDetails = new EmployerDetails(),
+        ListOfAttachments = new List<AttachementsViewModel>()
+    };
+    private List<IBrowserFile> SelectedFiles = new();
+    private List<AttachementsViewModel> UploadedFiles = new();
+
+    private List<Region> Regions = new();
+    private List<Province> AllProvinces = new();
+    private List<CityMunicipality> AllCities = new();
+    private List<Barangay> AllBarangays = new();
+
+    private IEnumerable<Province> FilteredProvinces =>
+        AllProvinces?.Where(p => p.regCode == employer.EmployerDetails?.Region) ?? Enumerable.Empty<Province>();
+
+    private IEnumerable<CityMunicipality> FilteredCities =>
+        AllCities?.Where(c => c.provCode == employer.EmployerDetails?.Province) ?? Enumerable.Empty<CityMunicipality>();
+
+    private IEnumerable<Barangay> FilteredBarangays =>
+        AllBarangays?.Where(b => b.citymunCode == employer.EmployerDetails?.CityMunicipality) ?? Enumerable.Empty<Barangay>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        employer ??= new EmployerRegistrationViewModel();
+        employer.EmployerDetails ??= new EmployerDetails();
+        employer.ListOfAttachments ??= new List<AttachementsViewModel>();
+
+        Regions = await AddressService.GetRegionsAsync();
+        AllProvinces = await AddressService.GetProvincesAsync();
+        AllCities = await AddressService.GetCitiesAsync();
+        AllBarangays = await AddressService.GetBarangaysAsync();
+    }
+
+    private void OnRegionChanged(ChangeEventArgs e)
+    {
+        employer.EmployerDetails.Region = e.Value?.ToString();
+        employer.EmployerDetails.Province = employer.EmployerDetails.CityMunicipality = employer.EmployerDetails.Barangay = null;
+    }
+
+    private void OnProvinceChanged(ChangeEventArgs e)
+    {
+        employer.EmployerDetails.Province = e.Value?.ToString();
+        employer.EmployerDetails.CityMunicipality = employer.EmployerDetails.Barangay = null;
+    }
+
+    private void OnCityChanged(ChangeEventArgs e)
+    {
+        employer.EmployerDetails.CityMunicipality = e.Value?.ToString();
+        employer.EmployerDetails.Barangay = null;
+    }
+
+    private async Task SaveEmployer()
+    {
+        if (!AllConsentsChecked)
+        {
+            await JS.InvokeVoidAsync("alert", "⚠️ Please check all consent boxes before submitting.");
+            return;
+        }
+
+        try
+        {
+            employer.EmployerDetails.NumberOfHiredApplicants ??= 0;
+            employer.EmployerDetails.Status = 0;
+
+            var response = await Http.PostAsJsonAsync("/api/Employer/RegisterEmployer", employer);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                await JS.InvokeVoidAsync("alert", $"❌ Failed to register employer:\n{error}");
+                return;
+            }
+
+            var result = await response.Content.ReadFromJsonAsync<PostResultViewModel>();
+            if (result?.StatusCode == 1 && result.Data is not null)
+            {
+                // ✅ Get EmployerId
+                var employerId = result.Data?.GetType()?.GetProperty("EmployerId")?.GetValue(result.Data, null)?.ToString();
+
+                if (!string.IsNullOrEmpty(employerId) && SelectedFiles.Count > 0)
+                {
+                    // ✅ Upload all files
+                    var content = new MultipartFormDataContent();
+
+                    foreach (var file in SelectedFiles)
+                    {
+                        var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+                        var fileContent = new StreamContent(stream);
+                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
+                        content.Add(fileContent, "files", file.Name);
+                    }
+
+                    content.Add(new StringContent(employerId), "employerId");
+
+                    var uploadResponse = await Http.PostAsync("api/Employer/UploadEmployerFile", content);
+
+                    if (!uploadResponse.IsSuccessStatusCode)
+                    {
+                        var uploadError = await uploadResponse.Content.ReadAsStringAsync();
+                        await JS.InvokeVoidAsync("alert", $"⚠️ Some files failed to upload:\n{uploadError}");
+                    }
+                }
+
+                await JS.InvokeVoidAsync("alert", "✅ Employer and files uploaded successfully!");
+
+                employer = new()
+                {
+                    EmployerDetails = new EmployerDetails(),
+                    ListOfAttachments = new List<AttachementsViewModel>()
+                };
+                UploadedFiles.Clear();
+                SelectedFiles.Clear();
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("alert", "❌ Failed to register employer. Please try again.");
+            }
+        }
+        catch (Exception ex)
+        {
+            await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
+        }
+    }
+
+    private void FileSelected(InputFileChangeEventArgs e)
+    {
+        SelectedFiles = e.GetMultipleFiles().ToList();
+
+        UploadedFiles = SelectedFiles.Select(f => new AttachementsViewModel
+        {
+            FileName = f.Name,
+            FileSize = $"{f.Size / 1024.0:F1} KB"
+        }).ToList();
+    }
+
+    private void ValidateCellphoneInput(ChangeEventArgs e)
+    {
+        var value = new string(e.Value?.ToString()?.Where(char.IsDigit).ToArray() ?? []);
+        if (value.Length > 10) value = value.Substring(0, 10);
+        employer.EmployerDetails.ContactMobileNo = value;
+    }
+
+    private async Task UploadSelectedFiles()
+    {
+        if (SelectedFiles.Count == 0)
+            return;
+
+        await JS.InvokeVoidAsync("alert", $"You selected {SelectedFiles.Count} file(s). This will upload on form submit.");
+    }
+
+    private bool consent1, consent2, consent3, consent4;
+
+    private bool AllConsentsChecked => consent1 && consent2 && consent3 && consent4;
+
+}

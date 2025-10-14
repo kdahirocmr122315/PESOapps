@@ -646,3 +646,40 @@ p.mud-input-helper-text {
 .flatpickr-wrapper {
     display: block !important;
 }
+
+/**************************************** Employer Registration  ****************************************/
+.notice-card {
+    border: 2px solid #ffc107;
+    border-radius: 10px 10px 0 0;
+    background-color: #fffbea;
+    box-shadow: 0 4px 8px rgba(255, 193, 7, 0.2);
+    font-size: .8em;
+}
+
+.notice-card .card-header {
+    background-color: #ffc107;
+    color: #212529;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
+
+.notice-card .card-body table {
+    background-color: #fffdf6;
+}
+
+.notice-card td {
+    padding: 5px;
+    vertical-align: middle;
+}
+
+.notice-card td::before {
+    content: "⚠️ ";
+}
+
+.notice-card th,
+.notice-card td {
+    border: 0;
+}

@@ -571,35 +571,59 @@ namespace webapi_peso.Controllers
         }
 
         [HttpPost("UploadEmployerFile")]
+        [AllowAnonymous]
         public async Task<IActionResult> UploadEmployerFile([FromForm] string employerId, [FromForm] List<IFormFile> files)
         {
+            Console.WriteLine($"📩 Upload called with employerId={employerId}, files.Count={files?.Count}");
+
+            if (string.IsNullOrWhiteSpace(employerId))
+                return BadRequest("Employer ID is required.");
+
             if (files == null || files.Count == 0)
                 return BadRequest("No files uploaded.");
 
-            var folderPath = Path.Combine(env.ContentRootPath, "files", "employers", employerId);
-
-            if (!Directory.Exists(folderPath))
-                Directory.CreateDirectory(folderPath);
-
-            var results = new List<AttachementsViewModel>();
-
-            foreach (var file in files)
+            try
             {
-                var filePath = Path.Combine(folderPath, file.FileName);
-                using var stream = new FileStream(filePath, FileMode.Create);
-                await file.CopyToAsync(stream);
+                // ✅ Folder destination inside your project
+                var folderPath = Path.Combine(env.ContentRootPath, "files", "employers", employerId);
 
-                results.Add(new AttachementsViewModel
+                // 👇 Add this line here
+                Console.WriteLine($"📁 Saving files to: {folderPath}");
+
+                if (!Directory.Exists(folderPath))
+                    Directory.CreateDirectory(folderPath);
+
+                var results = new List<AttachementsViewModel>();
+
+                foreach (var file in files)
                 {
-                    Id = "0",
-                    FolderName = employerId, // since folder is tied to employerId
-                    FileName = file.FileName,
-                    FileSize = $"{Math.Round(file.Length / 1024.0, 2)} KB",
-                    IsAlreadyUploaded = 0
-                });
-            }
+                    var filePath = Path.Combine(folderPath, file.FileName);
 
-            return Ok(results);
+                    // 👇 (Optional) log per file
+                    Console.WriteLine($"   → Writing {file.FileName} ({file.Length / 1024.0:F1} KB)");
+
+                    using (var stream = new FileStream(filePath, FileMode.Create))
+                    {
+                        await file.CopyToAsync(stream);
+                    }
+
+                    results.Add(new AttachementsViewModel
+                    {
+                        Id = Guid.NewGuid().ToString(),
+                        FolderName = employerId,
+                        FileName = file.FileName,
+                        FileSize = $"{Math.Round(file.Length / 1024.0, 2)} KB",
+                        IsAlreadyUploaded = 1
+                    });
+                }
+
+                return Ok(results);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"❌ Error: {ex.Message}");
+                return StatusCode(500, $"Error uploading files: {ex.Message}");
+            }
         }
 
 
@@ -835,40 +859,70 @@ namespace webapi_peso.Controllers
         public PostResultViewModel RegisterEmployer(EmployerRegistrationViewModel data)
         {
             using var db = dbFactory.CreateDbContext();
-            var rs = new PostResultViewModel();
-            rs.StatusCode = 0;
-            var isExist = db.EmployerDetails.Any(x => x.EstablishmentName == data.EmployerDetails.EstablishmentName && x.AcronymAbbreviation == data.EmployerDetails.AcronymAbbreviation);
-            if (!isExist)
+            var rs = new PostResultViewModel
             {
-                var d = data.EmployerDetails;
-                d.DateCreated = DateTime.Now;
-                db.EmployerDetails.Add(d);
-                if (db.SaveChanges() > 0)
-                {
-                    var folderDestination = System.IO.Path.Combine(env.WebRootPath, "files", "employers", d.Id);
-                    if (!System.IO.Directory.Exists(folderDestination))
-                        System.IO.Directory.CreateDirectory(folderDestination);
-                    //var origDest = string.Empty;
-                    foreach (var f in data.ListOfAttachments)
-                    {
-                        var filepath = System.IO.Path.Combine(env.WebRootPath, "file_temp", f.FolderName, f.FileName);
-                        if (System.IO.File.Exists(filepath))
-                            System.IO.File.Move(filepath, System.IO.Path.Combine(folderDestination, f.FileName));
-                        //origDest = System.IO.Path.Combine(env.WebRootPath, "file_temp", f.FolderName);
-                    }
+                StatusCode = 0,
+                Message = "Error during registration."
+            };
 
-                    /* if (System.IO.Directory.GetFiles(origDest).Length == 0)
-                         System.IO.Directory.Delete(origDest);*/
-                    rs.StatusCode = 1;
+            try
+            {
+                // ✅ Prevent duplicates
+                bool isExist = db.EmployerDetails.Any(x =>
+                    x.EstablishmentName == data.EmployerDetails.EstablishmentName &&
+                    x.AcronymAbbreviation == data.EmployerDetails.AcronymAbbreviation);
+
+                if (isExist)
+                {
+                    rs.StatusCode = 999;
+                    rs.Message = "Employer already exists.";
+                    return rs;
                 }
 
+                // ✅ Prepare Employer Data
+                var d = data.EmployerDetails;
+                d.Id = Guid.NewGuid().ToString();
+                d.DateCreated = DateTime.Now;
+                d.NumberOfHiredApplicants = d.NumberOfHiredApplicants == 0 ? 0 : d.NumberOfHiredApplicants;
+                d.Status = 0;
+
+                // ✅ Save Employer
+                db.EmployerDetails.Add(d);
+                db.SaveChanges();
+
+                // ✅ Create permanent employer folder
+                var folderDestination = Path.Combine(env.ContentRootPath, "files", "employers", d.Id);
+                if (!Directory.Exists(folderDestination))
+                    Directory.CreateDirectory(folderDestination);
+
+                // ✅ Move uploaded files from temp to permanent folder
+                if (data.ListOfAttachments != null && data.ListOfAttachments.Count > 0)
+                {
+                    foreach (var f in data.ListOfAttachments)
+                    {
+                        var tempPath = Path.Combine(env.ContentRootPath, "file_temp", f.FolderName, f.FileName);
+                        var destPath = Path.Combine(folderDestination, f.FileName);
+
+                        if (System.IO.File.Exists(tempPath))
+                            System.IO.File.Move(tempPath, destPath);
+                    }
+                }
+
+                // ✅ Return success + EmployerId
+                rs.StatusCode = 1;
+                rs.Message = "Employer registered successfully.";
+                rs.Data = new { EmployerId = d.Id };
             }
-            else
+            catch (Exception ex)
             {
-                rs.StatusCode = 999;
+                rs.StatusCode = 500;
+                rs.Message = $"Server error: {ex.Message}";
             }
+
             return rs;
         }
+
+
 
         [HttpGet("CopyFiles")]
         public IActionResult CopyFiles()

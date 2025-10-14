@@ -418,6 +418,36 @@ else
             </div>
         </div>
 
+        @if (showReferenceModal)
+        {
+            <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-3 shadow-lg">
+                        <div class="modal-header bg-success text-white">
+                            <h5 class="modal-title text-white">Your Reference Code</h5>
+                            <button type="button" class="btn-close btn-close-white" @onclick="CloseReferenceModal"></button>
+                        </div>
+
+                        <div class="modal-body text-center">
+                            @if (string.IsNullOrEmpty(applicant?.ApplicantInformation?.JobFairReferenceCode))
+                            {
+                                <p class="text-muted">No reference code available yet.</p>
+                            }
+                            else
+                            {
+                                <h4 class="fw-bold text-success">
+                                    @applicant.ApplicantInformation.JobFairReferenceCode
+                                </h4>
+                            }
+                        </div>
+
+                        <div class="modal-footer">
+                            <button class="nsrp-toggle" @onclick="CloseReferenceModal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
         <!-- END Modal -->
         @if (showChangePasswordModal)
         {
@@ -481,12 +511,7 @@ else
         <div class="nsrp-header">
             <button class="nsrp-toggle" onclick="openNSRP()">View NSRP Form</button>
             <button class="nsrp-toggle" @onclick="OpenChangePasswordModal">Change Password</button>
-            @if (JobFairStatus == 1)
-                {
-                    <button class="nsrp-toggle" @onclick="GenerateJobReference">
-                        Get Reference Code
-                    </button>
-                }
+            <button class="nsrp-toggle" @onclick="ShowJobReference">Get Reference Code</button>
             <button class="nsrp-toggle" @onclick="ToggleEdit">
                 @(isEditing ? "Disable Update" : "Enable Update")
             </button>
@@ -1463,45 +1488,45 @@ else
 
     private void ToggleEdit() => isEditing = !isEditing;
 
-
-   protected override async Task OnAfterRenderAsync(bool firstRender)
-{
-    if (firstRender && !loaded)
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        try
+        if (firstRender && !loaded)
         {
-            accountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
-            if (string.IsNullOrEmpty(accountId))
+            try
             {
-                await JS.InvokeVoidAsync("alert", "No UserId found in local storage!");
-                return;
+                // 🆔 Retrieve UserId from local storage
+                accountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+
+                if (string.IsNullOrEmpty(accountId))
+                {
+                    await JS.InvokeVoidAsync("alert", "No UserId found in local storage!");
+                    return;
+                }
+
+                isUserLoggedIn = true;
+
+                // 📦 Load address data
+                Regions = await AddressService.GetRegionsAsync();
+                AllProvinces = await AddressService.GetProvincesAsync();
+                AllCities = await AddressService.GetCitiesAsync();
+                AllBarangays = await AddressService.GetBarangaysAsync();
+
+                // 👤 Load applicant data
+                applicant = await Http.GetFromJsonAsync<ApplicantDataViewModel>(
+                    $"api/Employer/ApplicantDataViewModel/{accountId}"
+                ) ?? new ApplicantDataViewModel();
+
+                loaded = true;
+
+                // 🔄 Refresh the UI after data is loaded
+                StateHasChanged();
             }
-
-            isUserLoggedIn = true;
-
-            // ✅ Fetch JobFairStatus here (after JS interop is available)
-            var jobFairResponse = await Http.GetFromJsonAsync<JobFairStatusResponse>("api/Manager/GetJobFairStatus");
-            JobFairStatus = jobFairResponse?.JobFairStatus ?? 0;
-
-            // ✅ Now load applicant data and address info
-            Regions = await AddressService.GetRegionsAsync();
-            AllProvinces = await AddressService.GetProvincesAsync();
-            AllCities = await AddressService.GetCitiesAsync();
-            AllBarangays = await AddressService.GetBarangaysAsync();
-
-            applicant = await Http.GetFromJsonAsync<ApplicantDataViewModel>(
-                $"api/Employer/ApplicantDataViewModel/{accountId}"
-            ) ?? new ApplicantDataViewModel();
-
-            loaded = true;
-            StateHasChanged(); // refresh UI after load
-        }
-        catch (Exception ex)
-        {
-            await JS.InvokeVoidAsync("alert", $"Error loading applicant: {ex.Message}");
+            catch (Exception ex)
+            {
+                await JS.InvokeVoidAsync("alert", $"Error loading applicant: {ex.Message}");
+            }
         }
     }
-}
 
 
     // Converts between long timestamp <-> DateTime for binding
@@ -1566,85 +1591,20 @@ else
     }
 
     // ********************************************************************** Job Fair Status **********************************************************************
-    private int JobFairStatus = -1; // Default (not loaded)
-    private string? AccountId;
+    private bool showReferenceModal = false;
 
-    protected override async Task OnInitializedAsync()
+    // Show modal
+    private void ShowJobReference()
     {
-        try
-        {
-            // ✅ Get the account ID from localStorage
-            AccountId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
-
-            // ✅ Fetch JobFairStatus from API
-            var response = await Http.GetFromJsonAsync<JobFairStatusResponse>("api/Manager/GetJobFairStatus");
-
-            if (response != null)
-            {
-                JobFairStatus = response.JobFairStatus;
-                Console.WriteLine($"[DEBUG] JobFairStatus: {JobFairStatus}");
-            }
-            else
-            {
-                Console.WriteLine("Error: Empty JobFairStatus response.");
-            }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error fetching JobFairStatus: {ex.Message}");
-        }
+        showReferenceModal = true;
     }
 
-
-    private async Task GenerateJobReference()
+    // Close modal
+    private void CloseReferenceModal()
     {
-        // ✅ Check if applicant and AccountId exist
-        if (string.IsNullOrEmpty(applicant?.ApplicantInformation?.AccountId))
-        {
-            await JS.InvokeVoidAsync("alert", "Account ID not found!");
-            return;
-        }
-
-        try
-        {
-            var accountId = applicant.ApplicantInformation.AccountId;
-
-            // ✅ Call the POST API
-            var response = await Http.PostAsync(
-                $"api/Applicant/GenerateReferenceCode/{accountId}",
-                null
-            );
-
-            // ✅ Read the response content
-            var message = await response.Content.ReadAsStringAsync();
-
-            if (response.IsSuccessStatusCode)
-            {
-                // ✅ Save the generated code in your model
-                applicant.ApplicantInformation.JobFairReferenceCode = message;
-
-                await JS.InvokeVoidAsync("alert", $"✅ Reference Code generated: {message}");
-            }
-            else
-            {
-                // ❌ Handle error messages from backend (400 / 404)
-                await JS.InvokeVoidAsync("alert", $"⚠️ {message}");
-            }
-        }
-        catch (Exception ex)
-        {
-            await JS.InvokeVoidAsync("alert", $"❌ Unexpected error: {ex.Message}");
-        }
+        showReferenceModal = false;
     }
 
-
-
-    // ✅ Strongly typed response model
-    public class JobFairStatusResponse
-    {
-        public int JobFairStatus { get; set; }
-    }
- 
     // ********************************************************************** Add Occupation **********************************************************************
     private string newOccupationName = string.Empty;
     private string newWorkLocationName = string.Empty;

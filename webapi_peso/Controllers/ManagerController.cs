@@ -297,18 +297,25 @@ namespace webapi_peso.Controllers
         {
             using (var db = dbFactory.CreateDbContext())
             {
-                var listApp = db.ApplicantInformation
-                    .Where(x => x.PresentMunicipalityCity == cityCode && x.ProvincialProvince == provCode)
-                    .ToList();
+                var query = db.ApplicantInformation.AsQueryable();
+
+                // ✅ Apply province filter if selected
+                if (!string.IsNullOrEmpty(provCode) && provCode != "0")
+                    query = query.Where(x => x.ProvincialProvince == provCode);
+
+                // ✅ Apply city filter if selected
+                if (!string.IsNullOrEmpty(cityCode) && cityCode != "0")
+                    query = query.Where(x => x.PresentMunicipalityCity == cityCode);
+
+                var listApp = query.ToList();
 
                 if (listApp == null || !listApp.Any())
-                {
-                    return NotFound("No applicants found for the specified province and city.");
-                }
+                    return NotFound("No applicants found for the specified filters.");
 
                 return Ok(listApp);
             }
         }
+
 
         [HttpGet("GetReferralStatus")]
         public IActionResult GetReferralStatus()

@@ -308,16 +308,36 @@
 
         try
         {
+            // Base filters
             var provCode = SelectedProvinceCode ?? "";
             var cityCode = SelectedCityCode ?? "";
 
-            var res = await Http.GetAsync(
-                $"api/Manager/GetPreRegList1/{provCode}/{cityCode}");
+            string apiUrl = "api/Manager/GetPreRegList1";
+
+            // Dynamic API endpoint based on filter levels
+            if (!string.IsNullOrEmpty(provCode) && !string.IsNullOrEmpty(cityCode))
+            {
+                // province + city selected
+                apiUrl += $"/{provCode}/{cityCode}";
+            }
+            else if (!string.IsNullOrEmpty(provCode))
+            {
+                // province only selected
+                apiUrl += $"/{provCode}/0";
+            }
+            else
+            {
+                // no province/city, just get all
+                apiUrl += "/0/0";
+            }
+
+            var res = await Http.GetAsync(apiUrl);
 
             if (res.IsSuccessStatusCode)
             {
                 var allData = await res.Content.ReadFromJsonAsync<List<ApplicantInformation>>() ?? new();
 
+                // 🗓 Apply date filters if any
                 if (filterFrom.HasValue && filterTo.HasValue)
                 {
                     var from = filterFrom.Value.Date;
@@ -326,9 +346,7 @@
                     filteredList = allData
                         .Where(a =>
                         {
-                            var date = DateTimeOffset
-                                .FromUnixTimeMilliseconds(a.DateLastUpdate)
-                                .Date;
+                            var date = DateTimeOffset.FromUnixTimeMilliseconds(a.DateLastUpdate).Date;
                             return date >= from && date <= to;
                         })
                         .ToList();
@@ -343,14 +361,16 @@
                 filteredList.Clear();
             }
         }
-        catch
+        catch (Exception ex)
         {
+            Console.WriteLine($"❌ LoadAllPreRegistered error: {ex.Message}");
             filteredList.Clear();
         }
 
         isLoading = false;
         StateHasChanged();
     }
+
 
     private async Task VerifyReference()
     {

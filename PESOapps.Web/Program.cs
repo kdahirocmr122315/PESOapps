@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Components.ProtectedBrowserStorage;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.StaticFiles;
 using PESOapps.Shared.Address;
 using PESOapps.Shared.Services;
@@ -23,7 +24,10 @@ builder.Services.AddScoped(sp => new HttpClient
 {
     BaseAddress = new Uri("http://localhost:5167/")
 });
-
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50 MB
+});
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();

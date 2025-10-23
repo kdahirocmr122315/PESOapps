@@ -922,16 +922,5 @@ namespace webapi_peso.Controllers
             return rs;
         }
 
-
-
-        [HttpGet("CopyFiles")]
-        public IActionResult CopyFiles()
-        {
-            var filesFolder = System.IO.Path.Combine(env.WebRootPath, "files");
-            var files = Directory.GetFiles(filesFolder, "*", SearchOption.AllDirectories);
-
-            return Ok();
-        }
-
     }
-    }
+}

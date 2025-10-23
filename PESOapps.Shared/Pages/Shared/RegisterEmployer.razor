@@ -1,5 +1,7 @@
 ﻿@page "/Employers"
 @using PESOapps.Shared.Address
+@using System.Net.Http.Headers
+@using System.Text.Json
 @using webapi_peso.Model
 @using webapi_peso.ViewModels
 @inject HttpClient Http
@@ -352,7 +354,8 @@
             employer.EmployerDetails.NumberOfHiredApplicants ??= 0;
             employer.EmployerDetails.Status = 0;
 
-            var response = await Http.PostAsJsonAsync("/api/Employer/RegisterEmployer", employer);
+            // 🔹 Register Employer
+            var response = await Http.PostAsJsonAsync("api/Employer/RegisterEmployer", employer);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -361,53 +364,75 @@
                 return;
             }
 
+            // 🔹 Read response
             var result = await response.Content.ReadFromJsonAsync<PostResultViewModel>();
-            if (result?.StatusCode == 1 && result.Data is not null)
+
+            // ✅ Extract EmployerId safely (works even if Data is a JsonElement)
+            string employerId = null;
+            if (result?.Data is JsonElement jsonElement && jsonElement.TryGetProperty("employerId", out var employerIdProp))
             {
-                // ✅ Get EmployerId
-                var employerId = result.Data?.GetType()?.GetProperty("EmployerId")?.GetValue(result.Data, null)?.ToString();
+                employerId = employerIdProp.GetString();
+            }
 
-                if (!string.IsNullOrEmpty(employerId) && SelectedFiles.Count > 0)
+            // Debug info
+            Console.WriteLine($"✅ RegisterEmployer response received");
+            Console.WriteLine($"EmployerId: {employerId}");
+            Console.WriteLine($"SelectedFiles.Count: {SelectedFiles?.Count}");
+
+            // 🔹 Upload Files if EmployerId is valid
+            if (!string.IsNullOrEmpty(employerId) && SelectedFiles.Count > 0)
+            {
+                Console.WriteLine($"📤 Uploading {SelectedFiles.Count} files for EmployerId={employerId}");
+
+                using var content = new MultipartFormDataContent();
+
+                foreach (var file in SelectedFiles)
                 {
-                    // ✅ Upload all files
-                    var content = new MultipartFormDataContent();
+                    // Create file stream (no using — must stay open until upload completes)
+                    var stream = file.OpenReadStream(10 * 1024 * 1024);
+                    var fileContent = new StreamContent(stream);
+                    fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType ?? "application/octet-stream");
 
-                    foreach (var file in SelectedFiles)
-                    {
-                        var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-                        var fileContent = new StreamContent(stream);
-                        fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(file.ContentType);
-                        content.Add(fileContent, "files", file.Name);
-                    }
-
-                    content.Add(new StringContent(employerId), "employerId");
-
-                    var uploadResponse = await Http.PostAsync("api/Employer/UploadEmployerFile", content);
-
-                    if (!uploadResponse.IsSuccessStatusCode)
-                    {
-                        var uploadError = await uploadResponse.Content.ReadAsStringAsync();
-                        await JS.InvokeVoidAsync("alert", $"⚠️ Some files failed to upload:\n{uploadError}");
-                    }
+                    // Key must match your backend parameter name
+                    content.Add(fileContent, "files", file.Name);
                 }
 
-                await JS.InvokeVoidAsync("alert", "✅ Employer and files uploaded successfully!");
+                // Add EmployerId as string form data
+                content.Add(new StringContent(employerId), "employerId");
 
-                employer = new()
+                var uploadResponse = await Http.PostAsync("api/Employer/UploadEmployerFile", content);
+
+                if (!uploadResponse.IsSuccessStatusCode)
                 {
-                    EmployerDetails = new EmployerDetails(),
-                    ListOfAttachments = new List<AttachementsViewModel>()
-                };
-                UploadedFiles.Clear();
-                SelectedFiles.Clear();
+                    var uploadError = await uploadResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"⚠️ Upload failed: {uploadError}");
+                    await JS.InvokeVoidAsync("alert", $"⚠️ Some files failed to upload:\n{uploadError}");
+                }
+                else
+                {
+                    Console.WriteLine("✅ Files uploaded successfully!");
+                }
             }
             else
             {
-                await JS.InvokeVoidAsync("alert", "❌ Failed to register employer. Please try again.");
+                Console.WriteLine("⚠️ Skipped upload: either EmployerId is null or no files selected.");
             }
+
+            await JS.InvokeVoidAsync("alert", "✅ Employer and files uploaded successfully!");
+
+            // 🔹 Reset form and clear state
+            employer = new()
+            {
+                EmployerDetails = new EmployerDetails(),
+                ListOfAttachments = new List<AttachementsViewModel>()
+            };
+            UploadedFiles.Clear();
+            SelectedFiles.Clear();
+
         }
         catch (Exception ex)
         {
+            Console.WriteLine($"❌ Exception: {ex}");
             await JS.InvokeVoidAsync("alert", $"Error: {ex.Message}");
         }
     }
@@ -421,21 +446,16 @@
             FileName = f.Name,
             FileSize = $"{f.Size / 1024.0:F1} KB"
         }).ToList();
+
+        Console.WriteLine($"📁 {SelectedFiles.Count} file(s) selected.");
     }
+
 
     private void ValidateCellphoneInput(ChangeEventArgs e)
     {
         var value = new string(e.Value?.ToString()?.Where(char.IsDigit).ToArray() ?? []);
         if (value.Length > 10) value = value.Substring(0, 10);
         employer.EmployerDetails.ContactMobileNo = value;
-    }
-
-    private async Task UploadSelectedFiles()
-    {
-        if (SelectedFiles.Count == 0)
-            return;
-
-        await JS.InvokeVoidAsync("alert", $"You selected {SelectedFiles.Count} file(s). This will upload on form submit.");
     }
 
     private bool consent1, consent2, consent3, consent4;

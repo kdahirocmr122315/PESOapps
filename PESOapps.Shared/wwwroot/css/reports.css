@@ -1,0 +1,147 @@
+﻿/********************************************* START REPORTS *********************************************/
+.dashboard-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin: 1rem 0;
+    color: var(--maincolor);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.5rem;
+}
+
+.report-card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.report-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.report-card h3 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #444;
+}
+
+.report-card p {
+    font-size: 0.9rem;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+button {
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: #fff;
+}
+
+/* Button Colors */
+.btn-orange {
+    background: #ff9800;
+}
+
+.btn-green {
+    background: #07522D;
+}
+
+.btn-blue {
+    background: #2196f3;
+}
+
+.btn-red {
+    background: #f44336;
+}
+
+.btn-teal {
+    background: #009688;
+}
+
+.btn-orange:hover {
+    background: #e68900;
+}
+
+.btn-green:hover {
+    background: #3d8b40;
+}
+
+.btn-blue:hover {
+    background: #1976d2;
+}
+
+.btn-red:hover {
+    background: #d32f2f;
+}
+
+.btn-teal:hover {
+    background: #00796b;
+}
+
+/********************************************* END REPORTS *********************************************/
+
+
+.filter-section {
+    margin: 1rem 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.filter-section label {
+    font-weight: 600;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.report-table th,
+.report-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+.report-table th {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+.error {
+    color: red;
+    font-weight: bold;
+}
+
+.btn {
+    border: none;
+    padding: 0.6rem 1rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    color: #fff;
+}
+
+.btn-blue {
+    background: #2196f3;
+}
+
+.btn-blue:hover {
+    background: #1976d2;
+}

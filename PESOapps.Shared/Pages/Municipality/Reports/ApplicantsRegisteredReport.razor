@@ -1,0 +1,105 @@
+﻿@page "/ApplicantsRegistered/municipality"
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Applicants Registered Report</PageTitle>
+
+<h2>Applicants Registered Report</h2>
+
+<div class="filter-section">
+    <label>Month:</label>
+    <select @bind="selectedMonth">
+        @for (int m = 1; m <= 12; m++)
+        {
+            <option value="@m">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+        }
+    </select>
+
+    <label>Year:</label>
+    <select @bind="selectedYear">
+        @for (int y = DateTime.Now.Year; y >= 2000; y--)
+        {
+            <option value="@y">@y</option>
+        }
+    </select>
+
+    <button class="btn btn-blue" @onclick="LoadReport">Search</button>
+</div>
+
+@if (isLoading)
+{
+    <p><em>Loading report...</em></p>
+}
+else if (!string.IsNullOrEmpty(errorMessage))
+{
+    <p class="error">@errorMessage</p>
+}
+else if (reportData != null && reportData.Any())
+{
+    <table class="report-table">
+        <thead>
+            <tr>
+                <th>Applicant ID</th>
+                <th>Name</th>
+                <th>Municipality/City</th>
+                <th>Province</th>
+                <th>Date Registered</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in reportData)
+            {
+                <tr>
+                    <td>@item.Id</td>
+                    <td>@item.Name</td>
+                    <td>@item.City</td>
+                    <td>@item.Province</td>
+                    <td>@item.DateRegistered.ToString("MMM dd, yyyy")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p>No records found for this month and year.</p>
+}
+
+@code {
+    private int selectedMonth = DateTime.Now.Month;
+    private int selectedYear = DateTime.Now.Year;
+    private bool isLoading = false;
+    private string? errorMessage;
+    private List<ApplicantReport> reportData = new();
+
+    private async Task LoadReport()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            var response = await Http.GetFromJsonAsync<List<ApplicantReport>>(
+                $"api/Manager/GetRegisteredReferredReports/{selectedMonth}/{selectedYear}");
+
+            reportData = response ?? new List<ApplicantReport>();
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load report: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public class ApplicantReport
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string City { get; set; } = "";
+        public string Province { get; set; } = "";
+        public DateTime DateRegistered { get; set; }
+    }
+}

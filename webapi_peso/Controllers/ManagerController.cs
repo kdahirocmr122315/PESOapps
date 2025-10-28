@@ -316,20 +316,6 @@ namespace webapi_peso.Controllers
             }
         }
 
-        [HttpGet("GetPreRegListChart")]
-        public IActionResult GetPreRegListChart()
-        {
-            using (var db = dbFactory.CreateDbContext())
-            {
-                var rs = new List<ApplicantInformation>();
-                var list = db.ApplicantInformation.ToList();
-
-
-                return Ok(list);
-            }
-        }
-
-
         [HttpGet("GetReferralStatus")]
         public IActionResult GetReferralStatus()
         {

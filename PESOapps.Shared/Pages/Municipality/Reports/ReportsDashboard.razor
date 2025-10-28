@@ -1,0 +1,157 @@
+﻿@page "/Report/municipality"
+@inject NavigationManager Navigation
+
+<PageTitle>Reports</PageTitle>
+<div class="nsrp-container">
+    <h3 class="dashboard-title">Reports Dashboard</h3>
+    <div class="dashboard-grid">
+
+        <!-- Applicants Registered -->
+        <div class="report-card">
+            <h3>Applicants Registered</h3>
+            <p>Monthly report for registered applicants.</p>
+            <button class="nsrp-toggle btn-orange" @onclick="@(() => NavigateToReport("/Reports/ApplicantsRegistered"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Vacancies Solicited -->
+        <div class="report-card">
+            <h3>Vacancies Solicited</h3>
+            <p>Monthly report for job vacancies.</p>
+            <button class="nsrp-toggle btn-green" @onclick="@(() => NavigateToReport("/Reports/VacanciesSolicited"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Applicants Referred -->
+        <div class="report-card">
+            <h3>Applicants Referred</h3>
+            <p>Monthly report for referred applicants.</p>
+            <button class="nsrp-toggle btn-blue" @onclick="@(() => NavigateToReport("/Reports/ApplicantsReferred"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Applicants Placed -->
+        <div class="report-card">
+            <h3>Applicants Placed</h3>
+            <p>Monthly report for placed/hired applicants.</p>
+            <button class="nsrp-toggle btn-red" @onclick="@(() => NavigateToReport("/Reports/ApplicantsPlaced"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- LMI Analysis -->
+        <div class="report-card">
+            <h3>LMI Analysis</h3>
+            <p>Labor Market Updates.</p>
+            <button class="nsrp-toggle btn-teal" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+    </div>
+
+    <h3 class="dashboard-title"></h3>
+    <div class="dashboard-grid">
+        <!-- CONSOLIDATED -->
+        <div class="report-card">
+            <h3>CONSOLIDATED LMI MONTHLY REPORT BY MUNICIPALITY/CITY</h3>
+            <button class="nsrp-toggle btn-orange" @onclick="@(() => NavigateToReport("/Reports/ApplicantsRegistered"))">
+                Generate Report
+            </button>
+        </div>
+    </div>
+
+    <h3 class="dashboard-title">Consolidated Monthly Reports</h3>
+    <div class="dashboard-grid">
+        <!-- Monthly Reports -->
+        <div class="report-card">
+            <h3>JOB VACANCIES SOLICITED</h3>
+            <p>MONTHLY REPORT BY MUNICIPALITY/CITY</p>
+            <button class="nsrp-toggle btn-green" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Monthly Reports -->
+        <div class="report-card">
+            <h3>JOB APPLICANTS REGISTERED</h3>
+            <p>MONTHLY REPORT BY MUNICIPALITY/CITY</p>
+            <button class="nsrp-toggle btn-green" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Monthly Reports -->
+        <div class="report-card">
+            <h3>JOB APPLICANTS REFERRED</h3>
+            <p>MONTHLY REPORT BY MUNICIPALITY/CITY</p>
+            <button class="nsrp-toggle btn-green" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Monthly Reports -->
+        <div class="report-card">
+            <h3>JOB APPLICANTS PLACED</h3>
+            <p>MONTHLY REPORT BY MUNICIPALITY/CITY</p>
+            <button class="nsrp-toggle btn-green" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+    </div>
+
+    <h3 class="dashboard-title">Consolidated Yearly Reports</h3>
+    <div class="dashboard-grid">
+        <!-- Yearly Reports -->
+        <div class="report-card">
+            <h3>YEARLY REPORT PER MUNICIPALITY/CITY (January - December)</h3>
+            <button class="nsrp-toggle btn-teal" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Yearly Reports -->
+        <div class="report-card">
+            <h3>JOB VACANCIES SOLICITED</h3>
+            <p>YEARLY REPORT BY MUNICIPALITY/CITY</p>
+            <button class="nsrp-toggle btn-teal" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Yearly Reports -->
+        <div class="report-card">
+            <h3>JOB APPLICANTS REGISTERED</h3>
+            <p>YEARLY REPORT BY MUNICIPALITY/CITY</p>
+            <button class="nsrp-toggle btn-teal" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Yearly Reports -->
+        <div class="report-card">
+            <h3>JOB APPLICANTS REFERRED</h3>
+            <p>YEARLY REPORT BY MUNICIPALITY/CITY</p>
+            <button class="nsrp-toggle btn-teal" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+
+        <!-- Yearly Reports -->
+        <div class="report-card">
+            <h3>JOB APPLICANTS PLACED</h3>
+            <p>YEARLY REPORT BY MUNICIPALITY/CITY</p>
+            <button class="nsrp-toggle btn-teal" @onclick="@(() => NavigateToReport("/Reports/LMIAnalysis"))">
+                Generate Report
+            </button>
+        </div>
+    </div>
+</div>
+@code {
+    private void NavigateToReport(string url)
+    {
+        Navigation.NavigateTo(url);
+    }
+}

@@ -316,6 +316,19 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetPreRegListChart")]
+        public IActionResult GetPreRegListChart()
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = new List<ApplicantInformation>();
+                var list = db.ApplicantInformation.ToList();
+
+
+                return Ok(list);
+            }
+        }
+
 
         [HttpGet("GetReferralStatus")]
         public IActionResult GetReferralStatus()
@@ -828,6 +841,328 @@ namespace webapi_peso.Controllers
             if (jobFair == null)
                 return NotFound("JobFairEnable record not found.");
             return Ok(new { jobFair.JobFairStatus });
+        }
+
+        [HttpGet("GetRegisteredReferredReports/{month}/{year}")]
+        public IActionResult GetRegisteredReferredReports(int month, int year)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = new List<JobRegisteredReferredViewModel>();
+                var list = db.JobApplicantsReferred.Where(x => x.DateReferred.Month == month && x.DateReferred.Year == year).ToList();
+                foreach (var i in list)
+                {
+                    var appInfo = db.ApplicantInformation.Where(x => x.Id == i.ApplicantAccountId).FirstOrDefault();
+                    var empInfo = db.EmployerDetails.Where(x => x.Id == i.EmployerId).FirstOrDefault();
+                    var educ = db.ApplicantEducationalBackground.Where(x => x.AccountId == i.ApplicantAccountId).ToList();
+                    string educationalAttainment = "N/A";
+                    if (educ != null)
+                    {
+                        if (educ.Any(x => x.LevelName == "Graduate Studies" && (!string.IsNullOrEmpty(x.Course) || !string.IsNullOrEmpty(x.School))))
+                        {
+                            educationalAttainment = "Master's Degree";
+                        }
+                        else if (educ.Any(x => x.LevelName == "Tertiary" && (!string.IsNullOrEmpty(x.Course) || !string.IsNullOrEmpty(x.School))))
+                        {
+                            educationalAttainment = "College Level";
+                        }
+                        else if (educ.Any(x => x.LevelName == "Secondary" && (!string.IsNullOrEmpty(x.Course) || !string.IsNullOrEmpty(x.School))))
+                        {
+                            educationalAttainment = "Highschool Level";
+                        }
+                        else if (educ.Any(x => x.LevelName == "Elementary" && (!string.IsNullOrEmpty(x.Course) || !string.IsNullOrEmpty(x.School))))
+                        {
+                            educationalAttainment = "Elementary Level";
+                        }
+                    }
+                    if (appInfo != null)
+                    {
+                        rs.Add(new JobRegisteredReferredViewModel()
+                        {
+                            ApplicantName = $"{appInfo.FirstName} {appInfo.SurName}",
+                            Skills = i.JobTitle,
+                            Gender = appInfo.Gender,
+                            Age = Helper.GetAge(appInfo.DateOfBirth).ToString(),
+                            CivilStatus = appInfo.CivilStatus,
+                            Education = educationalAttainment,
+                            EmploymentStatus = appInfo.EmpStatus,
+                            ReferredAs = i.JobTitle,
+                            ReferredTo = empInfo != null ? empInfo.EstablishmentName : ""
+                        });
+                    }
+                }
+
+                return Ok(rs);
+            }
+        }
+
+        [HttpGet("GetJobVacancySolicitedReport/{cityCode}/{month}/{year}/{isEmployerIncluded}")]
+        public IActionResult GetJobVacancySolicitedReport(string cityCode, int month, int year, bool isEmployerIncluded)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var result = new List<ReportVacancyViewModel>();
+                if (isEmployerIncluded)
+                {
+                    var emps = db.EmployerDetails.Where(x => x.CityMunicipality == cityCode).ToList();
+                    if (emps != null && emps.Count > 0)
+                    {
+                        int count = 0;
+                        foreach (var emp in emps)
+                        {
+                            foreach (var jobposts in db.EmployerJobPost.Where(x => x.EmployerDetailsId == emp.Id && x.DatePosted.Month == month && x.DatePosted.Year == year))
+                            {
+                                count += 1;
+                                result.Add(new ReportVacancyViewModel()
+                                {
+                                    Count = count,
+                                    Company = emp.EstablishmentName,
+                                    ListOfJobs = new List<JobVacancySolicited>()
+                                    {
+                                       new JobVacancySolicited()
+                                       {
+                                           AgeFrom = jobposts.AgeFrom,
+                                           AgeTo = jobposts.AgeTo,
+                                           CityMunCode = emp.CityMunicipality,
+                                           JobTitle = jobposts.Description,
+                                           Company = emp.EstablishmentName,
+                                           NumberOfVacancy = jobposts.NumberOfVacancy,
+                                           Month = jobposts.DatePosted.Month,
+                                           Year = jobposts.DatePosted.Year,
+                                           MajorOccCode = "",
+                                           Gender = jobposts.Gender,
+                                           CivilStatus = jobposts.CivilStatus,
+                                           EducationalAttainment = jobposts.EducationalAttainment,
+                                           WorkExperience = jobposts.WorkExperience,
+                                           Salary = jobposts.Salary.HasValue ? jobposts.Salary.Value : 0,
+                                           ReasonExpansion = jobposts.ReasonExpansion,
+                                           ReasonReplaceMent = jobposts.ReasonReplaceMent,
+                                           ReasonOthers = jobposts.ReasonOthers,
+                                           IndustryCode = ""
+                                       }
+                                    }
+                                });
+                            }
+                        }
+                    }
+                }
+                var companies = db.JobVacancySolicited.Where(x => x.CityMunCode == cityCode && x.Month == month && x.Year == year).MyDistinctBy(x => x.Company);
+                if (companies.Any())
+                {
+                    int count = 0;
+                    foreach (var c in companies)
+                    {
+                        count += 1;
+                        result.Add(new ReportVacancyViewModel()
+                        {
+                            Count = count,
+                            Company = c.Company,
+                            ListOfJobs = db.JobVacancySolicited.Where(x => x.Company == c.Company).ToList()
+                        });
+                    }
+                }
+                return Ok(result);
+            }
+        }
+
+        [HttpGet("GetReferralReport/{year}/{isExport}")]
+        public async Task<IActionResult> GetReferralReport(int year, bool isExport)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = new List<ConsolidatedReportViewModel>();
+                var list = db.JobApplicantsReferred.Where(x => x.DateReferred.Year == year).MyDistinctBy(x => x.EmployerId).ToList();
+                int noRow = 0;
+                foreach (var i in list)
+                {
+                    var empDetails = db.EmployerDetails.Where(x => x.Id == i.EmployerId).FirstOrDefault();
+                    if (empDetails != null)
+                    {
+                        var city = FindCity(empDetails.CityMunicipality);
+                        rs.Add(new ConsolidatedReportViewModel()
+                        {
+                            RowNumber = noRow,
+                            ReportName = "Referred Applicants",
+                            MunicipalityName = city.citymunDesc,
+                            NumberOfApplicants = db.JobApplicantsReferred.Where(x => x.EmployerId == empDetails.Id).Count()
+                        });
+                    }
+                }
+                var resultList = rs.MyDistinctBy(x => x.MunicipalityName);
+                foreach (var i in resultList)
+                {
+                    noRow += 1;
+                    i.RowNumber = noRow;
+                }
+                rs.AddRange(AddPESOProvinceData(db, noRow, year));
+
+                if (isExport)
+                {
+                    var csv = new StringBuilder();
+                    csv.AppendLine($"Generated Date:,{DateTime.Now.ToString("MM-dd-yyyy")},{DateTime.Now.ToString("hh:mmtt").ToUpper()}");
+                    csv.AppendLine("NO.,MUNICIPALITY,APPLICANTS REFERRED");
+                    if (rs.Count > 0)
+                    {
+                        foreach (var i in resultList.OrderBy(x => x.RowNumber))
+                        {
+                            var newLine = $"{i.RowNumber}, {i.MunicipalityName}, {i.NumberOfApplicants}";
+                            csv.AppendLine(newLine);
+                        }
+                    }
+                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    try
+                    {
+                        foreach (var item in Directory.GetFiles(dir))
+                        {
+                            if (System.IO.File.Exists(item))
+                                System.IO.File.Delete(item);
+                        }
+                    }
+                    catch (Exception) { }
+                    var fileName = System.IO.Path.Combine(dir, $"export_referred_applicants_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
+                    using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
+                    {
+                        await sw.WriteAsync(csv.ToString());
+                    }
+                    var url = $"{ProjectConfig.API_HOST}/files/csv/{System.IO.Path.GetFileName(fileName)}";
+                    using (Stream stream = System.IO.File.OpenRead(fileName))
+                    {
+                        var data = new System.IO.MemoryStream();
+                        stream.CopyTo(data);
+                        data.Seek(0, SeekOrigin.Begin);
+                        var buf = new byte[data.Length];
+                        data.Read(buf, 0, buf.Length);
+
+                        var f = File(fileContents: buf,
+                            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            fileDownloadName: System.IO.Path.GetFileName(fileName));
+                        return Ok(url);
+                    }
+
+                }
+
+                return Ok(resultList);
+            }
+        }
+
+        [HttpGet("GetHiredApplicantsList/{month}/{year}/{cityCode}/{isExport}")]
+        public async Task<IActionResult> GetHiredApplicantsList(int month, int year, string cityCode, bool isExport)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var list = db.EmployerHiredApplicants.Where(x => x.DateHired.Month == month && x.DateHired.Year == year);
+                var rs = new List<JobApplicantsPlaced>();
+                foreach (var hired in list)
+                {
+                    var emp = db.EmployerDetails.Where(x => x.Id == hired.EmployerId && x.CityMunicipality == cityCode).FirstOrDefault();
+                    var applicant = db.ApplicantInformation.Where(x => x.AccountId == hired.ApplicantAccountId).FirstOrDefault();
+                    if (emp != null && applicant != null)
+                    {
+                        rs.Add(new JobApplicantsPlaced()
+                        {
+                            Company = emp.EstablishmentName,
+                            ApplicantName = $"{applicant.FirstName} {applicant.SurName}",
+                            CityMunCode = cityCode,
+                            DateHired = hired.DateHired,
+                            JobTitle = hired.HiredPosition
+                        });
+                    }
+                }
+                if (isExport)
+                {
+                    var csv = new StringBuilder();
+                    csv.AppendLine($"Generated Date:,{DateTime.Now.ToString("MM-dd-yyyy")},{DateTime.Now.ToString("hh:mmtt").ToUpper()}");
+                    csv.AppendLine("No,NAME OF APPLICANT, AS (Position), TO (Employer)");
+                    if (rs.Count > 0)
+                    {
+                        int count = 0;
+                        foreach (var i in rs.OrderBy(x => x.DateCreated))
+                        {
+                            count += 1;
+                            var newLine = $"{count}, {i.ApplicantName}, {i.JobTitle}, {i.Company}";
+                            csv.AppendLine(newLine);
+                        }
+                    }
+                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+                    try
+                    {
+                        foreach (var item in Directory.GetFiles(dir))
+                        {
+                            if (System.IO.File.Exists(item))
+                                System.IO.File.Delete(item);
+                        }
+                    }
+                    catch (Exception) { }
+                    var fileName = System.IO.Path.Combine(dir, $"export_placed_applicants_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
+                    using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
+                    {
+                        await sw.WriteAsync(csv.ToString());
+                    }
+                    var url = $"{ProjectConfig.API_HOST}/files/csv/{System.IO.Path.GetFileName(fileName)}";
+                    using (Stream stream = System.IO.File.OpenRead(fileName))
+                    {
+                        var data = new System.IO.MemoryStream();
+                        stream.CopyTo(data);
+                        data.Seek(0, SeekOrigin.Begin);
+                        var buf = new byte[data.Length];
+                        data.Read(buf, 0, buf.Length);
+
+                        var f = File(fileContents: buf,
+                            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            fileDownloadName: System.IO.Path.GetFileName(fileName));
+                        return Ok(url);
+                    }
+
+                }
+                return Ok(rs);
+            }
+        }
+
+        List<ConsolidatedReportViewModel> AddPESOProvinceData(ApplicationDbContext db, int noRow, int year, int month = 0)
+        {
+            var rs = new List<ConsolidatedReportViewModel>();
+            var pesoReport = new PESOManualReport();
+            if (month > 0)
+            {
+                pesoReport = db.PESOManualReport.Where(x => x.Year == year && x.Month == month).FirstOrDefault();
+            }
+            else
+            {
+                pesoReport = db.PESOManualReport.Where(x => x.Year == year).FirstOrDefault();
+            }
+
+            if (pesoReport == null)
+            {
+                pesoReport = new PESOManualReport();
+                pesoReport.Month = month;
+                pesoReport.Year = year;
+                pesoReport.MunicipalityCode = "PESO";
+                db.PESOManualReport.Add(pesoReport);
+                db.SaveChanges();
+            }
+
+            if (!string.IsNullOrEmpty(pesoReport.MunicipalityCode))
+            {
+                rs.Add(new ConsolidatedReportViewModel()
+                {
+                    Month = pesoReport.Month,
+                    MonthName = Helper.ToMonthName(pesoReport.Month),
+                    MunicipalityName = FindCity(pesoReport.MunicipalityCode).citymunDesc,
+                    RowNumber = noRow + 1,
+                    Solicited = pesoReport.Solicited,
+                    SolicitedFemale = pesoReport.SolicitedFemale,
+                    Registered = pesoReport.Registered,
+                    RegisteredFemale = pesoReport.RegisteredFemale,
+                    Referred = pesoReport.Referred,
+                    ReferredFemale = pesoReport.ReferredFemale,
+                    Placed = pesoReport.Placed,
+                    PlacedFemale = pesoReport.PlacedFemale
+                });
+            }
+
+            return rs;
         }
 
         //GetAddress -----------------------------------------

@@ -374,6 +374,42 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetReferredApplicantChart/{startMonth}/{endMonth}/{year}")]
+        public IActionResult GetReferredApplicantChart(int startMonth, int endMonth, int year)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var rs = new List<ReferralViewModel>();
+                var list = db.JobApplicantsReferred.Where(x => x.DateReferred.Month >= startMonth && x.DateReferred.Month <= endMonth && x.DateReferred.Year == year).ToList();
+
+                return Ok(list);
+            }
+
+
+        }
+
+        [HttpGet("GetHiredApplicantsListChart/{startMonth}/{endMonth}/{year}")]
+        public IActionResult GetHiredApplicantsListChart(int startMonth, int endMonth, int year)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var list = db.JobApplicantsPlaced.Where(x => x.DateHired.Month >= startMonth && x.DateHired.Month <= endMonth && x.DateHired.Year == year).ToList();
+
+                return Ok(list);
+            }
+        }
+
+        [HttpGet("GetSolicitedReportChart/{startMonth}/{endMonth}/{year}")]
+        public IActionResult GetSolicitedReportChart(int startMonth, int endMonth, int year)
+        {
+            using (var db = dbFactory.CreateDbContext())
+            {
+                var solicited = db.JobVacancySolicited.Where(x => x.DateCreated.Month >= startMonth && x.DateCreated.Month <= endMonth && x.DateCreated.Year == year).ToList();
+
+                return Ok(solicited);
+            }
+        }
+
         [HttpGet("GetReportByGender/{month}/{year}/{isExport}")]
         public async Task<IActionResult> GetReportByGender(int month, int year, bool isExport)
         {

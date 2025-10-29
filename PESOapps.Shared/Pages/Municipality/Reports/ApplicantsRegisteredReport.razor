@@ -1,76 +1,181 @@
 ﻿@page "/ApplicantsRegistered/municipality"
+@using webapi_peso.ViewModels
 @inject HttpClient Http
 @inject IJSRuntime JS
 
 <PageTitle>Applicants Registered Report</PageTitle>
 
-<h2>Applicants Registered Report</h2>
+<div class="nsrp-container">
+    <h3>Applicants Registered Report</h3>
 
-<div class="filter-section">
-    <label>Month:</label>
-    <select @bind="selectedMonth">
-        @for (int m = 1; m <= 12; m++)
-        {
-            <option value="@m">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
-        }
-    </select>
+    <div class="jf-card jf-list-card reports">
 
-    <label>Year:</label>
-    <select @bind="selectedYear">
-        @for (int y = DateTime.Now.Year; y >= 2000; y--)
-        {
-            <option value="@y">@y</option>
-        }
-    </select>
+        <!-- Filters & Actions -->
+        <div class="filters-actions">
+            <div class="filters">
+                <label>Month:</label>
+                <select @bind="selectedMonth">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+                    }
+                </select>
+            </div>
 
-    <button class="btn btn-blue" @onclick="LoadReport">Search</button>
+            <div class="filters">
+                <label>Year:</label>
+                <select @bind="selectedYear">
+                    @for (int y = DateTime.Now.Year; y >= 2000; y--)
+                    {
+                        <option value="@y">@y</option>
+                    }
+                </select>
+            </div>
+        </div>
+
+        <!-- Prepared / Noted Inputs -->
+        <div class="prepared-noted-inputs">
+            <div class="prepared">
+                <label>Prepared By:</label>
+                <div class="inline-inputs">
+                    <input type="text" @bind="preparedBy" placeholder="Name" />
+                    <input type="text" @bind="preparedByPosition" placeholder="Position" />
+                </div>
+            </div>
+            <div class="noted">
+                <label>Noted By:</label>
+                <div class="inline-inputs">
+                    <input type="text" @bind="notedBy" placeholder="Name" />
+                    <input type="text" @bind="notedByPosition" placeholder="Position" />
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="nsrp-toggle" @onclick="LoadReport">Search</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <p><em>Loading report...</em></p>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="error">@errorMessage</p>
+    }
+    else if (reportData != null && reportData.Any())
+    {
+        <!-- ✅ PRINT SECTION -->
+        <div id="print-section">
+            <h5>APPLICANTS REGISTERED/REFERRED</h5>
+            <h6>@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(selectedMonth) @selectedYear</h6>
+            <div class="table-scroll">
+                <table class="report-table jf-table">
+                    <thead>
+                        <tr>
+                            <th>NAME OF APPLICANT</th>
+                            <th>OCCUPATIONAL/SKILL</th>
+                            <th>SEX</th>
+                            <th>AGE</th>
+                            <th>CIVIL STATUS</th>
+                            <th>EDUCATIONAL QUALIFICATION</th>
+                            <th>EMPLOYMENT STATUS</th>
+                            <th>REFERRED AS POSITION</th>
+                            <th>REFERRED TO COMPANY</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!isPrinting)
+                        {
+                            @foreach (var item in PagedData)
+                            {
+                                <tr>
+                                    <td>@item.ApplicantName</td>
+                                    <td>@item.Skills</td>
+                                    <td>@item.Gender</td>
+                                    <td>@item.Age</td>
+                                    <td>@item.CivilStatus</td>
+                                    <td>@item.Education</td>
+                                    <td>@item.EmploymentStatus</td>
+                                    <td>@item.ReferredAs</td>
+                                    <td>@item.ReferredTo</td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            @foreach (var item in reportData)
+                            {
+                                <tr>
+                                    <td>@item.ApplicantName</td>
+                                    <td>@item.Skills</td>
+                                    <td>@item.Gender</td>
+                                    <td>@item.Age</td>
+                                    <td>@item.CivilStatus</td>
+                                    <td>@item.Education</td>
+                                    <td>@item.EmploymentStatus</td>
+                                    <td>@item.ReferredAs</td>
+                                    <td>@item.ReferredTo</td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <!-- Pagination controls (screen only) -->
+            <div class="pagination-controls no-print">
+                <button class="nsrp-toggle" @onclick="PrevPage" disabled="@(!CanPrev)">Previous</button>
+                <span>Page @currentPage of @totalPages</span>
+                <button class="nsrp-toggle" @onclick="NextPage" disabled="@(!CanNext)">Next</button>
+            </div>
+
+            <!-- Prepared/Noted Section -->
+            <div class="prepared-noted-print">
+                <div>
+                    <span>Prepared by:</span><br />
+                    <strong>@preparedBy</strong><br />
+                    <span>@preparedByPosition</span>
+                </div>
+                <div>
+                    <span>Noted by:</span><br />
+                    <strong>@notedBy</strong><br />
+                    <span>@notedByPosition</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="nsrp-toggle no-print" @onclick="PrintReport">Print</button>
+    }
+    else
+    {
+        <p>No records found for this month and year.</p>
+    }
 </div>
-
-@if (isLoading)
-{
-    <p><em>Loading report...</em></p>
-}
-else if (!string.IsNullOrEmpty(errorMessage))
-{
-    <p class="error">@errorMessage</p>
-}
-else if (reportData != null && reportData.Any())
-{
-    <table class="report-table">
-        <thead>
-            <tr>
-                <th>Applicant ID</th>
-                <th>Name</th>
-                <th>Municipality/City</th>
-                <th>Province</th>
-                <th>Date Registered</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach (var item in reportData)
-            {
-                <tr>
-                    <td>@item.Id</td>
-                    <td>@item.Name</td>
-                    <td>@item.City</td>
-                    <td>@item.Province</td>
-                    <td>@item.DateRegistered.ToString("MMM dd, yyyy")</td>
-                </tr>
-            }
-        </tbody>
-    </table>
-}
-else
-{
-    <p>No records found for this month and year.</p>
-}
 
 @code {
     private int selectedMonth = DateTime.Now.Month;
     private int selectedYear = DateTime.Now.Year;
     private bool isLoading = false;
     private string? errorMessage;
-    private List<ApplicantReport> reportData = new();
+    private List<JobRegisteredReferredViewModel> reportData = new();
+
+    private string preparedBy = "";
+    private string preparedByPosition = "";
+    private string notedBy = "";
+    private string notedByPosition = "";
+
+    // ✅ Pagination
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages => (int)Math.Ceiling((double)reportData.Count / pageSize);
+    private IEnumerable<JobRegisteredReferredViewModel> PagedData =>
+        reportData.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    private bool CanPrev => currentPage > 1;
+    private bool CanNext => currentPage < totalPages;
+
+    private bool isPrinting = false;
 
     private async Task LoadReport()
     {
@@ -79,10 +184,11 @@ else
             isLoading = true;
             errorMessage = null;
 
-            var response = await Http.GetFromJsonAsync<List<ApplicantReport>>(
+            var response = await Http.GetFromJsonAsync<List<JobRegisteredReferredViewModel>>(
                 $"api/Manager/GetRegisteredReferredReports/{selectedMonth}/{selectedYear}");
 
-            reportData = response ?? new List<ApplicantReport>();
+            reportData = response ?? new List<JobRegisteredReferredViewModel>();
+            currentPage = 1; // reset to first page
         }
         catch (Exception ex)
         {
@@ -94,12 +200,27 @@ else
         }
     }
 
-    public class ApplicantReport
+    private void PrevPage()
     {
-        public string Id { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string City { get; set; } = "";
-        public string Province { get; set; } = "";
-        public DateTime DateRegistered { get; set; }
+        if (CanPrev) currentPage--;
+    }
+
+    private void NextPage()
+    {
+        if (CanNext) currentPage++;
+    }
+
+    private async Task PrintReport()
+    {
+        isPrinting = true;   // show all rows
+        StateHasChanged();   // trigger UI re-render
+
+        // ✅ give Blazor time to update DOM before printing
+        await Task.Delay(300);
+
+        await JS.InvokeVoidAsync("window.print");
+
+        isPrinting = false;  // restore pagination
+        StateHasChanged();
     }
 }

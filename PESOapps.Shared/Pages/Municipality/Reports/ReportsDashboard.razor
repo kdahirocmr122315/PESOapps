@@ -19,7 +19,7 @@
         <div class="report-card">
             <h3>Vacancies Solicited</h3>
             <p>Monthly report for job vacancies.</p>
-            <button class="nsrp-toggle btn-green" @onclick="@(() => NavigateToReport("/Reports/VacanciesSolicited"))">
+            <button class="nsrp-toggle btn-green" @onclick="@(() => NavigateToReport("VacanciesSolicited/municipality"))">
                 Generate Report
             </button>
         </div>
@@ -28,7 +28,7 @@
         <div class="report-card">
             <h3>Applicants Referred</h3>
             <p>Monthly report for referred applicants.</p>
-            <button class="nsrp-toggle btn-blue" @onclick="@(() => NavigateToReport("/Reports/ApplicantsReferred"))">
+            <button class="nsrp-toggle btn-blue" @onclick="@(() => NavigateToReport("ApplicantsReferred/municipality"))">
                 Generate Report
             </button>
         </div>

@@ -1,0 +1,147 @@
+﻿@page "/ApplicantsReferred/municipality"
+@using webapi_peso.ViewModels
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<PageTitle>Applicants Referred Report</PageTitle>
+
+<div class="nsrp-container">
+    <h3>Applicants Referred Report</h3>
+
+    <div class="jf-card jf-list-card reports">
+
+        <!-- Filters & Actions -->
+        <div class="filters-actions">
+            <div class="filters">
+                <label>Year:</label>
+                <select @bind="selectedYear">
+                    @for (int y = DateTime.Now.Year; y >= 2000; y--)
+                    {
+                        <option value="@y">@y</option>
+                    }
+                </select>
+            </div>
+
+            <div class="actions">
+                <button class="nsrp-toggle" @onclick="LoadReport">Search</button>
+                <button class="nsrp-toggle" @onclick="ExportCsv">Export CSV</button>
+            </div>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <p><em>Loading report...</em></p>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="error">@errorMessage</p>
+    }
+    else if (reportData != null && reportData.Any())
+    {
+        <!-- ✅ REPORT TABLE -->
+        <div id="print-section">
+            <h5>APPLICANTS REFERRED</h5>
+            <h6>@selectedYear</h6>
+
+            <div class="table-scroll">
+                <table class="report-table jf-table">
+                    <thead>
+                        <tr>
+                            <th>Row Number</th>
+                            <th>Municipality</th>
+                            <th>Number of Applicants</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in PagedData)
+                        {
+                            <tr>
+                                <td>@item.RowNumber</td>
+                                <td>@item.MunicipalityName</td>
+                                <td>@item.NumberOfApplicants</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination controls -->
+            <div class="pagination-controls no-print">
+                <button class="nsrp-toggle" @onclick="PrevPage" disabled="@(!CanPrev)">Previous</button>
+                <span>Page @currentPage of @totalPages</span>
+                <button class="nsrp-toggle" @onclick="NextPage" disabled="@(!CanNext)">Next</button>
+            </div>
+        </div>
+    }
+    else
+    {
+        <p>No records found for this year.</p>
+    }
+</div>
+
+@code {
+    private int selectedYear = DateTime.Now.Year;
+
+    private bool isLoading = false;
+    private string? errorMessage;
+    private List<ConsolidatedReportViewModel> reportData = new();
+
+    // ✅ Pagination
+    private int currentPage = 1;
+    private int pageSize = 20;
+    private int totalPages => (int)Math.Ceiling((double)reportData.Count / pageSize);
+    private IEnumerable<ConsolidatedReportViewModel> PagedData =>
+        reportData.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    private bool CanPrev => currentPage > 1;
+    private bool CanNext => currentPage < totalPages;
+
+    private async Task LoadReport()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            // Always load with false (for display)
+            var response = await Http.GetFromJsonAsync<List<ConsolidatedReportViewModel>>(
+                $"api/Manager/GetReferralReport/{selectedYear}/false");
+
+            reportData = response ?? new List<ConsolidatedReportViewModel>();
+            currentPage = 1;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load report: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void PrevPage()
+    {
+        if (CanPrev) currentPage--;
+    }
+
+    private void NextPage()
+    {
+        if (CanNext) currentPage++;
+    }
+
+    private async Task ExportCsv()
+    {
+        try
+        {
+            // Build URL with isExport = true
+            var url = $"api/Manager/GetReferralReport/{selectedYear}/true";
+            await JS.InvokeVoidAsync("open", url, "_blank");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Export failed: {ex.Message}";
+        }
+    }
+}

@@ -1,4 +1,4 @@
-﻿/********************************************* START REPORTS *********************************************/
+﻿/********************************************* REPORTS *********************************************/
 .dashboard-title {
     font-size: 1.2rem;
     font-weight: bold;
@@ -26,10 +26,9 @@
 }
 
 .report-card h3 {
-    margin: 0;
+    margin: 0 0 0.5rem;
     font-size: 1rem;
     font-weight: 600;
-    margin-bottom: 0.5rem;
     color: #444;
 }
 
@@ -39,18 +38,7 @@
     margin-bottom: 5px;
 }
 
-button {
-    border: none;
-    padding: 0.6rem 1rem;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    color: #fff;
-}
 
-/* Button Colors */
 .btn-orange {
     background: #ff9800;
 }
@@ -91,35 +79,25 @@ button {
     background: #00796b;
 }
 
-/********************************************* END REPORTS *********************************************/
-
-
-.filter-section {
-    margin: 1rem 0;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-
-.filter-section label {
-    font-weight: 600;
-}
-
+/********************************************* TABLE *********************************************/
 .report-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 1rem;
+    background: #fff;
 }
 
 .report-table th,
 .report-table td {
-    border: 1px solid #ddd;
-    padding: 8px;
+    border: 1px solid #000;
+    padding: 6px;
+    font-size: 12px;
 }
 
 .report-table th {
-    background-color: #f5f5f5;
+    background-color: #f0f0f0;
     font-weight: bold;
+    text-align: center;
 }
 
 .error {
@@ -127,21 +105,159 @@ button {
     font-weight: bold;
 }
 
-.btn {
-    border: none;
-    padding: 0.6rem 1rem;
-    border-radius: 6px;
-    font-size: 0.9rem;
+/********************************************* FILTERS & INPUTS *********************************************/
+.filters-actions {
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.filters {
+    display: flex;
+    flex-direction: column;
+}
+
+.filters label,
+.prepared-noted-inputs label {
     font-weight: 600;
-    cursor: pointer;
-    transition: background 0.2s;
-    color: #fff;
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
 }
 
-.btn-blue {
-    background: #2196f3;
+.filters select {
+    padding: 4px 8px;
+    font-size: 0.9rem;
+    border-radius: 5px;
+    border: 1px solid #d1d5db;
 }
 
-.btn-blue:hover {
-    background: #1976d2;
+.actions {
+    display: flex;
+    align-self: end;
+}
+
+/* Prepared / Noted inputs */
+.prepared-noted-inputs {
+    display: flex;
+    gap: 1rem;
+}
+
+.prepared-noted-inputs div {
+    display: flex;
+}
+
+.prepared-noted-inputs input {
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.inline-inputs {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.inline-inputs input {
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    width: 120px;
+}
+
+.jf-card.jf-list-card.reports {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+}
+
+div#print-section {
+    margin-top: 20px;
+}
+
+.prepared,
+.noted {
+    flex-direction: column;
+}
+
+/********************************************* PRINT *********************************************/
+@media print {
+    body * {
+        visibility: hidden;
+        /* hide everything */
+    }
+
+    #print-section,
+    #print-section * {
+        visibility: visible;
+        /* only print this section */
+    }
+
+    #print-section {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+
+    /* Repeat table header on each page */
+    .report-table thead {
+        display: table-header-group;
+    }
+
+    .report-table tfoot {
+        display: table-footer-group;
+    }
+
+    /* Hide UI controls in print */
+    .filters-actions,
+    .prepared-noted-inputs,
+    .no-print {
+        display: none !important;
+    }
+
+    .jf-table th,
+    .jf-table td {
+        border: 1px solid #000;
+        border-bottom: 1px solid #000;
+    }
+
+    div#print-section {
+        text-align: center;
+    }
+
+    .report-table th {
+        background-color: #f1f5f9 !important;
+        /* light gray or your preferred color */
+        -webkit-print-color-adjust: exact;
+        /* for Chrome, Safari */
+        color-adjust: exact;
+        /* for Firefox */
+        font-size: 10px;
+    }
+
+    body {
+        font-size: 10px;
+        /* or px, em, rem depending on your preference */
+    }
+
+    table {
+        font-size: 10px;
+    }
+}
+
+
+.prepared-noted-print {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 2rem;
+    font-size: 14px;
+}
+
+.pagination-controls.no-print {
+    margin: 10px 0;
+}
+
+.company-header {
+    background-color: #f0f0f0;
+    font-weight: bold;
 }

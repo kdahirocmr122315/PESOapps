@@ -1,0 +1,323 @@
+﻿@page "/VacanciesSolicited/municipality"
+@using PESOapps.Shared.Address
+@using webapi_peso.ViewModels
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject AddressService AddressService
+
+<PageTitle>Vacancies Solicited Report</PageTitle>
+
+<div class="nsrp-container">
+    <h3>Vacancies Solicited Report</h3>
+
+    <div class="jf-card jf-list-card reports">
+
+        <!-- Filters & Actions -->
+        <div class="filters-actions">
+            <!-- Province -->
+            <div class="filters">
+                <label>Province</label>
+                <select class="nsrp-input" @bind="ProvCode">
+                    <option value="">Select Province</option>
+                    @foreach (var p in AllProvinces)
+                    {
+                        <option value="@p.provCode">@p.provDesc</option>
+                    }
+                </select>
+            </div>
+
+            <!-- City/Municipality -->
+            <div class="filters">
+                <label>City / Municipality</label>
+                <select class="nsrp-input" @bind="CityCode">
+                    <option value="">Select City / Municipality</option>
+                    @foreach (var c in FilteredCities)
+                    {
+                        <option value="@c.citymunCode">@c.citymunDesc</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filters">
+                <label>Month:</label>
+                <select @bind="selectedMonth">
+                    @for (int m = 1; m <= 12; m++)
+                    {
+                        <option value="@m">@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m)</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filters">
+                <label>Year:</label>
+                <select @bind="selectedYear">
+                    @for (int y = DateTime.Now.Year; y >= 2000; y--)
+                    {
+                        <option value="@y">@y</option>
+                    }
+                </select>
+            </div>
+
+            <div class="filters align-self-start">
+                <label>Include Employers?</label>
+                <input type="checkbox" @bind="includeEmployers" />
+            </div>
+        </div>
+
+        <!-- Prepared / Noted Inputs -->
+        <div class="prepared-noted-inputs">
+            <div class="prepared">
+                <label>Prepared By:</label>
+                <div class="inline-inputs">
+                    <input type="text" @bind="preparedBy" placeholder="Name" />
+                    <input type="text" @bind="preparedByPosition" placeholder="Position" />
+                </div>
+            </div>
+            <div class="noted">
+                <label>Noted By:</label>
+                <div class="inline-inputs">
+                    <input type="text" @bind="notedBy" placeholder="Name" />
+                    <input type="text" @bind="notedByPosition" placeholder="Position" />
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button class="nsrp-toggle" @onclick="LoadReport">Search</button>
+        </div>
+    </div>
+
+    @if (isLoading)
+    {
+        <p><em>Loading report...</em></p>
+    }
+    else if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <p class="error">@errorMessage</p>
+    }
+    else if (reportData != null && reportData.Any())
+    {
+        <!-- ✅ PRINT SECTION -->
+        <div id="print-section">
+            <h5>JOB VACANCIES SOLICITED</h5>
+            <h6>@System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(selectedMonth) @selectedYear</h6>
+            <h6>
+                @(FilteredCities.FirstOrDefault(c => c.citymunCode == CityCode)?.citymunDesc),
+                @(AllProvinces.FirstOrDefault(p => p.provCode == ProvCode)?.provDesc)
+            </h6>
+
+            <div class="table-scroll">
+                <table class="report-table jf-table">
+                    <thead>
+                        <tr>
+                            <th>Company</th>
+                            <th>Job Title</th>
+                            <th>Major Occ. Code</th>
+                            <th>No. of Vacancies</th>
+                            <th>Age</th>
+                            <th>Sex</th>
+                            <th>Civil Status</th>
+                            <th>Educational Attainment</th>
+                            <th>Work Experience</th>
+                            <th>Salary per day</th>
+                            <th>Expansion</th>
+                            <th>Replacement</th>
+                            <th>Others</th>
+                            <th>Industry Code</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (!isPrinting)
+                        {
+                            @foreach (var company in GroupedPagedData)
+                            {
+                                <!-- Company Header -->
+                                <tr class="company-header">
+                                    <td colspan="14"><strong>@company.Company</strong></td>
+                                </tr>
+
+                                <!-- Jobs under this company -->
+                                @foreach (var job in company.ListOfJobs)
+                                {
+                                    <tr>
+                                        <td></td>
+                                        <td>@job.JobTitle</td>
+                                        <td>@job.MajorOccCode</td>
+                                        <td>@job.NumberOfVacancy</td>
+                                        <td>@job.AgeFrom - @job.AgeTo</td>
+                                        <td>@job.Gender</td>
+                                        <td>@job.CivilStatus</td>
+                                        <td>@job.EducationalAttainment</td>
+                                        <td>@job.WorkExperience</td>
+                                        <td>@job.Salary</td>
+                                        <td>@((job.ReasonExpansion ?? false ? "✔" : ""))</td>
+                                        <td>@((job.ReasonReplaceMent ?? false ? "✔" : ""))</td>
+                                        <td>@((job.ReasonOthers ?? false ? "✔" : ""))</td>
+                                        <td>@job.IndustryCode</td>
+                                    </tr>
+                                }
+                            }
+                        }
+                        else
+                        {
+                            @foreach (var company in GroupedReportData)
+                            {
+                                <tr class="company-header">
+                                    <td colspan="14"><strong>@company.Company</strong></td>
+                                </tr>
+
+                                @foreach (var job in company.ListOfJobs)
+                                {
+                                    <tr>
+                                        <td></td>
+                                        <td>@job.JobTitle</td>
+                                        <td>@job.MajorOccCode</td>
+                                        <td>@job.NumberOfVacancy</td>
+                                        <td>@job.AgeFrom - @job.AgeTo</td>
+                                        <td>@job.Gender</td>
+                                        <td>@job.CivilStatus</td>
+                                        <td>@job.EducationalAttainment</td>
+                                        <td>@job.WorkExperience</td>
+                                        <td>@job.Salary</td>
+                                        <td>@((job.ReasonExpansion ?? false ? "✔" : ""))</td>
+                                        <td>@((job.ReasonReplaceMent ?? false ? "✔" : ""))</td>
+                                        <td>@((job.ReasonOthers ?? false ? "✔" : ""))</td>
+                                        <td>@job.IndustryCode</td>
+                                    </tr>
+                                }
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination controls (screen only) -->
+            <div class="pagination-controls no-print">
+                <button class="nsrp-toggle" @onclick="PrevPage" disabled="@(!CanPrev)">Previous</button>
+                <span>Page @currentPage of @totalPages</span>
+                <button class="nsrp-toggle" @onclick="NextPage" disabled="@(!CanNext)">Next</button>
+            </div>
+
+            <!-- Prepared/Noted Section -->
+            <div class="prepared-noted-print">
+                <div>
+                    <span>Prepared by:</span><br />
+                    <strong>@preparedBy</strong><br />
+                    <span>@preparedByPosition</span>
+                </div>
+                <div>
+                    <span>Noted by:</span><br />
+                    <strong>@notedBy</strong><br />
+                    <span>@notedByPosition</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="nsrp-toggle no-print" @onclick="PrintReport">Print</button>
+    }
+    else
+    {
+        <p>No records found for this city and date range.</p>
+    }
+</div>
+
+@code {
+    private string ProvCode = "";
+    private string CityCode = "";
+    private int selectedMonth = DateTime.Now.Month;
+    private int selectedYear = DateTime.Now.Year;
+    private bool includeEmployers = false;
+
+    private bool isLoading = false;
+    private string? errorMessage;
+    private List<ReportVacancyViewModel> reportData = new();
+
+    private string preparedBy = "";
+    private string preparedByPosition = "";
+    private string notedBy = "";
+    private string notedByPosition = "";
+
+    // ✅ Pagination
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages => (int)Math.Ceiling((double)GroupedReportData.Count() / pageSize);
+
+    private IEnumerable<ReportVacancyViewModel> GroupedReportData =>
+        reportData
+            .GroupBy(r => r.Company)
+            .Select(g => new ReportVacancyViewModel
+            {
+                Company = g.Key,
+                ListOfJobs = g.SelectMany(r => r.ListOfJobs).ToList()
+            });
+
+    private IEnumerable<ReportVacancyViewModel> GroupedPagedData =>
+        GroupedReportData.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    private bool CanPrev => currentPage > 1;
+    private bool CanNext => currentPage < totalPages;
+
+    private bool isPrinting = false;
+    private List<Province> AllProvinces = new();
+    private List<CityMunicipality> AllCities = new();
+
+    private IEnumerable<CityMunicipality> FilteredCities =>
+        AllCities?.Where(c => c.provCode == ProvCode) ?? Enumerable.Empty<CityMunicipality>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        AllProvinces = await AddressService.GetProvincesAsync();
+        AllCities = await AddressService.GetCitiesAsync();
+    }
+
+    private async Task LoadReport()
+    {
+        try
+        {
+            isLoading = true;
+            errorMessage = null;
+
+            if (string.IsNullOrEmpty(CityCode))
+            {
+                errorMessage = "Please select a City/Municipality.";
+                return;
+            }
+
+            var response = await Http.GetFromJsonAsync<List<ReportVacancyViewModel>>(
+                $"api/Manager/GetJobVacancySolicitedReport/{CityCode}/{selectedMonth}/{selectedYear}/{includeEmployers}");
+
+            reportData = response ?? new List<ReportVacancyViewModel>();
+            currentPage = 1;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Failed to load report: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void PrevPage()
+    {
+        if (CanPrev) currentPage--;
+    }
+
+    private void NextPage()
+    {
+        if (CanNext) currentPage++;
+    }
+
+    private async Task PrintReport()
+    {
+        isPrinting = true;
+        StateHasChanged();
+
+        await Task.Delay(300); // allow re-render before printing
+        await JS.InvokeVoidAsync("window.print");
+
+        isPrinting = false;
+        StateHasChanged();
+    }
+}

@@ -1067,7 +1067,7 @@ a:hover span {
 .btn__indicator {
     background-color: #fff;
     width: 2em;
-    /*    height: 2em;*/
+    height: 2em;
     border-radius: 50%;
 
     position: absolute;
@@ -1411,4 +1411,3 @@ ul {
         opacity: 1;
     }
 }
-

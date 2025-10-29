@@ -250,7 +250,7 @@ namespace webapi_peso.Controllers
                             csv.AppendLine(newLine);
                         }
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {
@@ -325,7 +325,7 @@ namespace webapi_peso.Controllers
                             csv.AppendLine(newLine);
                         }
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {
@@ -484,7 +484,7 @@ namespace webapi_peso.Controllers
                         var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Solicited)},{list.Sum(x => x.SolicitedFemale)}, {list.Sum(x => x.Registered)},{list.Sum(x => x.RegisteredFemale)}, {list.Sum(x => x.Referred)},{list.Sum(x => x.ReferredFemale)}, {list.Sum(x => x.Placed)}, {list.Sum(x => x.PlacedFemale)}";
                         csv.AppendLine(newLineTotal);
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {
@@ -626,7 +626,7 @@ namespace webapi_peso.Controllers
 
                         }
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {
@@ -735,7 +735,7 @@ namespace webapi_peso.Controllers
                         var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Solicited)}, {list.Sum(x => x.Registered)}, {list.Sum(x => x.Referred)}, {list.Sum(x => x.Placed)}";
                         csv.AppendLine(newLineTotal);
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {
@@ -823,7 +823,7 @@ namespace webapi_peso.Controllers
                         var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Solicited)}";
                         csv.AppendLine(newLineTotal);
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {
@@ -921,7 +921,7 @@ namespace webapi_peso.Controllers
                         var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Registered)}";
                         csv.AppendLine(newLineTotal);
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {
@@ -1011,7 +1011,7 @@ namespace webapi_peso.Controllers
                         var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Referred)}";
                         csv.AppendLine(newLineTotal);
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {
@@ -1101,7 +1101,7 @@ namespace webapi_peso.Controllers
                         var newLineTotal = $"TOTAL,-, {list.Sum(x => x.Placed)}";
                         csv.AppendLine(newLineTotal);
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {

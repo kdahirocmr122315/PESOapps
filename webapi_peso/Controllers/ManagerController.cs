@@ -995,7 +995,7 @@ namespace webapi_peso.Controllers
                             csv.AppendLine(newLine);
                         }
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+                    var dir = System.IO.Path.Combine(env.ContentRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
                     try
                     {

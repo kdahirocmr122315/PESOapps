@@ -1178,42 +1178,42 @@ namespace webapi_peso.Controllers
                 data = JsonConvert.DeserializeObject<List<RefRegion>>(json);
                 cache.Set("region", data);
             }
-            return data;
+                return data;
         }
-        [HttpGet("GetProvince")]
-        [AllowAnonymous]
-        public List<RefProvince> GetProvince()
-        {
-            var data = cache.Get<List<RefProvince>>("province");
-            if (data == null)
+            [HttpGet("GetProvince")]
+            [AllowAnonymous]
+            public List<RefProvince> GetProvince()
             {
-                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refprovince.json"}");
-                var json = System.IO.File.ReadAllText(file);
-                data = JsonConvert.DeserializeObject<List<RefProvince>>(json);
-                cache.Set("province", data);
+                var data = cache.Get<List<RefProvince>>("province");
+                if (data == null)
+                {
+                    var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refprovince.json"}");
+                    var json = System.IO.File.ReadAllText(file);
+                    data = JsonConvert.DeserializeObject<List<RefProvince>>(json);
+                    cache.Set("province", data);
+                }
+                return data;
             }
-            return data;
-        }
-        [HttpGet("GetProvince/{limit}")]
-        [AllowAnonymous]
-        public List<RefProvince> GetProvince(int limit)
-        {
-            var data = cache.Get<List<RefProvince>>($"GetProvince/{limit}");
-            if (data == null)
+            [HttpGet("GetProvince/{limit}")]
+            [AllowAnonymous]
+            public List<RefProvince> GetProvince(int limit)
             {
-                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refprovince.json"}");
-                var json = System.IO.File.ReadAllText(file);
-                data = JsonConvert.DeserializeObject<List<RefProvince>>(json);
-                cache.Set($"GetProvince/{limit}", data.Take(limit).ToList());
+                var data = cache.Get<List<RefProvince>>($"GetProvince/{limit}");
+                if (data == null)
+                {
+                    var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refprovince.json"}");
+                    var json = System.IO.File.ReadAllText(file);
+                    data = JsonConvert.DeserializeObject<List<RefProvince>>(json);
+                    cache.Set($"GetProvince/{limit}", data.Take(limit).ToList());
+                }
+                return data.Take(limit).ToList();
             }
-            return data.Take(limit).ToList();
-        }
-        [HttpGet("FindProvince/{code}")]
-        [AllowAnonymous]
-        public RefProvince FindProvince(string code)
-        {
-            return GetProvince().Where(x => x.provCode == code).FirstOrDefault();
-        }
+            [HttpGet("FindProvince/{code}")]
+            [AllowAnonymous]
+            public RefProvince FindProvince(string code)
+            {
+                return GetProvince().Where(x => x.provCode == code).FirstOrDefault();
+            }
         [HttpGet("GetCity")]
         [AllowAnonymous]
         public List<RefCityMun> GetCity()
@@ -1221,7 +1221,18 @@ namespace webapi_peso.Controllers
             var data = cache.Get<List<RefCityMun>>("city");
             if (data == null)
             {
-                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
+                // Go up one directory from webapi_peso and into PESOapps.Shared/wwwroot/json/
+                var file = Path.Combine(
+                    Directory.GetParent(Directory.GetCurrentDirectory()).FullName,
+                    "PESOapps.Shared",
+                    "wwwroot",
+                    "json",
+                    "refcitymun.json"
+                );
+
+                if (!System.IO.File.Exists(file))
+                    throw new FileNotFoundException($"JSON file not found: {file}");
+
                 var json = System.IO.File.ReadAllText(file);
                 data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
 
@@ -1232,33 +1243,33 @@ namespace webapi_peso.Controllers
             return data;
         }
         [HttpGet("GetCity/{limit}")]
-        [AllowAnonymous]
-        public List<RefCityMun> GetCity(int limit)
-        {
-            var data = cache.Get<List<RefCityMun>>($"city/{limit}");
-            if (data == null)
+            [AllowAnonymous]
+            public List<RefCityMun> GetCity(int limit)
             {
-                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
-                var json = System.IO.File.ReadAllText(file);
-                data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
-                cache.Set($"city/{limit}", data.Take(limit).ToList());
+                var data = cache.Get<List<RefCityMun>>($"city/{limit}");
+                if (data == null)
+                {
+                    var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
+                    var json = System.IO.File.ReadAllText(file);
+                    data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
+                    cache.Set($"city/{limit}", data.Take(limit).ToList());
+                }
+                return data.Take(limit).ToList();
             }
-            return data.Take(limit).ToList();
-        }
-        [HttpGet("GetCity/{limit}/{provCode}")]
-        [AllowAnonymous]
-        public List<RefCityMun> GetCity(int limit, string provCode)
-        {
-            var data = cache.Get<List<RefCityMun>>($"city/{limit}/{provCode}");
-            if (data == null)
+            [HttpGet("GetCity/{limit}/{provCode}")]
+            [AllowAnonymous]
+            public List<RefCityMun> GetCity(int limit, string provCode)
             {
-                var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
-                var json = System.IO.File.ReadAllText(file);
-                data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
-                cache.Set($"city/{limit}/{provCode}", data.Where(x => x.provCode == provCode).Take(limit).ToList());
+                var data = cache.Get<List<RefCityMun>>($"city/{limit}/{provCode}");
+                if (data == null)
+                {
+                    var file = Path.Combine(Directory.GetCurrentDirectory(), $"wwwroot\\{"json\\refcitymun.json"}");
+                    var json = System.IO.File.ReadAllText(file);
+                    data = JsonConvert.DeserializeObject<List<RefCityMun>>(json);
+                    cache.Set($"city/{limit}/{provCode}", data.Where(x => x.provCode == provCode).Take(limit).ToList());
+                }
+                return data.Where(x => x.provCode == provCode).Take(limit).ToList();
             }
-            return data.Where(x => x.provCode == provCode).Take(limit).ToList();
-        }
         [HttpGet("FindCity/{code}")]
         [AllowAnonymous]
         public RefCityMun FindCity(string code)

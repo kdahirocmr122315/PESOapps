@@ -24,6 +24,11 @@
 
   <ItemGroup>
     <Folder Include="files\employers\" />
+    <Folder Include="wwwroot\" />
     <Folder Include="Services\" />
   </ItemGroup>
+
+	<ItemGroup>
+		<Content Include="wwwroot\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+	</ItemGroup>
 </Project>

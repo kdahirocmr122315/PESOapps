@@ -12,9 +12,11 @@
 
         <!-- Filters & Actions -->
         <div class="filters-actions">
+
+            <!-- YEAR FILTER -->
             <div class="filters">
                 <label>Year:</label>
-                <select @bind="selectedYear">
+                <select @onchange="OnYearChanged">
                     @for (int y = DateTime.Now.Year; y >= 2000; y--)
                     {
                         <option value="@y">@y</option>
@@ -22,8 +24,19 @@
                 </select>
             </div>
 
+            <!-- MUNICIPALITY FILTER -->
+            <div class="filters">
+                <label>Search Municipality:</label>
+                <select @onchange="OnMunicipalityChanged">
+                    <option value="">All</option>
+                    @foreach (var muni in municipalityList)
+                    {
+                        <option value="@muni">@muni</option>
+                    }
+                </select>
+            </div>
+
             <div class="actions">
-                <button class="nsrp-toggle" @onclick="LoadReport">Search</button>
                 <button class="nsrp-toggle" @onclick="ExportCsv">Export CSV</button>
             </div>
         </div>
@@ -37,7 +50,7 @@
     {
         <p class="error">@errorMessage</p>
     }
-    else if (reportData != null && reportData.Any())
+    else if (FilteredData != null && FilteredData.Any())
     {
         <!-- ✅ REPORT TABLE -->
         <div id="print-section">
@@ -67,11 +80,14 @@
             </div>
 
             <!-- Pagination controls -->
-            <div class="pagination-controls no-print">
-                <button class="nsrp-toggle" @onclick="PrevPage" disabled="@(!CanPrev)">Previous</button>
-                <span>Page @currentPage of @totalPages</span>
-                <button class="nsrp-toggle" @onclick="NextPage" disabled="@(!CanNext)">Next</button>
-            </div>
+            @if (totalPages > 1)
+            {
+                <div class="pagination-controls no-print">
+                    <button class="nsrp-toggle" @onclick="PrevPage" disabled="@(!CanPrev)">Previous</button>
+                    <span>Page @currentPage of @totalPages</span>
+                    <button class="nsrp-toggle" @onclick="NextPage" disabled="@(!CanNext)">Next</button>
+                </div>
+            }
         </div>
     }
     else
@@ -82,33 +98,49 @@
 
 @code {
     private int selectedYear = DateTime.Now.Year;
+    private string selectedMunicipality = string.Empty;
 
     private bool isLoading = false;
     private string? errorMessage;
     private List<ConsolidatedReportViewModel> reportData = new();
+    private List<string> municipalityList = new();
+
+    // ✅ Filtered data for display only
+    private IEnumerable<ConsolidatedReportViewModel> FilteredData =>
+        string.IsNullOrEmpty(selectedMunicipality)
+            ? reportData
+            : reportData.Where(x => x.MunicipalityName == selectedMunicipality);
 
     // ✅ Pagination
     private int currentPage = 1;
     private int pageSize = 20;
-    private int totalPages => (int)Math.Ceiling((double)reportData.Count / pageSize);
+    private int totalPages => (int)Math.Ceiling((double)FilteredData.Count() / pageSize);
     private IEnumerable<ConsolidatedReportViewModel> PagedData =>
-        reportData.Skip((currentPage - 1) * pageSize).Take(pageSize);
+        FilteredData.Skip((currentPage - 1) * pageSize).Take(pageSize);
 
     private bool CanPrev => currentPage > 1;
     private bool CanNext => currentPage < totalPages;
 
-    private async Task LoadReport()
+    // ✅ Load report for selected year
+    private async Task LoadReport(ChangeEventArgs? e = null)
     {
         try
         {
             isLoading = true;
             errorMessage = null;
+            selectedMunicipality = string.Empty; // reset filter
 
-            // Always load with false (for display)
             var response = await Http.GetFromJsonAsync<List<ConsolidatedReportViewModel>>(
                 $"api/Manager/GetReferralReport/{selectedYear}/false");
 
             reportData = response ?? new List<ConsolidatedReportViewModel>();
+
+            municipalityList = reportData
+                .Select(x => x.MunicipalityName)
+                .Distinct()
+                .OrderBy(x => x)
+                .ToList();
+
             currentPage = 1;
         }
         catch (Exception ex)
@@ -121,27 +153,44 @@
         }
     }
 
-    private void PrevPage()
+    // ✅ When user changes year
+    private async Task OnYearChanged(ChangeEventArgs e)
     {
-        if (CanPrev) currentPage--;
+        if (int.TryParse(e.Value?.ToString(), out int year))
+        {
+            selectedYear = year;
+            await LoadReport();
+        }
     }
 
-    private void NextPage()
+    // ✅ When user selects a municipality (filter only, not export)
+    private void OnMunicipalityChanged(ChangeEventArgs e)
     {
-        if (CanNext) currentPage++;
+        selectedMunicipality = e.Value?.ToString() ?? string.Empty;
+        currentPage = 1;
+        StateHasChanged();
     }
 
+    private void PrevPage() => currentPage = Math.Max(1, currentPage - 1);
+    private void NextPage() => currentPage = Math.Min(totalPages, currentPage + 1);
+
+    // ✅ Export CSV (always by year)
     private async Task ExportCsv()
     {
         try
         {
-            // Build URL with isExport = true
             var url = $"api/Manager/GetReferralReport/{selectedYear}/true";
-            await JS.InvokeVoidAsync("open", url, "_blank");
+            var response = await Http.GetStringAsync(url);
+            await JS.InvokeVoidAsync("open", response.Replace("\"", ""), "_blank");
         }
         catch (Exception ex)
         {
             errorMessage = $"Export failed: {ex.Message}";
         }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadReport();
     }
 }

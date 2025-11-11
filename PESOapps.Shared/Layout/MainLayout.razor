@@ -46,13 +46,15 @@
         @* <img class="bg-image" src="_content/PESOapps.Shared/images/banner_img.png"> *@
         <img class="bg-image" src="_content/PESOapps.Shared/images/gov_Uy.png"> 
     </div>
-    <div class="coverlog">
-        <model-viewer src="_content/PESOapps.Shared/glb/pgmlogo.glb"
-                      autoplay
-                      auto-rotate
-                      style="width: 400px; height: 400px;">
-        </model-viewer>
-    </div>
+        <div id="logoStart" class="coverlog">
+            <div id="logoWrapper">
+                <model-viewer id="pesoLogo"
+                              src="_content/PESOapps.Shared/glb/pgmlogo.glb"
+                              autoplay auto-rotate
+                              style="width: 400px; height: 400px;">
+                </model-viewer>
+            </div>
+        </div>
     @if (Navigation.Uri.EndsWith("/dash", StringComparison.OrdinalIgnoreCase))
     {
         <main class="main-content dboard">
@@ -141,4 +143,25 @@
     }
 
 }
+
+<script>
+    window.addEventListener("scroll", function () {
+        const el = document.querySelector(".parallax-logo");
+        if (!el) return;
+
+        let scrollY = window.scrollY;
+
+        // Movement amount
+        let offsetY = scrollY * 0.15; // lower = softer movement
+
+        // Scale factor
+        let scale = 1 - scrollY * 0.0005; // Adjust intensity here
+
+        // Limit maximum scale to avoid huge logo
+        if (scale < 0.7) scale = 0.7;
+
+        // Apply both translate & scale
+        el.style.transform = `scale(${scale})`;
+    });
+</script>
 

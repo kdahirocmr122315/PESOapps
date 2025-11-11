@@ -148,6 +148,7 @@ button.nsrp-toggle:hover[disabled] {
     margin: 0.25rem;
     white-space: nowrap;
     box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+    color: #000;
 }
 
 .carousel-arrow {

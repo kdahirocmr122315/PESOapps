@@ -135,6 +135,7 @@
 .actions {
     display: flex;
     align-self: end;
+    gap: 5px;
 }
 
 /* Prepared / Noted inputs */
@@ -180,71 +181,11 @@ div#print-section {
 }
 
 /********************************************* PRINT *********************************************/
-@media print {
-    body * {
-        visibility: hidden;
-        /* hide everything */
-    }
 
-    #print-section,
-    #print-section * {
-        visibility: visible;
-        /* only print this section */
-    }
-
-    #print-section {
-        position: absolute;
-        left: 0;
-        top: 0;
-        width: 100%;
-    }
-
-    /* Repeat table header on each page */
-    .report-table thead {
-        display: table-header-group;
-    }
-
-    .report-table tfoot {
-        display: table-footer-group;
-    }
-
-    /* Hide UI controls in print */
-    .filters-actions,
-    .prepared-noted-inputs,
-    .no-print {
-        display: none !important;
-    }
-
-    .jf-table th,
-    .jf-table td {
-        border: 1px solid #000;
-        border-bottom: 1px solid #000;
-    }
-
-    div#print-section {
-        text-align: center;
-    }
-
-    .report-table th {
-        background-color: #f1f5f9 !important;
-        /* light gray or your preferred color */
-        -webkit-print-color-adjust: exact;
-        /* for Chrome, Safari */
-        color-adjust: exact;
-        /* for Firefox */
-        font-size: 10px;
-    }
-
-    body {
-        font-size: 10px;
-        /* or px, em, rem depending on your preference */
-    }
-
-    table {
-        font-size: 10px;
-    }
+#reportRoot canvas {
+    max-width: 100% !important;
+    height: auto !important;
 }
-
 
 .prepared-noted-print {
     display: flex;
@@ -261,3 +202,4 @@ div#print-section {
     background-color: #f0f0f0;
     font-weight: bold;
 }
+

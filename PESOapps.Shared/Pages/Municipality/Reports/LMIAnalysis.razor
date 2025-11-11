@@ -1,0 +1,338 @@
+﻿@page "/lmianalysis/municipality"
+@using webapi_peso.Model
+@inject HttpClient Http
+@inject IJSRuntime JS
+
+<div class="nsrp-container">
+
+    <h3 class="fw-bold mb-3">LMI Analysis</h3>
+
+    @if (!isPrinting)
+    {
+        <div class="jf-card shadow-sm p-3 mb-3">
+            <div class="row g-3">
+
+                <div class="col-md-4">
+                    <label class="form-label">Report Type</label>
+                    <select class="form-select" @bind="selectedType" @bind:event="onchange">
+                        <option value="">-- Select Report Type --</option>
+                        <option>Job Applications Registered</option>
+                        <option>Job Vacancies Solicited</option>
+                        <option>Job Applicants Referred</option>
+                        <option>Job Applicants Placed</option>
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">Start Month</label>
+                    <select class="form-select" @bind="startMonth">
+                        @foreach (var m in months)
+                        {
+                            <option value="@m.Value">@m.Key</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-2">
+                    <label class="form-label">End Month</label>
+                    <select class="form-select" @bind="endMonth">
+                        @foreach (var m in months)
+                        {
+                            <option value="@m.Value">@m.Key</option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-md-1">
+                    <label class="form-label">Year</label>
+                    <select class="form-select" @bind="year">
+                        @foreach (var y in years)
+                        {
+                            <option>@y</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <div class="row g-3 mt-2">
+                <div class="col-md-4">
+                    <label class="form-label">Prepared By</label>
+                    <input class="form-control" @bind="preparedBy" />
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Noted By</label>
+                    <input class="form-control" @bind="notedBy" />
+                </div>
+            </div>
+
+            <div class="d-flex gap-2 mt-3 flex-wrap">
+                <button class="nsrp-toggle" @onclick="LoadReport"><i class="bi bi-bar-chart"></i> Generate Report</button>
+                <button class="nsrp-toggle" @onclick="ToggleChartType">Toggle Bar/Line</button>
+                <button class="nsrp-toggle" @onclick="PrintReport"><i class="bi bi-printer"></i> Print</button>
+            </div>
+        </div>
+    }
+
+    @if (loading)
+    {
+        <div class="alert alert-info">Loading report…</div>
+    }
+
+    <div class="jf-card" id="reportRoot">
+        <div class="shadow-sm p-3" id="reportHeader">
+            <div class="text-center">
+                <h5 class="mb-0 fw-bold">@DisplayTitle</h5>
+                <small class="text-muted">Period: @MonthName(startMonth)–@MonthName(endMonth) @year</small>
+            </div>
+
+            <hr />
+
+            @if (maleValues.Any() || femaleValues.Any())
+            {
+                <h5 class="text-center mt-3 fw-bold">
+                    Total: @(maleValues.Sum() + femaleValues.Sum()) @selectedType
+                </h5>
+            }
+        </div>
+        <!-- ✅ NEW: Place charts OUTSIDE the header -->
+        <div id="reportCharts">
+            <div class="chart-container">
+                <canvas id="lmiChart"></canvas>
+            </div>
+
+            <div class="pie-container text-center">
+                <h6 class="fw-bold">Gender Distribution (%)</h6>
+                <canvas id="lmiPieChart" style="display:unset;"></canvas>
+            </div>
+        </div>
+
+        <footer class="text-center mt-4 mb-2">
+            <small><strong>Prepared By:</strong> @preparedBy</small> &nbsp;|&nbsp;
+            <small><strong>Noted By:</strong> @notedBy</small>
+        </footer>
+    </div>
+</div>
+
+@code {
+    string selectedType = string.Empty;
+    bool isPrinting = false;
+    int startMonth = 1;
+    int endMonth = 12;
+    int year = DateTime.Now.Year;
+    string preparedBy = "";
+    string notedBy = "";
+    bool loading = false;
+    string chartMode = "bar";
+
+    List<string> labels = new();
+    List<int> maleValues = new();
+    List<int> femaleValues = new();
+    List<Dictionary<string, object?>> tableRows = new();
+    List<string> tableColumns = new();
+
+    string DisplayTitle => string.IsNullOrEmpty(selectedType) ? "Select a report" : selectedType;
+
+    Dictionary<string, int> months = System.Globalization.CultureInfo.CurrentCulture
+        .DateTimeFormat.MonthNames
+        .Where(m => !string.IsNullOrEmpty(m))
+        .Select((m, i) => new KeyValuePair<string, int>(m, i + 1))
+        .ToDictionary(x => x.Key, x => x.Value);
+
+    List<int> years = Enumerable.Range(2018, DateTime.Now.Year - 2017).Reverse().ToList();
+
+    string MonthName(int m) =>
+        System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m);
+
+    async Task LoadReport()
+    {
+        loading = true;
+        StateHasChanged();
+
+        switch (selectedType)
+        {
+            case "Job Applications Registered": await LoadPreReg(); break;
+            case "Job Vacancies Solicited": await LoadSolicited(); break;
+            case "Job Applicants Referred": await LoadReferred(); break;
+            case "Job Applicants Placed": await LoadHired(); break;
+        }
+
+        await JS.InvokeVoidAsync("lmiRenderChart", labels, maleValues, femaleValues, chartMode, DisplayTitle);
+        loading = false;
+    }
+
+    void BuildSeries(IEnumerable<dynamic> maleGroup, IEnumerable<dynamic> femaleGroup)
+    {
+        labels = Enumerable.Range(startMonth, endMonth - startMonth + 1).Select(MonthName).ToList();
+        var maleDict = maleGroup.ToDictionary(g => (int)g.Month, g => (int)g.Count);
+        var femaleDict = femaleGroup.ToDictionary(g => (int)g.Month, g => (int)g.Count);
+
+        maleValues = Enumerable.Range(startMonth, endMonth - startMonth + 1)
+            .Select(m => maleDict.ContainsKey(m) ? maleDict[m] : 0).ToList();
+
+        femaleValues = Enumerable.Range(startMonth, endMonth - startMonth + 1)
+            .Select(m => femaleDict.ContainsKey(m) ? femaleDict[m] : 0).ToList();
+    }
+
+    async Task LoadPreReg()
+    {
+        var raw = await Http.GetFromJsonAsync<List<PreRegDto>>("/api/Reports/GetPreRegListChart") ?? new();
+
+        var filtered = raw.Where(r => r.dateLastUpdate.HasValue)
+            .Select(r => new
+            {
+                r.gender,
+                Date = DateTimeOffset.FromUnixTimeMilliseconds(r.dateLastUpdate!.Value).LocalDateTime
+            })
+            .Where(r => r.Date.Year == year && r.Date.Month >= startMonth && r.Date.Month <= endMonth)
+            .ToList();
+
+        var maleGroup = filtered.Where(r => r.gender == "Male").GroupBy(r => r.Date.Month).Select(g => new { Month = g.Key, Count = g.Count() });
+        var femaleGroup = filtered.Where(r => r.gender == "Female").GroupBy(r => r.Date.Month).Select(g => new { Month = g.Key, Count = g.Count() });
+
+        BuildSeries(maleGroup, femaleGroup);
+        await RenderPie(filtered);
+    }
+
+    async Task LoadSolicited()
+    {
+        var raw = await Http.GetFromJsonAsync<List<JobVacancySolicited>>($"/api/Reports/GetSolicitedReportChart/{startMonth}/{endMonth}/{year}") ?? new();
+
+        // No gender data here → chart will only show total
+        labels = Enumerable.Range(startMonth, endMonth - startMonth + 1).Select(MonthName).ToList();
+        maleValues = raw.GroupBy(r => r.Month).Select(g => g.Sum(x => x.NumberOfVacancy ?? 0)).ToList();
+        femaleValues = maleValues; // mirrors, since no gender split data
+    }
+
+    async Task LoadReferred()
+    {
+        var raw = await Http.GetFromJsonAsync<List<ReferredDto>>($"/api/Reports/GetReferredApplicantChart/{startMonth}/{endMonth}/{year}") ?? new();
+
+        var filtered = raw.Where(r => r.dateReferred.HasValue)
+            .Select(r => new { r.gender, Month = r.dateReferred!.Value.Month, Year = r.dateReferred!.Value.Year })
+            .Where(r => r.Year == year && r.Month >= startMonth && r.Month <= endMonth).ToList();
+
+        var maleGroup = filtered.Where(r => r.gender == "Male").GroupBy(r => r.Month).Select(g => new { Month = g.Key, Count = g.Count() });
+        var femaleGroup = filtered.Where(r => r.gender == "Female").GroupBy(r => r.Month).Select(g => new { Month = g.Key, Count = g.Count() });
+
+        BuildSeries(maleGroup, femaleGroup);
+        await RenderPie(filtered);
+    }
+
+    async Task LoadHired()
+    {
+        var raw = await Http.GetFromJsonAsync<List<HiredDto>>($"/api/Reports/GetHiredApplicantsListChart/{startMonth}/{endMonth}/{year}") ?? new();
+
+        var filtered = raw.Where(r => r.month.HasValue && r.year.HasValue && r.year == year && r.month >= startMonth && r.month <= endMonth)
+            .Select(r => new { r.gender, Month = r.month }).ToList();
+
+        var maleGroup = filtered.Where(r => r.gender == "Male").GroupBy(r => r.Month).Select(g => new { Month = g.Key, Count = g.Count() });
+        var femaleGroup = filtered.Where(r => r.gender == "Female").GroupBy(r => r.Month).Select(g => new { Month = g.Key, Count = g.Count() });
+
+        BuildSeries(maleGroup, femaleGroup);
+        await RenderPie(filtered);
+    }
+
+    async Task RenderPie(IEnumerable<dynamic> filtered)
+    {
+        int male = filtered.Count(r => (string?)r.gender == "Male");
+        int female = filtered.Count(r => (string?)r.gender == "Female");
+        await JS.InvokeVoidAsync("lmiRenderPie", male, female);
+    }
+
+    async Task ToggleChartType()
+    {
+        chartMode = chartMode == "bar" ? "line" : "bar";
+        await JS.InvokeVoidAsync("lmiRenderChart", labels, maleValues, femaleValues, chartMode, DisplayTitle);
+    }
+
+    async Task PrintReport()
+    {
+        await JS.InvokeVoidAsync("lmiExportPDF", preparedBy, notedBy);
+    }
+
+
+    class PreRegDto { public string? gender { get; set; } public long? dateLastUpdate { get; set; } }
+    class ReferredDto { public string? gender { get; set; } public DateTime? dateReferred { get; set; } }
+    class HiredDto { public string? gender { get; set; } public int? month { get; set; } public int? year { get; set; } }
+}
+
+<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+@* --- JavaScript helpers via JS interop. Put this in host if you prefer; inline here for clarity. *@
+<script>
+    window.lmiChartInstance = null;
+    window.lmiRenderChart = (labels, maleValues, femaleValues, mode, title) => {
+      const ctx = document.getElementById('lmiChart');
+      if (!ctx) return;
+      if (window.lmiChartInstance) window.lmiChartInstance.destroy();
+
+      window.lmiChartInstance = new Chart(ctx, {
+        type: mode === 'line' ? 'line' : 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            { label: "Male", data: maleValues, borderWidth: 2, tension: 0.3 },
+            { label: "Female", data: femaleValues, borderWidth: 2, tension: 0.3 }
+          ]
+        },
+        options: { responsive: true, maintainAspectRatio: false }
+      });
+    }
+
+    window.lmiPieInstance = null;
+    window.lmiRenderPie = (male, female) => {
+      const ctx = document.getElementById("lmiPieChart");
+      if (!ctx) return;
+      if (window.lmiPieInstance) window.lmiPieInstance.destroy();
+
+      window.lmiPieInstance = new Chart(ctx, {
+        type: "pie",
+        data: { labels: ["Male", "Female"], datasets: [{ data: [male, female] }] },
+        options: { plugins: { legend: { position: "bottom" } } }
+      });
+    };
+
+    // Capture chart canvases to images before generating PDF
+    window.lmiPrepareChartImages = () => {
+        const chartCanvas = document.getElementById("lmiChart");
+        const pieCanvas = document.getElementById("lmiPieChart");
+
+        const chartImg = chartCanvas.toDataURL("image/png");
+        const pieImg = pieCanvas.toDataURL("image/png");
+
+        return { chartImg, pieImg };
+    };
+        function pxToMm(px) {
+        return px * 0.264583; // 1px = 0.264583 mm
+    }
+    // Generate PDF using jsPDF + html2canvas
+          window.lmiExportPDF = async (preparedBy, notedBy) => {
+
+        const report = document.getElementById("reportRoot");
+        if (!report) return;
+
+        // Capture report exactly as displayed
+        const canvas = await html2canvas(report, { scale: 3 });
+        const imgData = canvas.toDataURL("image/png");
+
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF("landscape", "mm", "a4");
+
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+
+        // Calculate correct aspect ratio to fit page nicely
+        const imgWidth = pageWidth - 20;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+
+        pdf.addImage(imgData, "PNG", 10, 10, imgWidth, imgHeight);
+
+
+        pdf.save(`LMI_Report_${new Date().toISOString().slice(0, 10)}.pdf`);
+    };
+
+
+</script>

@@ -25,6 +25,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     <link rel="stylesheet" href="_content/PESOapps.Shared/css/municipality.css" />
 
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+
 </head>
 
 <body>
@@ -50,6 +52,17 @@
     <!-- ✅ Your custom flatpickr logic -->
     <script src="_content/PESOapps.Shared/script/preregistered.js"></script>
 
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            AOS.init({
+                duration: 700,   // animation speed
+                once: false,      // animate only once
+                mirror: true,
+                offset: 120      // trigger distance
+            });
+        });
+    </script>
 </body>
 
 </html>

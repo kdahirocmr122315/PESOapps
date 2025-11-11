@@ -8,7 +8,7 @@
 <div class="home-container">
     <div class="peso-menu">
         <div class="org-logo-cont texts">
-            <div class="org-cont">
+            <div class="org-cont" data-aos="fade-down">
                 <div class="org-logo">
                     <span class="peso-log">Public Employment Service Office</span>
                 </div>
@@ -19,14 +19,14 @@
 
             <div class="container1">
                 <!-- PESO Managers Section -->
-                <div class="card1">
+                <div class="card1" data-aos="zoom-out-up" data-aos-delay="0">
                     <h2>PESO Managers</h2>
                     <p>Sign in your PESO manager account.</p>
                     <NavLink class="btn1" href="Login">Sign In</NavLink>
                 </div>
 
                 <!-- Jobseeker Section -->
-                <div class="card1">
+                <div class="card1" data-aos="zoom-out" data-aos-delay="200">
                     <h2>Jobseeker</h2>
                     <p>Register to our National Skills Registration Program (NSRP) for job seekers.</p>
                     <a class="btn1" href="Jobseeker">Register Now</a>
@@ -34,7 +34,7 @@
                 </div>
 
                 <!-- Employer Section -->
-                <div class="card1">
+                <div class="card1" data-aos="zoom-out-down" data-aos-delay="400">
                     <h2>Employer</h2>
                     <p>We have @verifiedCountText applicants looking for a job.</p>
                     <a class="btn1" href="Employers">Get Started</a>
@@ -53,7 +53,7 @@
             </div>
         </div>
     </div>
-    <div class="aboutus-bub">
+    <div class="aboutus-bub" data-aos="fade-right">
         <div class="header-title">
             <span class="misvis-title">About Us</span>
         </div>
@@ -63,29 +63,29 @@
             <div>On October 7, 2019, the Public Employment Service Office (PESO) was created as a regular department of the Provincial Government of Misamis Oriental (PGMO), with regular Plantilla Positions and corresponding Budgetary Allocation, pursuant to Ordinance Number 1440-2019.</div>
         </div>
     </div>
-     <div class="org-container pesomisvis ">
+    <div class="org-container pesomisvis" data-aos="fade-up">
          <div class="org-contents">
             <div class="header-title">
                 <span class="misvis-title">Mission and Vision</span>
             </div>
              <div class="org-content misvis">
-                <div class="misvis-divider">     
-                     <span class="misvis-header">
+                <div class="misvis-divider" data-aos="fade-up" data-aos-delay="0">
+                    <span class="misvis-header">
                        OFFICE MANDATE 
                      </span> 
                      <span class="misvis-par">
                       PESO shall provide decent and gainful employment opportunities for all, as well as, strengthen and expand the existing employment facilitation service machinery of the Provincial Government. 
                      </span>
-                 </div> 
-                 <div class="misvis-divider"> 
-                     <span class="misvis-header">MISSION</span> 
+                 </div>
+                <div class="misvis-divider" data-aos="fade-up" data-aos-delay="200">
+                    <span class="misvis-header">MISSION</span> 
                      <span class="misvis-par">
                          Every Misamisnon attains decent and productive employment. 
                      </span> 
-                 </div> 
-                 <div class="misvis-divider"> 
-                    <span class="misvis-header">VISION</span> 
-                     <span class="misvis-par"> 
+                 </div>
+                <div class="misvis-divider" data-aos="fade-up" data-aos-delay="400">
+                    <span class="misvis-header">VISION</span>
+                    <span class="misvis-par"> 
                          To provide full-cycle employment facilitation services for increased employability and to collectively achieve the end-goal of PESO for massive job facilitation and substantial poverty alleviation towards inclusive growth.
                     </span> 
                </div> 
@@ -96,13 +96,13 @@
             <div class="container-services">
                 <div class="content-services">
                     <div class="services">
-                        <span>
+                        <span data-aos="flip-up" data-aos-delay="0">
                             1. It shall provide clients with adequate information and Labor Market Information (LMI);
                         </span>
-                        <span>
+                        <span data-aos="flip-up" data-aos-delay="200">
                             2. It shall provide referral and placement services;
                         </span>
-                        <span>
+                        <span data-aos="flip-up" data-aos-delay="400">
                             3. It shall initiate and organize job fairs and facilitate the conduct of local/special recruitment activities.
                         </span>
                     </div>
@@ -111,7 +111,7 @@
             <div class="header-title">
                 <span class="misvis-title">Awards Received</span>
             </div>
-            <div class="container">
+            <div class="container" data-aos="zoom-in">
                 @foreach (var image in ImagePaths)
                 {
                     <div class="card" style="cursor: pointer;" @onclick="() => ShowImage(image)">
@@ -121,8 +121,7 @@
             </div>
          </div> 
      </div>
-
-    <div class="org-container aboutus">
+    <div class="org-container aboutus" data-aos="fade-up">
         <div class="cont-aboutus">
             <div class="header-title">
                 <span class="misvis-title">Contact Information</span>

@@ -15,7 +15,7 @@ namespace webapi_peso
         public static readonly bool IsProduction = true;
 #else
         public static string HOST = "https://localhost:44360";
-        public static string API_HOST = "https://localhost:44304";
+        public static string API_HOST = "http://localhost:5167";
         public static readonly bool IsProduction = false;
 #endif
         public const bool JobFairEnabled = true;
@@ -48,7 +48,7 @@ namespace webapi_peso
             if (!IsProduction)
             {
                 HOST = "https://localhost:44360";
-                API_HOST = "https://localhost:44304";
+                API_HOST = "http://localhost:5167";
             }
         }
     }

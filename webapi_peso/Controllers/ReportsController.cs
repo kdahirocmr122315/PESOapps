@@ -404,11 +404,25 @@ namespace webapi_peso.Controllers
         {
             using (var db = dbFactory.CreateDbContext())
             {
-                var solicited = db.JobVacancySolicited.Where(x => x.DateCreated.Month >= startMonth && x.DateCreated.Month <= endMonth && x.DateCreated.Year == year).ToList();
+                var solicited = db.JobVacancySolicited
+                    .Where(x => x.DateCreated != null) // ✅ Prevent null crash
+                    .Where(x => x.DateCreated.Month >= startMonth
+                             && x.DateCreated.Month <= endMonth
+                             && x.DateCreated.Year == year)
+                    .Select(x => new JobVacancySolicited
+                    {
+                        NumberOfVacancy = x.NumberOfVacancy,
+                        Month = x.DateCreated.Month,
+                        Year = x.DateCreated.Year,
+                        JobTitle = x.JobTitle,
+                        Company = x.Company
+                    })
+                    .ToList();
 
                 return Ok(solicited);
             }
         }
+
 
         [HttpGet("GetReportByGender/{month}/{year}/{isExport}")]
         public async Task<IActionResult> GetReportByGender(int month, int year, bool isExport)

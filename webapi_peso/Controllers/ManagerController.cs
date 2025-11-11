@@ -1037,15 +1037,23 @@ namespace webapi_peso.Controllers
         {
             using (var db = dbFactory.CreateDbContext())
             {
-                var list = db.EmployerHiredApplicants.Where(x => x.DateHired.Month == month && x.DateHired.Year == year);
+                // ✅ Fetch all first (prevents open DataReader issue)
+                var list = db.EmployerHiredApplicants
+                    .Where(x => x.DateHired.Month == month && x.DateHired.Year == year)
+                    .ToList();
+
                 var rs = new List<JobApplicantsPlaced>();
+
                 foreach (var hired in list)
                 {
-                    var emp = db.EmployerDetails.Where(x => x.Id == hired.EmployerId && x.CityMunicipality == cityCode).FirstOrDefault();
-                    var applicant = db.ApplicantInformation.Where(x => x.AccountId == hired.ApplicantAccountId).FirstOrDefault();
+                    var emp = db.EmployerDetails
+                        .FirstOrDefault(x => x.Id == hired.EmployerId && x.CityMunicipality == cityCode);
+                    var applicant = db.ApplicantInformation
+                        .FirstOrDefault(x => x.AccountId == hired.ApplicantAccountId);
+
                     if (emp != null && applicant != null)
                     {
-                        rs.Add(new JobApplicantsPlaced()
+                        rs.Add(new JobApplicantsPlaced
                         {
                             Company = emp.EstablishmentName,
                             ApplicantName = $"{applicant.FirstName} {applicant.SurName}",
@@ -1055,56 +1063,45 @@ namespace webapi_peso.Controllers
                         });
                     }
                 }
+
                 if (isExport)
                 {
                     var csv = new StringBuilder();
-                    csv.AppendLine($"Generated Date:,{DateTime.Now.ToString("MM-dd-yyyy")},{DateTime.Now.ToString("hh:mmtt").ToUpper()}");
-                    csv.AppendLine("No,NAME OF APPLICANT, AS (Position), TO (Employer)");
+                    csv.AppendLine($"Generated Date:,{DateTime.Now:MM-dd-yyyy},{DateTime.Now:hh:mmtt}");
+                    csv.AppendLine("No,NAME OF APPLICANT,AS (Position),TO (Employer)");
+
                     if (rs.Count > 0)
                     {
                         int count = 0;
-                        foreach (var i in rs.OrderBy(x => x.DateCreated))
+                        foreach (var i in rs.OrderBy(x => x.DateHired))
                         {
-                            count += 1;
-                            var newLine = $"{count}, {i.ApplicantName}, {i.JobTitle}, {i.Company}";
-                            csv.AppendLine(newLine);
+                            count++;
+                            csv.AppendLine($"{count},{i.ApplicantName},{i.JobTitle},{i.Company}");
                         }
                     }
-                    var dir = System.IO.Path.Combine(env.WebRootPath, "files", "csv");
+
+                    var dir = Path.Combine(env.WebRootPath, "files", "csv");
                     if (!Directory.Exists(dir)) Directory.CreateDirectory(dir);
+
                     try
                     {
                         foreach (var item in Directory.GetFiles(dir))
-                        {
-                            if (System.IO.File.Exists(item))
-                                System.IO.File.Delete(item);
-                        }
+                            System.IO.File.Delete(item);
                     }
-                    catch (Exception) { }
-                    var fileName = System.IO.Path.Combine(dir, $"export_placed_applicants_{DateTime.Now.ToString("MMddyyyyHHmmss")}.csv");
-                    using (StreamWriter sw = new StreamWriter(System.IO.File.Open(fileName, FileMode.Create), Encoding.UTF8))
-                    {
-                        await sw.WriteAsync(csv.ToString());
-                    }
-                    var url = $"{ProjectConfig.API_HOST}/files/csv/{System.IO.Path.GetFileName(fileName)}";
-                    using (Stream stream = System.IO.File.OpenRead(fileName))
-                    {
-                        var data = new System.IO.MemoryStream();
-                        stream.CopyTo(data);
-                        data.Seek(0, SeekOrigin.Begin);
-                        var buf = new byte[data.Length];
-                        data.Read(buf, 0, buf.Length);
+                    catch { }
 
-                        var f = File(fileContents: buf,
-                            contentType: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                            fileDownloadName: System.IO.Path.GetFileName(fileName));
-                        return Ok(url);
-                    }
+                    var fileName = Path.Combine(dir, $"export_placed_applicants_{DateTime.Now:MMddyyyyHHmmss}.csv");
 
+                    await System.IO.File.WriteAllTextAsync(fileName, csv.ToString(), Encoding.UTF8);
+
+                    var url = $"{ProjectConfig.API_HOST}/files/csv/{Path.GetFileName(fileName)}";
+                    return Ok(url);
                 }
+
                 return Ok(rs);
             }
         }
+
 
         List<ConsolidatedReportViewModel> AddPESOProvinceData(ApplicationDbContext db, int noRow, int year, int month = 0)
         {

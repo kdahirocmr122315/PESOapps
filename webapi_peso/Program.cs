@@ -123,4 +123,18 @@ app.UseAuthorization();
 app.MapControllers();
 
 
+
+var filesPath = Path.Combine(app.Environment.ContentRootPath, "files");
+if (!Directory.Exists(filesPath))
+    Directory.CreateDirectory(filesPath);
+
+// Serve static files from /wwwroot
+app.UseStaticFiles();
+
+// Serve static files from /files
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(filesPath),
+    RequestPath = "/files"
+});
 app.Run();

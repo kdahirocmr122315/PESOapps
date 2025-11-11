@@ -582,3 +582,12 @@ button {
 }
 
 /********************************************* END REPORTS *********************************************/
+/* Hide Pie Chart during screen view */
+
+.chart-container {
+    height: 250px;
+}
+
+.pie-container {
+    height: 250px;
+}

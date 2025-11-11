@@ -92,6 +92,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger(); // <!-- Add this line
     app.UseSwaggerUI(); // <!-- Add this line
 }
+
+
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".pdf"] = "application/pdf";
 provider.Mappings[".docx"] = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -99,21 +101,49 @@ provider.Mappings[".doc"] = "application/msword";
 provider.Mappings[".png"] = "image/png";
 provider.Mappings[".jpg"] = "image/jpeg";
 
+
+var filesPath1 = Path.Combine(builder.Environment.ContentRootPath, "files", "applications");
+var filesPath2 = Path.Combine(builder.Environment.ContentRootPath, "files", "employers");
+
+if (!Directory.Exists(filesPath1))
+    Directory.CreateDirectory(filesPath1);
+if (!Directory.Exists(filesPath2))
+    Directory.CreateDirectory(filesPath2);
+
+app.UseStaticFiles();
+
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "files", "applications")),
+    FileProvider = new PhysicalFileProvider(filesPath1),
     RequestPath = "/files/applications",
     ContentTypeProvider = provider
 });
 
 app.UseStaticFiles(new StaticFileOptions
 {
-    FileProvider = new PhysicalFileProvider(
-        Path.Combine(builder.Environment.ContentRootPath, "files", "employers")),
+    FileProvider = new PhysicalFileProvider(filesPath2),
     RequestPath = "/files/employers",
     ContentTypeProvider = provider
 });
+
+
+
+var filesPath = Path.Combine(app.Environment.ContentRootPath, "files");
+if (!Directory.Exists(filesPath))
+    Directory.CreateDirectory(filesPath);
+
+
+
+app.UseStaticFiles(new StaticFileOptions
+{
+    FileProvider = new PhysicalFileProvider(filesPath),
+    RequestPath = "/files"
+});
+
+
+
+
+
 
 app.UseHttpsRedirection();
 
@@ -124,17 +154,13 @@ app.MapControllers();
 
 
 
-var filesPath = Path.Combine(app.Environment.ContentRootPath, "files");
-if (!Directory.Exists(filesPath))
-    Directory.CreateDirectory(filesPath);
 
-// Serve static files from /wwwroot
-app.UseStaticFiles();
 
-// Serve static files from /files
-app.UseStaticFiles(new StaticFileOptions
-{
-    FileProvider = new PhysicalFileProvider(filesPath),
-    RequestPath = "/files"
-});
+
+
+
+
+
+
+
 app.Run();

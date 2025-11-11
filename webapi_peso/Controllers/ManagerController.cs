@@ -387,14 +387,6 @@ namespace webapi_peso.Controllers
                         db.SaveChanges();
                     }
                 }
-#if !DEBUG
-                var body = data.Message +
-                   "<br/><br/><br/>" +
-                   $"{EMAIL_FOOTER}";
-                var client = new SendGridClient(SENGRID_API_KEY);
-                var msg = MailHelper.CreateSingleEmailToMultipleRecipients(Emailfrom, emails, "REFERRED APPLICANTS", "", body);
-                await client.SendEmailAsync(msg);
-#endif
                 return Ok();
             }
         }

@@ -292,7 +292,7 @@ namespace webapi_peso.Controllers
         {
             using (var db = dbFactory.CreateDbContext())
             {
-                var list = db.EmployerHiredApplicants.Where(x => x.DateHired.Month == month && x.DateHired.Year == year);
+                var list = db.EmployerHiredApplicants.Where(x => x.DateHired.Month == month && x.DateHired.Year == year).ToList();
                 var rs = new List<JobApplicantsPlaced>();
                 foreach (var hired in list)
                 {

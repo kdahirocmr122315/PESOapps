@@ -173,6 +173,22 @@ namespace webapi_peso.Controllers
         }
 
         [HttpGet]
+        [Route("GetNSRP/verified")]
+        public List<ApplicantInformation> GetNSRPverified()
+        {
+            using var db = dbFactory.CreateDbContext();
+            var rs = cache.Get<List<ApplicantInformation>>("GetNSRPverified");
+            if (rs == null)
+            {
+                rs = new List<ApplicantInformation>();
+               var list = db.ApplicantInformation.Where(x => db.ApplicantAccount.Any(a => a.IsReviewedReturned == 1 && a.IsRemoved == 0 && x.AccountId == a.Id)).OrderByDescending(x => x.DateLastUpdate).ToList();
+                rs = list;
+            }
+
+            return rs;
+        }
+
+        [HttpGet]
         [Route("GetNSRP/verified/{distinct}/{pageIndex}/{pageSize}")]
         public Pagination<ApplicantInformation> GetNSRPverified(bool distinct, int pageIndex = 1, int pageSize = 10)
         {

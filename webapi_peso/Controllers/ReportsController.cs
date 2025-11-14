@@ -787,6 +787,21 @@ namespace webapi_peso.Controllers
             }
         }
 
+        [HttpGet("GetApplicantAccount")]
+        public List<ApplicantAccount> GetApplicantAccount()
+        {
+            using var db = dbFactory.CreateDbContext();
+            var rs = cache.Get<List<ApplicantAccount>>("GetApplicantAccount");
+            if (rs == null)
+            {
+                rs = new List<ApplicantAccount>();
+                var list = db.ApplicantAccount.ToList();
+                rs = list;
+            }
+
+            return rs;
+        }
+
         //Get Address ------------------
 
         [HttpGet("FindRegion/{code}")]

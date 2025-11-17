@@ -29,6 +29,12 @@
                 <NavMenuDashMunicipality />
             </div>
         }
+        else if (Navigation.Uri.EndsWith("/peso", StringComparison.OrdinalIgnoreCase))
+        {
+            <div class="navigation-section dboard">
+                <NavMenuDashPeso />
+            </div>
+        }
         else if (Navigation.Uri.EndsWith("/Admin", StringComparison.OrdinalIgnoreCase))
         {
             <div class="navigation-section dboard">
@@ -79,6 +85,14 @@
             </article>
         </main>
     }
+        else if (Navigation.Uri.EndsWith("/peso", StringComparison.OrdinalIgnoreCase))
+        {
+            <main class="main-content dboard">
+                <article class="main-container">
+                    @Body
+                </article>
+            </main>
+        }
         else if (Navigation.Uri.EndsWith("/admin", StringComparison.OrdinalIgnoreCase))
         {
             <main class="main-content dboard">

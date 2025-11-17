@@ -72,6 +72,15 @@
                     <input class="nsrp-input" @bind="employer.EmployerDetails.LineOfBusiness" />
                     <p class="text-muted">(Check BIR 2303)</p>
                 </div>
+                <div>
+                    <label>Employer Location<span class="text-danger">*</span></label>
+                    <select class="nsrp-input" @bind="employer.EmployerDetails.LocalOrOverseas">
+                        <option value="">Select</option>
+                        <option value="Local">Local</option>
+                        <option value="Overseas">Overseas</option>
+                    </select>
+                </div>
+
             </div>
 
             <!-- --- ADDRESS --- -->
@@ -168,56 +177,62 @@
 
             <!-- --- ATTACHMENTS --- -->
             <h4 class="mt-4 text-uppercase text-success fw-bold">Attach Documents</h4>
-
+            <!-- For Overseas -->
             <div class="row mt-3">
-                <!-- For Overseas -->
-                <div class="col-md-6">
-                    <div class="notice-card mb-3">
-                        <div class="card-header text-center">
-                            For Overseas Manpower Agencies/Companies
-                        </div>
-                        <div class="card-body p-0">
-                            <table class="table table-sm table-bordered mb-0">
-                                <tbody>
-                                    <tr><td>Philippines Overseas and Employment Agency Accreditation Certificate (POEA)</td></tr>
-                                    <tr><td>Bureau of Internal Revenue Registration (BIR) Registration</td></tr>
-                                    <tr><td>Securities and Exchange Commission (SEC) Registration</td></tr>
-                                    <tr><td>Updated Business Permit</td></tr>
-                                    <tr><td>Job Postings / Job Order (to be posted on our Facebook page)</td></tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- For Local -->
-                <div class="col-md-6">
-                    <div class="notice-card mb-3">
-                        <div class="card-header text-center">
-                            For Local Companies
-                        </div>
-                        <div class="card-body p-0">
-                            <table class="table table-sm table-bordered mb-0">
-                                <tbody>
-                                    <tr><td>PhilJobNet Online Registration</td></tr>
-                                    <tr><td>Submit print screen copy of online registration or scanned DOLE accreditation certificate</td></tr>
-                                    <tr><td>Bureau of Internal Revenue (BIR) Registration</td></tr>
-                                    <tr><td>Securities and Exchange Commission (SEC) Registration (for Corporations)</td></tr>
-                                    <tr><td>Department of Trade and Industry (DTI) Registration (for Small Enterprises)</td></tr>
-                                    <tr><td>Cooperative Development Authority (CDA) Registration (for Cooperatives)</td></tr>
-                                    <tr><td>Updated Business Permit</td></tr>
-                                    <tr><td>Job Postings</td></tr>
-                                </tbody>
-                            </table>
+                @if (employer.EmployerDetails.LocalOrOverseas == "Overseas")
+                {
+                    <div class="col-md-6">
+                        <div class="notice-card mb-3">
+                            <div class="card-header text-center">
+                                For Overseas Manpower Agencies/Companies
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <tbody>
+                                        <tr><td>Philippines Overseas and Employment Agency Accreditation Certificate (POEA)</td></tr>
+                                        <tr><td>Bureau of Internal Revenue Registration (BIR) Registration</td></tr>
+                                        <tr><td>Securities and Exchange Commission (SEC) Registration</td></tr>
+                                        <tr><td>Updated Business Permit</td></tr>
+                                        <tr><td>Job Postings / Job Order (to be posted on our Facebook page)</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
+                }
+
+                @if (employer.EmployerDetails.LocalOrOverseas == "Local")
+                {
+                    <div class="col-md-6">
+                        <div class="notice-card mb-3">
+                            <div class="card-header text-center">
+                                For Local Companies
+                            </div>
+                            <div class="card-body p-0">
+                                <table class="table table-sm table-bordered mb-0">
+                                    <tbody>
+                                        <tr><td>PhilJobNet Online Registration</td></tr>
+                                        <tr><td>Submit print screen copy of online registration or scanned DOLE accreditation certificate</td></tr>
+                                        <tr><td>Bureau of Internal Revenue (BIR) Registration</td></tr>
+                                        <tr><td>Securities and Exchange Commission (SEC) Registration (for Corporations)</td></tr>
+                                        <tr><td>Department of Trade and Industry (DTI) Registration (for Small Enterprises)</td></tr>
+                                        <tr><td>Cooperative Development Authority (CDA) Registration (for Cooperatives)</td></tr>
+                                        <tr><td>Updated Business Permit</td></tr>
+                                        <tr><td>Job Postings</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                }
+
             </div>
 
             <!-- File Upload Area -->
             <div class="text-center mt-3">
                 <InputFile OnChange="FileSelected" multiple accept=".pdf,.doc,.docx" />
-                <p class="text-muted mt-2"><small>10 MB maximum file size.</small></p>
+                <p class="text-muted mt-2"><small>100 MB maximum file size.</small></p>
             </div>
 
             @if (UploadedFiles?.Any() == true)
@@ -389,7 +404,7 @@
                 foreach (var file in SelectedFiles)
                 {
                     // Create file stream (no using — must stay open until upload completes)
-                    var stream = file.OpenReadStream(10 * 1024 * 1024);
+                    var stream = file.OpenReadStream(100 * 1024 * 1024);
                     var fileContent = new StreamContent(stream);
                     fileContent.Headers.ContentType = new MediaTypeHeaderValue(file.ContentType ?? "application/octet-stream");
 

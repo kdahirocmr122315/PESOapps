@@ -49,6 +49,8 @@ namespace webapi_peso.Model
         public DateTime? DateCreated { get; set; }
         public ProjectConfig.ACCOUNT_STATUS? Status { get; set; }
         public string? PESORemarks { get; set; }
+
+        public string? LocalOrOverseas { get; set; }
         public DateTime? LastUpdate { get; set; }
         public EmployerDetails()
         {

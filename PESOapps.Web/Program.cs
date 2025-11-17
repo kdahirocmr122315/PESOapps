@@ -26,7 +26,7 @@ builder.Services.AddScoped(sp => new HttpClient
 });
 builder.Services.Configure<FormOptions>(options =>
 {
-    options.MultipartBodyLengthLimit = 50 * 1024 * 1024; // 50 MB
+    options.MultipartBodyLengthLimit = 100 * 1024 * 1024; // 50 MB
 });
 // Add services to the container.
 builder.Services.AddRazorComponents()

@@ -259,10 +259,17 @@
                         </div>
 
                         <h4>Permanent Address</h4>
+                        <label class="form-check-label mb-2" style="display:flex; align-items:center; gap:6px;">
+                            <input type="checkbox"
+                                   class="form-check-input"
+                                   @bind="SameAsPresent"
+                                   @bind:after="OnSameAsPresentChanged" />
+                            Permanent address is the same as present
+                        </label>
                         <div class="nsrp-grid">
                             <div>
                                 <label>Region<span class="text-danger">*</span></label>
-                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialRegion">
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialRegion" disabled="@SameAsPresent">
                                     <option value="">Select</option>
                                     @foreach (var r in Regions)
                                     {
@@ -272,7 +279,7 @@
                             </div>
                             <div>
                                 <label>Province<span class="text-danger">*</span></label>
-                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialProvince">
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialProvince" disabled="@SameAsPresent">
                                     <option value="">Select</option>
                                     @foreach (var p in FilteredProvincesPermanent)
                                     {
@@ -282,7 +289,7 @@
                             </div>
                             <div>
                                 <label>City/Municipality<span class="text-danger">*</span></label>
-                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialMunicipalityCity">
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialMunicipalityCity" disabled="@SameAsPresent">
                                     <option value="">Select</option>
                                     @foreach (var c in FilteredCitiesPermanent)
                                     {
@@ -292,7 +299,7 @@
                             </div>
                             <div>
                                 <label>Barangay<span class="text-danger">*</span></label>
-                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialBarangay">
+                                <select class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialBarangay" disabled="@SameAsPresent">
                                     <option value="">Select</option>
                                     @foreach (var b in FilteredBarangaysPermanent)
                                     {
@@ -302,7 +309,7 @@
                             </div>
                             <div>
                                 <label>Street</label>
-                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialHouseNoOrStreetVillage" />
+                                <input class="nsrp-input" @bind="applicant.ApplicantInformation.ProvincialHouseNoOrStreetVillage" disabled="@SameAsPresent" />
                             </div>
                         </div>
 
@@ -559,7 +566,34 @@
                         <!-- Add New Language -->
                         <div class="nsrp-input-group">
                             <input class="nsrp-input" placeholder="Enter language"
-                                   @bind="newLanguageName" />
+                                   @bind="newLanguageName" list="langOptions" />
+
+                            <datalist id="langOptions">
+                                <option value="English" />
+                                <option value="Bisaya/ Cebuano" />
+                                <option value="Filipino / Tagalog" />
+                                <option value="Hiligaynon / Ilonggo" />
+                                <option value="Talaandig" />
+                                <option value="Tausog" />
+                                <option value="Maranao" />
+                                <option value="Waray" />
+                                <option value="Kapampangan" />
+
+                                <option value="Ilocano" />
+                                <option value="Bicolano" />
+                                <option value="Maguindanaoan" />
+                                <option value="Yakan" />
+                                <option value="Aklanon" />
+                                <option value="Kinaray-a" />
+                                <option value="Sambal" />
+                                <option value="Ifugao" />
+                                <option value="Ibanag" />
+                                <option value="Bontoc" />
+                                <option value="Kankanaey" />
+                                <option value="Ivatan" />
+                                <option value="Chavacano" />
+                                <option value="Surigaonon" />
+                            </datalist>
 
                             <label><input type="checkbox" @bind="newRead" /> Read</label>
                             <label><input type="checkbox" @bind="newWrite" /> Write</label>
@@ -1044,7 +1078,7 @@
                 else if (activeTab == "Other")
                 {
                     <div class="nsrp-section">
-                        <h4>Other Skills<span class="text-danger">*</span></h4>
+                        <h4>Other Skills</h4>
 
                         <!-- Add New Skill -->
                         <div class="nsrp-input-group">
@@ -1535,6 +1569,28 @@
         }
     }
 
+    bool SameAsPresent;
+
+    private void OnSameAsPresentChanged()
+    {
+        if (SameAsPresent)
+        {
+            applicant.ApplicantInformation.ProvincialRegion =
+                applicant.ApplicantInformation.PresentRegion;
+
+            applicant.ApplicantInformation.ProvincialProvince =
+                applicant.ApplicantInformation.PresentProvince;
+
+            applicant.ApplicantInformation.ProvincialMunicipalityCity =
+                applicant.ApplicantInformation.PresentMunicipalityCity;
+
+            applicant.ApplicantInformation.ProvincialBarangay =
+                applicant.ApplicantInformation.PresentBarangay;
+
+            applicant.ApplicantInformation.ProvincialHouseNoOrStreetVillage =
+                applicant.ApplicantInformation.PresentHouseNoOrStreetVillage;
+        }
+    }
 
 
 
@@ -2069,11 +2125,6 @@
             case "education":
                 if (applicant.ApplicantEducationalBackground == null || !applicant.ApplicantEducationalBackground.Any())
                     _errors.Add("Please add at least one educational background.");
-                break;
-
-            case "Other":
-                if (applicant.ApplicantOtherSkills == null || !applicant.ApplicantOtherSkills.Any())
-                    _errors.Add("Please add at least one skill before submitting.");
                 break;
         }
 

@@ -1,0 +1,429 @@
+﻿@page "/Jobfair/admin"
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject AddressService AddressService
+
+@using System.Text.Json
+@using PESOapps.Shared.Address
+@using webapi_peso.Model
+@using webapi_peso.ViewModels
+
+<div class="jf-container">
+
+    <!-- Verification Section -->
+    <div class="jf-card jf-verification-card">
+        <h3>🔍 Pre-registered Verification</h3>
+        <div class="jf-verification-input">
+            <input type="text"
+                   placeholder="Enter Reference Number"
+                   @bind="referenceNumber"
+                   maxlength="8"
+                   inputmode="numeric"
+                   pattern="\d*"
+                   @oninput="OnReferenceInput" />
+
+            @code {
+                private void OnReferenceInput(ChangeEventArgs e)
+                {
+                    var input = e.Value?.ToString() ?? "";
+                    // Remove non-digit characters and limit to 8 digits
+                    referenceNumber = new string(input.Where(char.IsDigit).Take(8).ToArray());
+                }
+            }
+            <button class="jf-btn-primary" @onclick="VerifyReference">VERIFY</button>
+        </div>
+
+
+
+        @if (verifiedInfo != null)
+        {
+            <div class="jf-verified-details">
+                <div class="jf-input-group">
+                    <label>First Name</label>
+                    <input type="text" value="@verifiedInfo.FirstName" readonly />
+                </div>
+                <div class="jf-input-group">
+                    <label>Last Name</label>
+                    <input type="text" value="@verifiedInfo.Surname" readonly />
+                </div>
+                <div class="jf-input-group">
+                    <label>Email</label>
+                    <input type="email" value="@verifiedInfo.Email" readonly />
+                </div>
+                <div class="jf-input-group">
+                    <label>Phone</label>
+                    <div class="jf-phone">
+                        <span class="jf-phone-prefix">+63</span>
+                        <input type="text" value="@verifiedInfo.CellphoneNumber" readonly />
+                    </div>
+                </div>
+            </div>
+
+        }
+        @if (!string.IsNullOrEmpty(verificationMessage))
+        {
+            <p class="@(isVerified ? "jf-text-success" : "jf-text-error")">@verificationMessage</p>
+        }
+    </div>
+
+    <!-- List Section -->
+    <div class="jf-card jf-list-card">
+        <div class="jf-header">
+            <h3>@filteredList.Count Pre-registered</h3>
+            <button class="jf-btn-secondary" @onclick="ExportToCSV" disabled="@(!filteredList.Any())">
+                ⬇ Export CSV
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="jf-filters">
+            <div>
+                <label>Province:</label>
+                <select @onchange="OnProvinceChanged">
+                    <option value="">Select Province</option>
+                    @foreach (var province in Provinces)
+                    {
+                        <option value="@province.provCode" selected="@(province.provCode == SelectedProvinceCode)">
+                            @province.provDesc
+                        </option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label>City/Municipality:</label>
+                <select @onchange="OnCitySelected" disabled="@(!HasSelectedProvince)">
+                    <option value="">Select City/Municipality</option>
+                    @foreach (var city in Cities)
+                    {
+                        <option value="@city.citymunCode" selected="@(city.citymunCode == SelectedCityCode)">
+                            @city.citymunDesc
+                        </option>
+                    }
+                </select>
+            </div>
+            <div>
+                <label>From:</label>
+                <input id="fromDate" class="jf-fromto" type="text" placeholder="Select date" />
+            </div>
+            <div>
+                <label>To:</label>
+                <input id="toDate" class="jf-fromto" type="text" placeholder="Select date" />
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        @if (isLoading)
+        {
+            <p>Loading data...</p>
+        }
+        else
+        {
+            <table class="jf-table">
+                <thead>
+                    <tr>
+                        <th>First Name</th>
+                        <th>Last Name</th>
+                        <th>Date Registered</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!filteredList.Any())
+                    {
+                        <tr><td colspan="3">No matching records found</td></tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in paginatedList)
+                        {
+                            <tr>
+                                <td>@item.FirstName</td>
+                                <td>@item.SurName</td>
+                                <td>@DateTimeOffset.FromUnixTimeMilliseconds(item.DateLastUpdate).ToString("yyyy-MM-dd")</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+            @if (totalPages > 1)
+            {
+                <div class="jf-pagination">
+                    <button class="jf-btn-secondary" @onclick="PreviousPage" disabled="@(currentPage == 1)">Previous</button>
+                    <span>Page @currentPage of @totalPages</span>
+                    <button class="jf-btn-secondary" @onclick="NextPage" disabled="@(currentPage == totalPages)">Next</button>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+
+@code {
+    private string referenceNumber = "";
+    private VerifiedUser? verifiedInfo;
+    private List<ApplicantInformation> filteredList = new();
+
+    private DateTime? filterFrom = null;
+    private DateTime? filterTo = null;
+
+    private string? verificationMessage;
+    private bool isVerified;
+    private bool isLoading = false;
+    private bool loaded = false;
+
+    // Location selections
+    private string? SelectedProvinceCode;
+    private string? SelectedCityCode;
+    private string? SelectedBarangayCode;
+
+    public List<Province> Provinces { get; set; } = new();
+    public List<CityMunicipality> Cities { get; set; } = new();
+    public List<Barangay> Barangays { get; set; } = new();
+
+    private bool HasSelectedProvince => !string.IsNullOrEmpty(SelectedProvinceCode);
+    private bool HasSelectedCity => !string.IsNullOrEmpty(SelectedCityCode);
+
+    private int currentPage = 1;
+    private int pageSize = 10;
+    private int totalPages => (int)Math.Ceiling(filteredList.Count / (double)pageSize);
+    private IEnumerable<ApplicantInformation> paginatedList =>
+        filteredList.Skip((currentPage - 1) * pageSize).Take(pageSize);
+
+    private void NextPage()
+    {
+        if (currentPage < totalPages)
+            currentPage++;
+    }
+
+    private void PreviousPage()
+    {
+        if (currentPage > 1)
+            currentPage--;
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && !loaded)
+        {
+            loaded = true;
+
+            // existing init code...
+            Provinces = await AddressService.GetProvincesAsync();
+            await LoadFromLocalStorage();
+
+            if (HasSelectedProvince)
+                Cities = (await AddressService.GetCitiesAsync())
+                    .Where(c => c.provCode == SelectedProvinceCode).ToList();
+
+            if (HasSelectedCity)
+                Barangays = (await AddressService.GetBarangaysAsync())
+                    .Where(b => b.citymunCode == SelectedCityCode).ToList();
+
+            await LoadAllPreRegistered();
+
+            // initialize Flatpickr after render
+            await JS.InvokeVoidAsync("initFlatpickr", DotNetObjectReference.Create(this));
+
+            StateHasChanged();
+        }
+    }
+
+    [JSInvokable]
+    public Task OnFromDateSelected(string date)
+    {
+        filterFrom = DateTime.Parse(date);
+        return LoadAllPreRegistered();
+    }
+
+    [JSInvokable]
+    public Task OnToDateSelected(string date)
+    {
+        filterTo = DateTime.Parse(date);
+        return LoadAllPreRegistered();
+    }
+
+    private async Task LoadFromLocalStorage()
+    {
+        SelectedProvinceCode = await JS.InvokeAsync<string>("localStorage.getItem", "provinceCode") ?? "";
+        SelectedCityCode = await JS.InvokeAsync<string>("localStorage.getItem", "cityCode") ?? "";
+        SelectedBarangayCode = await JS.InvokeAsync<string>("localStorage.getItem", "barangayCode") ?? "";
+    }
+
+    private async Task SaveToLocalStorage()
+    {
+        await JS.InvokeVoidAsync("localStorage.setItem", "provinceCode", SelectedProvinceCode ?? "");
+        await JS.InvokeVoidAsync("localStorage.setItem", "cityCode", SelectedCityCode ?? "");
+        await JS.InvokeVoidAsync("localStorage.setItem", "barangayCode", SelectedBarangayCode ?? "");
+    }
+
+    private async Task OnProvinceChanged(ChangeEventArgs e)
+    {
+        SelectedProvinceCode = e.Value?.ToString();
+        SelectedCityCode = null;
+        SelectedBarangayCode = null;
+
+        if (HasSelectedProvince)
+            Cities = (await AddressService.GetCitiesAsync())
+                .Where(c => c.provCode == SelectedProvinceCode).ToList();
+        else
+            Cities.Clear();
+
+        Barangays.Clear();
+        await SaveToLocalStorage();
+        await LoadAllPreRegistered();
+    }
+
+    private async Task OnCitySelected(ChangeEventArgs e)
+    {
+        SelectedCityCode = e.Value?.ToString();
+        SelectedBarangayCode = null;
+
+        if (HasSelectedCity)
+            Barangays = (await AddressService.GetBarangaysAsync())
+                .Where(b => b.citymunCode == SelectedCityCode).ToList();
+        else
+            Barangays.Clear();
+
+        await SaveToLocalStorage();
+        await LoadAllPreRegistered();
+    }
+
+    private async Task OnBarangaySelected(ChangeEventArgs e)
+    {
+        SelectedBarangayCode = e.Value?.ToString();
+        await SaveToLocalStorage();
+        await LoadAllPreRegistered();
+    }
+
+    private async Task OnDateChanged(ChangeEventArgs e)
+    {
+        if (filterFrom.HasValue && filterTo.HasValue)
+            await LoadAllPreRegistered();
+    }
+
+    private async Task LoadAllPreRegistered()
+    {
+        isLoading = true;
+        StateHasChanged();
+
+        try
+        {
+            // Base filters
+            var provCode = SelectedProvinceCode ?? "";
+            var cityCode = SelectedCityCode ?? "";
+
+            string apiUrl = "api/Manager/GetPreRegList1";
+
+            // Dynamic API endpoint based on filter levels
+            if (!string.IsNullOrEmpty(provCode) && !string.IsNullOrEmpty(cityCode))
+            {
+                // province + city selected
+                apiUrl += $"/{provCode}/{cityCode}";
+            }
+            else if (!string.IsNullOrEmpty(provCode))
+            {
+                // province only selected
+                apiUrl += $"/{provCode}/0";
+            }
+            else
+            {
+                // no province/city, just get all
+                apiUrl += "/0/0";
+            }
+
+            var res = await Http.GetAsync(apiUrl);
+
+            if (res.IsSuccessStatusCode)
+            {
+                var allData = await res.Content.ReadFromJsonAsync<List<ApplicantInformation>>() ?? new();
+
+                // 🗓 Apply date filters if any
+                if (filterFrom.HasValue && filterTo.HasValue)
+                {
+                    var from = filterFrom.Value.Date;
+                    var to = filterTo.Value.Date;
+
+                    filteredList = allData
+                        .Where(a =>
+                        {
+                            var date = DateTimeOffset.FromUnixTimeMilliseconds(a.DateLastUpdate).Date;
+                            return date >= from && date <= to;
+                        })
+                        .ToList();
+                }
+                else
+                {
+                    filteredList = allData;
+                }
+            }
+            else
+            {
+                filteredList.Clear();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ LoadAllPreRegistered error: {ex.Message}");
+            filteredList.Clear();
+        }
+
+        isLoading = false;
+        StateHasChanged();
+    }
+
+
+    private async Task VerifyReference()
+    {
+        if (string.IsNullOrWhiteSpace(referenceNumber))
+        {
+            verificationMessage = "Please enter a reference number.";
+            isVerified = false;
+            verifiedInfo = null;
+            return;
+        }
+
+        try
+        {
+            var res = await Http.GetAsync($"api/Manager/ValidateReferenceNumber/{referenceNumber}");
+            if (res.IsSuccessStatusCode)
+            {
+                var json = await res.Content.ReadAsStringAsync();
+                verifiedInfo = JsonSerializer.Deserialize<VerifiedUser>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                isVerified = verifiedInfo != null;
+                verificationMessage = isVerified ? "Reference number is valid!" : "Invalid reference number.";
+            }
+            else
+            {
+                isVerified = false;
+                verificationMessage = "Invalid reference number.";
+                verifiedInfo = null;
+            }
+        }
+        catch (Exception ex)
+        {
+            verificationMessage = $"Error verifying: {ex.Message}";
+            isVerified = false;
+            verifiedInfo = null;
+        }
+    }
+
+    private async Task ExportToCSV()
+    {
+        if (!filteredList.Any())
+            return;
+
+        var csv = "First Name,Last Name,Date Registered\n" +
+                  string.Join("\n", filteredList.Select(u =>
+                      $"{u.FirstName},{u.SurName},{DateTimeOffset.FromUnixTimeMilliseconds(u.DateLastUpdate):yyyy-MM-dd}"));
+
+        await JS.InvokeVoidAsync("downloadCSV", csv, "pre_registered.csv");
+    }
+
+    public class VerifiedUser
+    {
+        public string FirstName { get; set; } = "";
+        public string Surname { get; set; } = "";
+        public string Email { get; set; } = "";
+        public string CellphoneNumber { get; set; } = "";
+    }
+}

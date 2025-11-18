@@ -9,7 +9,8 @@
       },
       {
         "Path": "PESOapps.Web\\PESOapps.Web.csproj",
-        "Action": "Start"
+        "Action": "Start",
+        "DebugTarget": "https"
       }
     ]
   }

@@ -4,8 +4,7 @@
 @inject IJSRuntime JS
 @using System.Text.Json
 @using PESOapps.Shared.Pages.Shared
-
-<h3>Admin Profile - Job Fair Status</h3>
+@using webapi_peso.ViewModels
 
 @if (isLoading)
 {
@@ -17,16 +16,174 @@ else if (!isUserLoggedIn)
 }
 else
 {
-    <div class="status-container">
-        <label class="switch">
-            <input type="checkbox" @bind="IsJobFairActive" />
-            <span class="slider"></span>
-        </label>
-        <span class="status-text">@statusText</span>
+    <div class="profile-page manads">
+
+        <!-- Job Fair Toggle -->
+        <div class="jf-card">
+            <h3>Admin Profile - Job Fair Status</h3>
+            <label class="switch">
+                <input type="checkbox" @bind="IsJobFairActive" />
+                <span class="slider"></span>
+            </label>
+            <span class="status-text">@statusText</span>
+        </div>
+
+        <!-- NSRP Section -->
+        <div class="jf-card">
+            <div class="mb-3 d-flex gap-2">
+                <button class="nsrp-toggle" @onclick="LoadPending">Pending Applicants</button>
+                <button class="nsrp-toggle" @onclick="LoadVerified">Verified Applicants</button>
+                <button class="nsrp-toggle" @onclick="GoToAddNSRP">Add NSRP</button>
+            </div>
+
+            @if (isLoadingTable)
+            {
+                <div>Loading records...</div>
+            }
+            else if (
+            (isVerifiedMode && (verifiedList == null || !verifiedList.Any())) ||
+            (!isVerifiedMode && (pendingList == null || !pendingList.Any()))
+            )
+            {
+                <div class="alert alert-warning">No records found.</div>
+            }
+            else
+            {
+                <!-- VERIFIED TABLE -->
+                @if (isVerifiedMode)
+                {
+                    <h3 class="fw-bold mb-3">Verified Applicants</h3>
+                    <table class="jf-table">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Gender</th>
+                                <th>Date</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (JsonElement item in PagedJson)
+                            {
+                                long rawDate = item.GetProperty("dateLastUpdate").GetInt64();
+                                string fixedDate = rawDate > 0
+                                ? DateTimeOffset.FromUnixTimeMilliseconds(rawDate).ToString("MMMM dd, yyyy")
+                                : "";
+
+                                // FIX: use accountId instead of id
+                                string id = item.GetProperty("accountId").GetString() ?? "";
+
+                                <tr>
+                                    <td>@item.GetProperty("surName").GetString(), @item.GetProperty("firstName").GetString()</td>
+                                    <td>@item.GetProperty("email").GetString()</td>
+                                    <td>@item.GetProperty("gender").GetString()</td>
+                                    <td>@fixedDate</td>
+
+                                    <td class="text-center">
+                                        <button class="badge btn-danger" @onclick="(() => DeleteApplicant(id))">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <!-- PENDING TABLE -->
+                    <h3 class="fw-bold mb-3">Pending Applicants</h3>
+                    <table class="jf-table">
+                        <thead>
+                            <tr>
+                                <th>Full Name</th>
+                                <th>Email</th>
+                                <th>Registered</th>
+                                <th>Status</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in PagedPending)
+                            {
+                                long rawDate = item.ApplicantAccount?.DateRegistered ?? 0;
+                                string formattedDate =
+                                rawDate > 0
+                                ? DateTimeOffset.FromUnixTimeMilliseconds(rawDate).ToString("MMMM dd, yyyy")
+                                : "";
+
+                                <tr>
+                                    <td>@item.ApplicantInformation?.SurName, @item.ApplicantInformation?.FirstName</td>
+                                    <td>@item.ApplicantInformation?.Email</td>
+                                    <td>@formattedDate</td>
+
+                                    <td>
+                                        @if (item.ApplicantAccount?.IsReviewedReturned == 0)
+                                        {
+                                            <span class="text-danger fw-bold">Pending</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-success fw-bold">Returned</span>
+                                        }
+                                    </td>
+
+                                    <td class="text-center">
+                                        <button class="badge btn-success"
+                                                @onclick="(() => VerifyApplicant(item.ApplicantAccount.Id))">
+                                            Verify
+                                        </button>
+
+                                        <button class="badge btn-danger"
+                                                @onclick="(() => DeleteApplicant(item.ApplicantAccount.Id))">
+                                            Delete
+                                        </button>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+
+                <!-- PAGINATION -->
+                <div class="jf-pagination">
+                    <nav class="mt-3 d-flex justify-content-center align-items-center gap-2">
+                        <button class="jf-btn-secondary"
+                                @onclick="PreviousPage"
+                                disabled="@(currentPage == 1)">
+                            Previous
+                        </button>
+
+                        <span>Page</span>
+
+                        <input type="number"
+                               class="form-control text-center"
+                               style="width: 80px;"
+                               min="1"
+                               max="@totalPages"
+                               value="@currentPage"
+                               @onchange="OnPageInputChange" />
+
+                        <span>of @totalPages</span>
+
+                        <button class="jf-btn-secondary"
+                                @onclick="NextPage"
+                                disabled="@(currentPage == totalPages)">
+                            Next
+                        </button>
+                    </nav>
+                </div>
+            }
+        </div>
     </div>
 }
 
 @code {
+    /* ============================
+       LOGIN + STATUS SECTION
+       ============================ */
+
     private bool isUserLoggedIn;
     private bool isLoading = true;
     private string statusText = "";
@@ -39,18 +196,14 @@ else
         set
         {
             if (_isJobFairActive != value)
-            {
-                _ = ConfirmAndToggleAsync(value); // confirm before toggling
-            }
+                _ = ConfirmAndToggleAsync(value);
         }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
-        {
             await InitializeProfileAsync();
-        }
     }
 
     private async Task InitializeProfileAsync()
@@ -72,6 +225,7 @@ else
                 new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
             await LoadJobFairStatus();
+            await LoadPending();
         }
         finally
         {
@@ -82,88 +236,166 @@ else
 
     private async Task LoadJobFairStatus()
     {
-        try
-        {
-            var response = await Http.GetAsync("api/Manager/GetJobFairStatus");
-            if (response.IsSuccessStatusCode)
-            {
-                var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-                var statusValue = json.RootElement.GetProperty("jobFairStatus").GetInt32();
+        var response = await Http.GetAsync("api/Manager/GetJobFairStatus");
 
-                _isJobFairActive = statusValue == 1;
-                UpdateStatusText();
-                StateHasChanged();
-            }
-            else
-            {
-                await JS.InvokeVoidAsync("alert", "Failed to load Job Fair Status.");
-            }
-        }
-        catch (Exception ex)
-        {
-            await JS.InvokeVoidAsync("alert", $"Error loading status: {ex.Message}");
-        }
-        UpdateStatusText();
+        if (!response.IsSuccessStatusCode)
+            return;
+
+        var json = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+        var value = json.RootElement.GetProperty("jobFairStatus").GetInt32();
+
+        _isJobFairActive = value == 1;
+        statusText = _isJobFairActive ? "Job Fair is ON" : "Job Fair is OFF";
     }
 
     private async Task ConfirmAndToggleAsync(bool newValue)
     {
-        bool confirmed = await JS.InvokeAsync<bool>("confirm",
-            $"Are you sure you want to turn {(newValue ? "ON" : "OFF")} the Job Fair?");
+        bool confirm = await JS.InvokeAsync<bool>("confirm",
+            $"Turn {(newValue ? "ON" : "OFF")} the Job Fair?");
 
-        if (confirmed)
+        if (!confirm) return;
+
+        _isJobFairActive = newValue;
+        statusText = newValue ? "Job Fair is ON" : "Job Fair is OFF";
+
+        var content = new StringContent(
+            JsonSerializer.Serialize(new { accountId = userId }),
+            System.Text.Encoding.UTF8,
+            "application/json"
+        );
+
+        await Http.PostAsync("api/Manager/SetJobFairStatus", content);
+    }
+
+    /* ============================
+       NSRP LIST + PAGINATION
+       ============================ */
+
+    private bool isLoadingTable = false;
+    private bool isVerifiedMode = false;
+
+    private List<AccountAndInformationViewModel>? pendingList;
+    private List<JsonElement>? verifiedList;
+
+    private int currentPage = 1;
+    private int pageSize = 15;
+
+    private int totalPages =>
+        (int)Math.Ceiling(
+            (double)(isVerifiedMode ? verifiedList?.Count ?? 0 : pendingList?.Count ?? 0)
+            / pageSize
+        );
+
+    private IEnumerable<AccountAndInformationViewModel> PagedPending =>
+        pendingList?
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            ?? Enumerable.Empty<AccountAndInformationViewModel>();
+
+    private IEnumerable<JsonElement> PagedJson =>
+        verifiedList?
+            .Skip((currentPage - 1) * pageSize)
+            .Take(pageSize)
+            ?? Enumerable.Empty<JsonElement>();
+
+
+    private async Task LoadPending()
+    {
+        isVerifiedMode = false;
+        isLoadingTable = true;
+
+        pendingList = await Http.GetFromJsonAsync<List<AccountAndInformationViewModel>>(
+            "/api/Manager/GetNSRP/pending"
+        );
+
+        verifiedList = null;
+        currentPage = 1;
+        isLoadingTable = false;
+    }
+
+    private async Task LoadVerified()
+    {
+        isVerifiedMode = true;
+        isLoadingTable = true;
+
+        verifiedList = await Http.GetFromJsonAsync<List<JsonElement>>(
+            "/api/Manager/GetNSRP/verified"
+        );
+
+        pendingList = null;
+        currentPage = 1;
+        isLoadingTable = false;
+    }
+
+    /* ============================
+       ACTION BUTTONS (GET)
+       ============================ */
+
+    private async Task VerifyApplicant(string id)
+    {
+        bool confirm = await JS.InvokeAsync<bool>("confirm", "Verify this applicant?");
+        if (!confirm) return;
+
+        var response = await Http.GetAsync($"/api/Applicant/VerifyApplicant/{id}");
+
+        if (response.IsSuccessStatusCode)
         {
-            // ✅ Only update if confirmed
-            _isJobFairActive = newValue;
-
-            // ✅ Update the text immediately
-            UpdateStatusText();
-
-            // ✅ Refresh the UI before calling API
-            StateHasChanged();
-
-            await ToggleStatusAsync();
+            await JS.InvokeVoidAsync("alert", "Applicant verified successfully.");
+            await LoadPending();
         }
         else
         {
-            // ❌ Do nothing (revert visual state)
-            StateHasChanged();
+            await JS.InvokeVoidAsync("alert", "Failed to verify applicant.");
         }
     }
 
-
-
-
-    private async Task ToggleStatusAsync()
+    private async Task DeleteApplicant(string id)
     {
-        UpdateStatusText();
+        bool confirm = await JS.InvokeAsync<bool>("confirm", "Delete this applicant?");
+        if (!confirm) return;
 
-        if (string.IsNullOrEmpty(userId))
-            return;
+        var response = await Http.GetAsync($"/api/Applicant/RemoveNSRPRecord/{id}");
 
-        try
+        if (response.IsSuccessStatusCode)
         {
-            var content = new StringContent(
-                JsonSerializer.Serialize(new { accountId = userId }),
-                System.Text.Encoding.UTF8,
-                "application/json"
-            );
+            await JS.InvokeVoidAsync("alert", "Applicant removed successfully.");
 
-            var response = await Http.PostAsync("api/Manager/SetJobFairStatus", content);
-            if (response.IsSuccessStatusCode)
-                await JS.InvokeVoidAsync("alert", $"Job Fair Status updated to: {statusText}");
+            if (isVerifiedMode)
+                await LoadVerified();
             else
-                await JS.InvokeVoidAsync("alert", "Failed to update Job Fair Status.");
+                await LoadPending();
         }
-        catch (Exception ex)
+        else
         {
-            await JS.InvokeVoidAsync("alert", $"Error updating status: {ex.Message}");
+            await JS.InvokeVoidAsync("alert", "Failed to delete applicant.");
         }
-        UpdateStatusText();
     }
 
-    private void UpdateStatusText()
+    /* ============================
+       PAGINATION
+       ============================ */
+
+    private void PreviousPage()
     {
-        statusText = _isJobFairActive ? "Job Fair is ON" : "Job Fair is OFF";
+        if (currentPage > 1)
+            currentPage--;
+    }
+
+    private void NextPage()
+    {
+        if (currentPage < totalPages)
+            currentPage++;
+    }
+
+    private void OnPageInputChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int page))
+            if (page >= 1 && page <= totalPages)
+                currentPage = page;
+    }
+
+    private void GoToAddNSRP()
+    {
+        Navigation.NavigateTo("/pesobeta/nsrpadd/admin");
     }
 }

@@ -474,6 +474,10 @@ input:checked + .slider:before {
     transform: translateX(24px);
 }
 
+.manads {
+    gap: 10px;
+}
+
 /****************************** END Toggle********************************/
 @keyframes jf-spin {
     0% {

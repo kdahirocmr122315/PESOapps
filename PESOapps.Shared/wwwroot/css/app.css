@@ -379,7 +379,6 @@ span.misvis-par {
     left: 0;
     bottom: 0;
     width: 100%;
-    z-index: -1;
 }
 
 .aboutus-bub {
@@ -780,6 +779,10 @@ a.nav-links-sub.tupad:after {
 .btn-danger,
 .btn-success {
     color: #000;
+}
+
+.badge {
+    color: #fff;
 }
 
 .form-cont.dashb th {

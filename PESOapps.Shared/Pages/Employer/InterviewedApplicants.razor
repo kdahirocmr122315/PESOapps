@@ -111,45 +111,60 @@ else
                 return;
             }
 
-            var jobResponse = await Http.GetAsync($"api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
-            if (jobResponse.IsSuccessStatusCode)
+            // STEP 1 — Get EmployerDetails using userId
+            var detailsResponse = await Http.GetAsync($"api/Employer/GetEmployerDetailsByEmail/{userId}");
+
+            if (!detailsResponse.IsSuccessStatusCode)
             {
-                var rawJson = await jobResponse.Content.ReadAsStringAsync();
-                var employerData = JsonSerializer.Deserialize<EmployerRegistrationViewModel>(rawJson, new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (employerData != null)
-                {
-                    employerDetails = employerData.EmployerDetails;
-                    employerId = employerDetails?.Id;
-
-                    // load positions from employerDetails.JobPosts if available
-                    if (employerDetails?.JobPosts != null && employerDetails.JobPosts.Any())
-                    {
-                        // Ensure null-safe projection to List<string>
-                        availablePositions = employerDetails.JobPosts
-                            .Select(j => j.Description ?? j.Description2)
-                            .Where(s => !string.IsNullOrWhiteSpace(s))
-                            .ToList()!;
-                    }
-                }
-            }
-
-            if (string.IsNullOrEmpty(employerId))
-            {
-                pendingErrorMessage = "EmployerId not found for current user.";
+                pendingErrorMessage = "Failed to get employer details using userId.";
                 return;
             }
 
+            var json1 = await detailsResponse.Content.ReadAsStringAsync();
+            var employerLookup = JsonSerializer.Deserialize<EmployerDetails>(json1,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (employerLookup == null)
+            {
+                pendingErrorMessage = "No employer details found for this account.";
+                return;
+            }
+
+            // Extract the REAL employerDetailsId
+            employerId = employerLookup.Id;
+
+            // STEP 2 — Load full establishment data using employerId
+            var jobResponse = await Http.GetAsync($"api/Employer/GetEstablishmentDataWithUserAccountId/{employerId}");
+            if (jobResponse.IsSuccessStatusCode)
+            {
+                var rawJson = await jobResponse.Content.ReadAsStringAsync();
+                var employerData = JsonSerializer.Deserialize<EmployerRegistrationViewModel>(rawJson,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                employerDetails = employerData?.EmployerDetails;
+
+                // Load job positions
+                if (employerDetails?.JobPosts != null && employerDetails.JobPosts.Any())
+                {
+                    availablePositions = employerDetails.JobPosts
+                        .Select(j => j.Description ?? j.Description2)
+                        .Where(s => !string.IsNullOrWhiteSpace(s))
+                        .ToList()!;
+                }
+            }
+            else
+            {
+                pendingErrorMessage = "Failed to load establishment/job posts.";
+                return;
+            }
+
+            // STEP 3 — Load Interviewed Applicants using employerId
             var url = $"api/Employer/GetInterViewedApplicants/{employerId}";
             var response = await Http.GetAsync(url);
 
             if (response.IsSuccessStatusCode)
             {
                 var rawJson = await response.Content.ReadAsStringAsync();
-                Console.WriteLine("🔍 JSON Response: " + rawJson);
                 interviewedApplicants = JsonSerializer.Deserialize<List<InterviewedApplicantViewModel>>(
                     rawJson,
                     new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
@@ -158,7 +173,7 @@ else
             else
             {
                 var err = await response.Content.ReadAsStringAsync();
-                pendingErrorMessage = $"Failed to load: {response.StatusCode} - {err}";
+                pendingErrorMessage = $"Failed to load interviewed applicants: {response.StatusCode} - {err}";
             }
         }
         catch (Exception ex)
@@ -170,6 +185,7 @@ else
             isLoading = false;
         }
     }
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

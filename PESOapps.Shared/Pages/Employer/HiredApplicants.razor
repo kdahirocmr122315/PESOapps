@@ -72,21 +72,56 @@
                 return;
             }
 
-            // load employer details to get employerId (same pattern used elsewhere)
-            var jobResponse = await Http.GetAsync($"api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
+            // STEP 1 — Get EmployerDetails using userId
+            var detailsResponse = await Http.GetAsync($"api/Employer/GetEmployerDetailsByEmail/{userId}");
+
+            if (!detailsResponse.IsSuccessStatusCode)
+            {
+                pendingErrorMessage = "Failed to get employer details using userId.";
+                return;
+            }
+
+            var json1 = await detailsResponse.Content.ReadAsStringAsync();
+            var employerLookup = JsonSerializer.Deserialize<EmployerDetails>(json1,
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (employerLookup == null)
+            {
+                pendingErrorMessage = "Employer details not found for this user.";
+                return;
+            }
+
+            // Extract REAL employerDetails.Id
+            employerId = employerLookup.Id;
+
+            // STEP 2 — Load full establishment data using employerId
+            var jobResponse = await Http.GetAsync(
+                $"api/Employer/GetEstablishmentDataWithUserAccountId/{employerId}"
+            );
+
             if (jobResponse.IsSuccessStatusCode)
             {
                 var rawJob = await jobResponse.Content.ReadAsStringAsync();
-                var employerData = JsonSerializer.Deserialize<EmployerRegistrationViewModel>(rawJob, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                employerId = employerData?.EmployerDetails?.Id;
+                var employerData = JsonSerializer.Deserialize<EmployerRegistrationViewModel>(
+                    rawJob,
+                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+
+                // employerDetails = employerData?.EmployerDetails; (optional)
+            }
+            else
+            {
+                pendingErrorMessage = "Failed to load employer establishment data.";
+                return;
             }
 
             if (string.IsNullOrEmpty(employerId))
             {
-                pendingErrorMessage = "EmployerId not found for current user.";
+                pendingErrorMessage = "EmployerId was not resolved.";
                 return;
             }
 
+            // STEP 3 — Load Hired Applicants using employerId
             await LoadHiredApplicants();
             StateHasChanged();
         }
@@ -99,6 +134,7 @@
             isLoading = false;
         }
     }
+
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {

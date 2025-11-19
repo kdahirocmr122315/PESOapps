@@ -12,7 +12,7 @@
 
 <PageTitle>Admin — Add NSRP Applicant</PageTitle>
 
-<div class="nsrp-container registrations-container">
+<div class="nsrp-container registrations-container pesoman">
     <EditForm Model="@applicant" OnValidSubmit="HandleValidSubmit">
         <DataAnnotationsValidator />
         <ValidationSummary />
@@ -217,6 +217,7 @@
                         </div>
 
                         <div class="form-group">
+                            <label> </label>
                             <select class="nsrp-input" @bind="applicant.ApplicantInformation.EmpStatusChild">
                                 <option value="Wage Employed">Wage Employed</option>
                                 <option value="Self Employed">Self Employed</option>
@@ -745,7 +746,16 @@
     private string message = "";
     private string messageType = "";
     // Model + state
-    private ApplicantDataViewModel applicant = new();
+    private ApplicantDataViewModel applicant = new()
+    {
+        ApplicantExpectedSalary = new ApplicantExpectedSalary
+        {
+            Id = Guid.NewGuid().ToString(),
+            From = 0,
+            To = 0,
+            DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        }
+    };
     private bool isSubmitting = false;
     private List<string> _errors = new();
     private bool showSuccessModal = false;
@@ -1055,7 +1065,25 @@
 
             // IMPORTANT: Remove email from payload (admin requirement) but keep a copy if you want to restore locally
             var originalEmail = applicant.ApplicantInformation.Email;
-            applicant.ApplicantInformation.Email = null; // ensure backend doesn't receive email
+            // If admin checked "No Email", use dummy email instead of null
+            if (NoEmailChecked && string.IsNullOrWhiteSpace(applicant.ApplicantInformation.Email))
+            {
+                var rand = new Random();
+                applicant.ApplicantInformation.Email = $"dummy{rand.Next(100000, 999999)}@email.com";
+            } // ensure backend doesn't receive email
+
+            // --- ensure ApplicantExpectedSalary.Id is not empty ---
+            if (string.IsNullOrEmpty(applicant.ApplicantExpectedSalary.Id))
+            {
+                applicant.ApplicantExpectedSalary.Id = Guid.NewGuid().ToString();
+            }
+
+            // --- ensure email is NOT null (backend requires email) ---
+            if (NoEmailChecked && string.IsNullOrWhiteSpace(applicant.ApplicantInformation.Email))
+            {
+                var rand = new Random();
+                applicant.ApplicantInformation.Email = $"dummy{rand.Next(100000, 999999)}@email.com";
+            }
 
             // Submit to API
             var response = await Http.PostAsJsonAsync("api/Applicant/SaveNSRP", applicant);
@@ -1102,10 +1130,18 @@
         showSuccessModal = false;
         isSubmitting = true;
         _errors.Clear();
+
+        // Reset the form model
         applicant = new ApplicantDataViewModel
         {
             ApplicantInformation = new ApplicantInformation(),
-            ApplicantExpectedSalary = new ApplicantExpectedSalary { Id = Guid.NewGuid().ToString(), From = 0, To = 0, DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() },
+            ApplicantExpectedSalary = new ApplicantExpectedSalary
+            {
+                Id = Guid.NewGuid().ToString(),
+                From = 0,
+                To = 0,
+                DateLastUpdate = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+            },
             ApplicantJobPrefOccupation = new(),
             ApplicantJobPrefWorkLocation = new(),
             ApplicantLanguageDialectProf = new(),
@@ -1117,10 +1153,15 @@
             ApplicantWorkExperience = new()
         };
 
-        _ = Task.Run(async () => { await Task.Delay(200); isSubmitting = false; });
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(200);
+            isSubmitting = false;
+        });
 
-        Navigation.NavigateTo("/pesobeta", forceLoad: false);
+        activeTab = "personal";
     }
+
 
     // Address copy helper
     private void OnSameAsPresentChanged()

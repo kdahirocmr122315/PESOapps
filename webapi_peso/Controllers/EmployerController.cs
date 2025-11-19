@@ -446,56 +446,43 @@ namespace webapi_peso.Controllers
             return BadRequest();
         }
 
-        [HttpGet("GetEstablishmentDataWithUserAccountId/{userId}")]
-        public EmployerRegistrationViewModel GetEstablishmentDataWithUserAccountId(string userId)
+        [HttpGet("GetEstablishmentDataWithUserAccountId/{employerId}")]
+        public EmployerRegistrationViewModel GetEstablishmentData(string employerId)
         {
             using var db = dbFactory.CreateDbContext();
-            var data = cache.Get<EmployerRegistrationViewModel>($"GetEstablishmentDataWithUserAccountId/{userId}");
+            var data = cache.Get<EmployerRegistrationViewModel>($"GetEstablishmentData/{employerId}");
+
             if (data == null)
             {
                 data = new EmployerRegistrationViewModel();
-                var userAccount = db.UserAccounts.Find(userId);
-                if (userAccount != null)
+
+                data.EmployerDetails = db.EmployerDetails
+                    .Include(x => x.JobPosts.Where(j => !(bool)j.IsDeleted))
+                    .FirstOrDefault(x => x.Id == employerId);
+
+                if (data.EmployerDetails != null)
                 {
-                    data.EmployerDetails = db.EmployerDetails.Include(x => x.JobPosts.Where(x => (bool)!x.IsDeleted)).Where(x => x.ContactEmailAddress == userAccount.Email).FirstOrDefault();
-                    if (data.EmployerDetails != null && data.EmployerDetails.JobPosts != null)
+                    foreach (var job in data.EmployerDetails.JobPosts)
                     {
-                        foreach (var job in data.EmployerDetails.JobPosts)
-                        {
-                            if (!job.Expiry.HasValue)
-                            {
-                                job.Expiry = DateTime.Now.AddMonths(2);
-                            }
-                            if (job.Expiry.Value.ToString("yyyy-MM-dd") == "0001-01-01")
-                            {
-                                job.Expiry = DateTime.Now.AddMonths(2);
-                            }
-                            db.EmployerJobPost.Update(job);
-                        }
-                        db.SaveChanges();
+                        if (!job.Expiry.HasValue || job.Expiry.Value.Year == 1)
+                            job.Expiry = DateTime.Now.AddMonths(2);
+
+                        db.EmployerJobPost.Update(job);
                     }
-                    data.ListOfAttachments = new();
-                    //var attachmentsDirectory = System.IO.Path.Combine(env.WebRootPath, "files", "employers", data.EmployerDetails.Id);
-                    //if (!System.IO.Directory.Exists(attachmentsDirectory))
-                    //    System.IO.Directory.CreateDirectory(attachmentsDirectory);
-                    //foreach (var file in Directory.GetFiles(attachmentsDirectory))
-                    //{
-                    //    var fileInfo = new FileInfo(file);
-                    //    data.ListOfAttachments.Add(new()
-                    //    {
-                    //        Id = data.EmployerDetails.Id,
-                    //        FileName = System.IO.Path.GetFileName(file),
-                    //        FolderName = data.EmployerDetails.Id,
-                    //        FileSize = Helper.SizeSuffix(fileInfo.Length),
-                    //        IsAlreadyUploaded = 1
-                    //    });
-                    //}
+                    db.SaveChanges();
                 }
-                cache.Set($"GetEstablishmentDataWithUserAccountId/{userId}", data, TimeSpan.FromSeconds(30));
+
+                data.ListOfAttachments = new();
+
+                cache.Set($"GetEstablishmentData/{employerId}", data, TimeSpan.FromSeconds(30));
             }
+
+            if (data.ListOfAttachments == null)
+                data.ListOfAttachments = new();
 
             return data;
         }
+
 
         [HttpPost("AddEmpJobPost")]
         public IActionResult AddEmpJobPost(EmployerDetails data)

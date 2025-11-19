@@ -843,65 +843,81 @@ else
 
     private string initialBearerToken = "your-bearer-token-here";
 
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
+{
+    if (firstRender && !loaded)
     {
-        if (firstRender && !loaded)
+        loaded = true;
+
+        var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
+        var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
+        var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+
+        if (!string.IsNullOrWhiteSpace(userId) && isLoggedIn == "true")
         {
-            loaded = true;
+            isUserLoggedIn = true;
 
-            var userId = await JS.InvokeAsync<string>("localStorage.getItem", "UserId");
-            var token = await JS.InvokeAsync<string>("localStorage.getItem", "Token");
-            var isLoggedIn = await JS.InvokeAsync<string>("localStorage.getItem", "IsLoggedIn");
+            Http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-            if (!string.IsNullOrWhiteSpace(userId) && isLoggedIn == "true")
+            try
             {
-                isUserLoggedIn = true;
-
-                Http.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
-
-                try
+                // Load profile
+                var profileResponse = await Http.GetAsync($"api/Applicant/GetApplicantProfile/{userId}");
+                if (profileResponse.IsSuccessStatusCode)
                 {
-                    var profileResponse = await Http.GetAsync($"api/Applicant/GetApplicantProfile/{userId}");
-                    if (profileResponse.IsSuccessStatusCode)
+                    var json = await profileResponse.Content.ReadAsStringAsync();
+                    profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                    // First API: Get EmployerDetails BY UserAccountId (email relation)
+                    var detailsResponse = await Http.GetAsync($"api/Employer/GetEmployerDetailsByEmail/{userId}");
+
+                    if (detailsResponse.IsSuccessStatusCode)
                     {
-                        var json = await profileResponse.Content.ReadAsStringAsync();
-                        profile = JsonSerializer.Deserialize<AccountAndInformationViewModel>(json, new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true 
-                        });
+                        var json1 = await detailsResponse.Content.ReadAsStringAsync();
+                        var employerDetailsLookup = JsonSerializer.Deserialize<EmployerDetails>(json1,
+                            new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
-                        var jobResponse = await Http.GetAsync($"api/Employer/GetEstablishmentDataWithUserAccountId/{userId}");
-                        if (jobResponse.IsSuccessStatusCode)
+                        if (employerDetailsLookup != null)
                         {
-                            var rawJson = await jobResponse.Content.ReadAsStringAsync();
-                            var employerData = JsonSerializer.Deserialize<EmployerRegistrationViewModel>(rawJson, new JsonSerializerOptions
-                            {
-                                PropertyNameCaseInsensitive = true
-                            });
+                            // We extract THE REAL employerDetails.Id
+                            var correctEmployerId = employerDetailsLookup.Id;
 
-                            if (employerData != null)
+                            // Second API: Load establishment data using REAL employerDetailsId
+                            var realResponse = await Http.GetAsync(
+                                $"api/Employer/GetEstablishmentDataWithUserAccountId/{correctEmployerId}");
+
+                            if (realResponse.IsSuccessStatusCode)
                             {
-                                employerDetails = employerData.EmployerDetails;
+                                var json2 = await realResponse.Content.ReadAsStringAsync();
+                                var realData = JsonSerializer.Deserialize<EmployerRegistrationViewModel>(json2,
+                                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                                employerDetails = realData?.EmployerDetails;
                                 jobPosts = employerDetails?.JobPosts ?? new List<EmployerJobPost>();
                             }
                         }
-                        StateHasChanged();
                     }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("Error: " + ex.Message);
-                }
 
-                StateHasChanged();
+                    StateHasChanged();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
+                Console.WriteLine("Error: " + ex.Message);
             }
+
+            StateHasChanged();
+        }
+        else
+        {
+            Navigation.NavigateTo("/pesobeta/Login", forceLoad: true);
         }
     }
+}
+
     // ────────────────────────── helpers ──────────────────────────
 
     private List<AppliedApplicantViewModel>? applicants;

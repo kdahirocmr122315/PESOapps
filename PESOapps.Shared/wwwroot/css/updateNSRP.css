@@ -313,6 +313,14 @@ input.nsrp-input.sal {
     align-items: center;
 }
 
+.pesoman .nsrp-input-group {
+    grid-template-columns: repeat(auto-fit, minmax(215px, 1fr));
+}
+
+.pesoman .nsrp-grid {
+    grid-template-columns: repeat(auto-fit, minmax(186px, 1fr));
+}
+
 .nsrp-btn {
     padding: 0.5rem 3rem;
     background: #eaeaea;

@@ -199,6 +199,7 @@ namespace authpro.Controllers
                 account.UserType = ProjectConfig.USER_TYPE.EMPLOYER;
                 account.GivenName = em.AcronymAbbreviation;
                 account.Password = Helper.RandomString(6).ToLower();
+                account.LastLoggedIn = DateTime.Now;
                 account.DateCreated = DateTime.Now;
                 db.UserAccounts.Add(account);
                 db.SaveChanges();

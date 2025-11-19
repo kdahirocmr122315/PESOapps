@@ -321,54 +321,64 @@
     }
     private async Task ApproveEstablishment()
     {
-        if (detailsData?.EmployerDetails?.Id == null)
+        if (detailsData?.EmployerDetails == null)
             return;
-
-        var employerId = detailsData.EmployerDetails.Id;
 
         if (!await JS.InvokeAsync<bool>("confirm", "Approve this establishment?"))
             return;
 
-        var response = await Http.GetAsync($"/api/Manager/ApproveEstablishment/{employerId}");
+        var em = detailsData.EmployerDetails;
+        em.Status = ProjectConfig.ACCOUNT_STATUS.APPROVED;
+
+        var response = await Http.PostAsJsonAsync("/admin/admin/SetEstablishmentStatus", em);
 
         if (response.IsSuccessStatusCode)
         {
             await JS.InvokeVoidAsync("alert", "Establishment approved!");
+
             CloseModal();
-            await LoadEstablishments(); // refresh list
+
+            // 🔄 REFRESH TABLE
+            await LoadEstablishments();
             StateHasChanged();
         }
         else
         {
             var err = await response.Content.ReadAsStringAsync();
-            await JS.InvokeVoidAsync("alert", $"Failed to approve: {err}");
+            await JS.InvokeVoidAsync("alert", "Error approving: " + err);
         }
     }
 
+
     private async Task DenyEstablishment()
     {
-        if (detailsData?.EmployerDetails?.Id == null)
+        if (detailsData?.EmployerDetails == null)
             return;
-
-        var employerId = detailsData.EmployerDetails.Id;
 
         if (!await JS.InvokeAsync<bool>("confirm", "Deny this establishment?"))
             return;
 
-        var response = await Http.GetAsync($"/api/Manager/DenyEstablishment/{employerId}");
+        var em = detailsData.EmployerDetails;
+        em.Status = ProjectConfig.ACCOUNT_STATUS.DENIED;
+
+        var response = await Http.PostAsJsonAsync("/admin/admin/SetEstablishmentStatus", em);
 
         if (response.IsSuccessStatusCode)
         {
             await JS.InvokeVoidAsync("alert", "Establishment denied!");
+
             CloseModal();
-            await LoadEstablishments(); // refresh list
+
+            // 🔄 REFRESH TABLE
+            await LoadEstablishments();
             StateHasChanged();
         }
         else
         {
             var err = await response.Content.ReadAsStringAsync();
-            await JS.InvokeVoidAsync("alert", $"Failed to deny: {err}");
+            await JS.InvokeVoidAsync("alert", "Error denying: " + err);
         }
     }
+
 
 }
